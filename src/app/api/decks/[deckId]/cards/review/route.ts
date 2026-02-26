@@ -1,0 +1,110 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import prisma from "@/lib/prisma";
+import { calculateSM2 } from "@/utils/cognitive/sm2";
+import { calculateXpForReview } from "@/utils/xp/xpUtils";
+
+export async function POST(request: NextRequest) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const userId = (session.user as { id: string }).id;
+        const { cardId, qualityGrade, isReviewMode } = await request.json();
+
+        if (typeof cardId !== "string" || typeof qualityGrade !== "number") {
+            return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+        }
+
+        // Get existing SM2 stats or use defaults
+        const existing = await prisma.sM2Stats.findUnique({
+            where: { card_id_user_id: { card_id: cardId, user_id: userId } },
+        });
+
+        const prevEase = existing?.ease_factor ?? 2.5;
+        const prevReps = existing?.repetitions ?? 0;
+
+        // Run the SM2 algorithm
+        const result = calculateSM2(qualityGrade, prevReps, prevEase);
+
+        // If explicitly reviewing, update intervals and next_review dates.
+        // Otherwise (Study Mode, Endless Mode), ONLY adjust ease_factor to reflect understanding
+        // without ruining the standard scheduled spaced-repetition timeline.
+        const updateData = isReviewMode === true
+            ? {
+                ease_factor: result.ease_factor,
+                interval: result.interval,
+                repetitions: result.repetitions,
+                next_review: result.next_review,
+            }
+            : {
+                ease_factor: result.ease_factor,
+                // Do not update interval, reps, or next review if just studying
+            };
+
+        const createData = isReviewMode === true
+            ? {
+                card_id: cardId,
+                user_id: userId,
+                ease_factor: result.ease_factor,
+                interval: result.interval,
+                repetitions: result.repetitions,
+                next_review: result.next_review,
+            }
+            : {
+                card_id: cardId,
+                user_id: userId,
+                ease_factor: result.ease_factor,
+                // Defaults for when a user studies a card before ever reviewing it
+                interval: 0,
+                repetitions: 0,
+                next_review: new Date(),
+            };
+
+        // Upsert the SM2 stats record
+        const updated = await prisma.sM2Stats.upsert({
+            where: { card_id_user_id: { card_id: cardId, user_id: userId } },
+            update: updateData,
+            create: createData,
+        });
+
+        // Determine the deck ID for this card
+        const card = await prisma.cards.findUnique({ where: { id: cardId }, select: { deck_id: true } });
+
+        // Log the review event for statistics
+        if (card) {
+            await prisma.reviewLog.create({
+                data: {
+                    user_id: userId,
+                    card_id: cardId,
+                    deck_id: card.deck_id,
+                    quality_grade: qualityGrade,
+                    mode: isReviewMode === true ? "review" : "study",
+                },
+            });
+        }
+
+        // Award XP
+        const xpEarned = calculateXpForReview(qualityGrade);
+        let totalXp = 0;
+        if (xpEarned > 0) {
+            const userStats = await prisma.userStats.upsert({
+                where: { user_id: userId },
+                update: { total_xp: { increment: xpEarned } },
+                create: { user_id: userId, total_xp: xpEarned },
+            });
+            totalXp = userStats.total_xp;
+        } else {
+            const existing = await prisma.userStats.findUnique({ where: { user_id: userId } });
+            totalXp = existing?.total_xp ?? 0;
+        }
+
+        return NextResponse.json({ success: true, stats: updated, xpEarned, totalXp });
+    } catch (error) {
+        console.error("Review API error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}

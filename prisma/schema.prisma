@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  
+  // Extended Profile
+  firstName     String?
+  lastName      String?
+  username      String?   @unique
+  university    String?
+
+  name          String?
+  email         String?   @unique
+  password      String?
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("STUDENT")
+  
+  accounts      Account[]
+  sessions      Session[]
+
+  // Relations
+  decks Decks[]
+  stats UserStats?
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Decks {
+  id       String @id @default(uuid())
+  user_id  String
+  title    String
+  deck_seq Int?
+
+  // Relations
+  user  User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  cards Cards[]
+}
+
+model Cards {
+  id              String  @id @default(uuid())
+  deck_id         String
+  front           String
+  back            String
+  front_image_url String?
+  back_image_url  String?
+  card_seq        Int?
+
+  // Relations
+  deck      Decks        @relation(fields: [deck_id], references: [id], onDelete: Cascade)
+  sm2_stats SM2Stats[]
+  review_logs ReviewLog[]
+}
+
+model SM2Stats {
+  id          String   @id @default(uuid())
+  card_id     String
+  user_id     String
+  
+  ease_factor Float    @default(2.5)
+  interval    Int      @default(0)
+  repetitions Int      @default(0)
+  next_review DateTime @default(now())
+
+  // Relations
+  card Cards @relation(fields: [card_id], references: [id], onDelete: Cascade)
+
+  @@index([next_review])
+  @@unique([card_id, user_id])
+}
+
+model UserStats {
+  user_id        String @id
+  current_streak Int    @default(0)
+  total_xp       Int    @default(0)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model ReviewLog {
+  id            String   @id @default(uuid())
+  user_id       String
+  card_id       String
+  deck_id       String
+  quality_grade Int
+  mode          String   // "review" | "study" | "endless"
+  reviewed_at   DateTime @default(now())
+
+  // Relations
+  card Cards @relation(fields: [card_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, reviewed_at])
+  @@index([deck_id])
+}
