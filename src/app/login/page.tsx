@@ -204,24 +204,26 @@ export default function LoginPage() {
                     </button>
                 </form>
 
-                <p className="text-center text-sm text-neutral-400 pt-2">
-                    {isLogin ? "Don't have an account? " : "Already have an account? "}
-                    <button
-                        type="button"
-                        onClick={() => setIsLogin(!isLogin)}
-                        className="text-[#f9c111] hover:underline transition-all"
-                    >
-                        {isLogin ? "Sign Up" : "Sign In"}
-                    </button>
-                </p>
-
-                {isLogin && (
-                    <p className="text-center text-sm text-neutral-500 pt-2">
-                        <Link href="/admin/login" className="hover:text-white transition-colors">
-                            Admin Sign In
-                        </Link>
+                <div className="space-y-1 pt-2">
+                    <p className="text-center text-sm text-neutral-400">
+                        {isLogin ? "Don't have an account? " : "Already have an account? "}
+                        <button
+                            type="button"
+                            onClick={() => setIsLogin(!isLogin)}
+                            className="text-[#f9c111] hover:underline transition-all"
+                        >
+                            {isLogin ? "Sign Up" : "Sign In"}
+                        </button>
                     </p>
-                )}
+
+                    {isLogin && (
+                        <p className="text-center text-sm text-neutral-500">
+                            <Link href="/admin/login" className="hover:text-white transition-colors">
+                                Admin Sign In
+                            </Link>
+                        </p>
+                    )}
+                </div>
 
             </div>
         </div>
