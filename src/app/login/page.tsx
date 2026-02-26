@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -213,6 +214,14 @@ export default function LoginPage() {
                         {isLogin ? "Sign Up" : "Sign In"}
                     </button>
                 </p>
+
+                {isLogin && (
+                    <p className="text-center text-sm text-neutral-500 pt-2">
+                        <Link href="/admin/login" className="hover:text-white transition-colors">
+                            Admin Sign In
+                        </Link>
+                    </p>
+                )}
 
             </div>
         </div>

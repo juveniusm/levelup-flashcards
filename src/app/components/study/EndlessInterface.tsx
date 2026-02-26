@@ -5,7 +5,8 @@ import { evaluateAnswer } from "@/utils/cognitive/fuzzyMatch";
 import { calculateQualityGrade } from "@/utils/cognitive/sm2";
 import { Card, formatTime, shuffleArray } from "@/utils/study/studyUtils";
 import Flashcard from "./Flashcard";
-import EndScreenButtons from "./EndScreenButtons";
+import SessionMetrics from "./SessionMetrics";
+import SessionEndScreen from "./SessionEndScreen";
 
 export default function EndlessInterface({
     cards,
@@ -186,47 +187,25 @@ export default function EndlessInterface({
     // Finished screen
     if (feedbackState === "finished") {
         return (
-            <div className="max-w-2xl mx-auto w-full text-center py-24 animate-in zoom-in duration-500">
-                <h2 className="text-5xl md:text-6xl font-black text-[#f9c111] mb-4 tracking-tight drop-shadow-lg">Session Over</h2>
-                <p className="text-lg text-neutral-400 mb-12">
-                    You studied for <span className="text-white font-bold">{formatTime(elapsedSeconds)}</span>
-                </p>
-
-                <div className="flex flex-col sm:flex-row justify-center gap-8 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-                    <div className="flex flex-col items-center">
-                        <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-1">Score</span>
-                        <span className="text-4xl font-black font-mono tracking-widest text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                            {score.toString().padStart(4, "0")}
-                        </span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-1">Right</span>
-                        <span className="text-4xl font-black font-mono tracking-widest text-green-400 drop-shadow-[0_0_15px_rgba(74,222,128,0.4)]">
-                            {correctAnswers.toString().padStart(2, "0")}
-                        </span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-1">Wrong</span>
-                        <span className="text-4xl font-black font-mono tracking-widest text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]">
-                            {incorrectAnswers.toString().padStart(2, "0")}
-                        </span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-1">Cards Seen</span>
-                        <span className="text-4xl font-black font-mono tracking-widest text-[#f9c111] drop-shadow-[0_0_15px_rgba(249,193,17,0.4)]">
-                            {totalCardsSeen.toString().padStart(2, "0")}
-                        </span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-1">XP Earned</span>
-                        <span className="text-4xl font-black font-mono tracking-widest text-[#f9c111] drop-shadow-[0_0_15px_rgba(249,193,17,0.4)]">
-                            +{xpEarned}
-                        </span>
-                    </div>
-                </div>
-
-                <EndScreenButtons primaryLabel="Play Again" onPrimaryClick={clearSessionAndReload} />
-            </div>
+            <SessionEndScreen
+                title="Session Over"
+                titleColorClass="text-[#f9c111]"
+                subtitle={
+                    <>
+                        You studied for <span className="text-white font-bold">{formatTime(elapsedSeconds)}</span>
+                    </>
+                }
+                primaryButtonLabel="Play Again"
+                onPrimaryClick={clearSessionAndReload}
+            >
+                <SessionMetrics
+                    score={score}
+                    correctAnswers={correctAnswers}
+                    incorrectAnswers={incorrectAnswers}
+                    totalCardsSeen={totalCardsSeen}
+                    xpEarned={xpEarned}
+                />
+            </SessionEndScreen>
         );
     }
 

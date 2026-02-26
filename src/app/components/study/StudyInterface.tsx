@@ -7,7 +7,8 @@ import { evaluateAnswer } from "@/utils/cognitive/fuzzyMatch";
 import { calculateQualityGrade } from "@/utils/cognitive/sm2";
 import { Card } from "@/utils/study/studyUtils";
 import Flashcard from "./Flashcard";
-import EndScreenButtons from "./EndScreenButtons";
+import SessionMetrics from "./SessionMetrics";
+import SessionEndScreen from "./SessionEndScreen";
 
 export default function StudyInterface({
     cards,
@@ -134,64 +135,59 @@ export default function StudyInterface({
         );
     }
 
-    const renderMetrics = () => (
-        <div className="flex flex-col sm:flex-row justify-center gap-8 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-            <div className="flex flex-col items-center">
-                <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-1">Score</span>
-                <span className="text-4xl font-black font-mono tracking-widest text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                    {(score ?? 0).toString().padStart(4, "0")}
-                </span>
-            </div>
-            <div className="flex flex-col items-center">
-                <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-1">Right</span>
-                <span className="text-4xl font-black font-mono tracking-widest text-green-400 drop-shadow-[0_0_15px_rgba(74,222,128,0.4)]">
-                    {(correctAnswers ?? 0).toString().padStart(2, "0")}
-                </span>
-            </div>
-            <div className="flex flex-col items-center">
-                <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-1">Wrong</span>
-                <span className="text-4xl font-black font-mono tracking-widest text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]">
-                    {(incorrectAnswers ?? 0).toString().padStart(2, "0")}
-                </span>
-            </div>
-            <div className="flex flex-col items-center">
-                <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-1">XP Earned</span>
-                <span className="text-4xl font-black font-mono tracking-widest text-[#f9c111] drop-shadow-[0_0_15px_rgba(249,193,17,0.4)]">
-                    +{xpEarned}
-                </span>
-            </div>
-        </div>
-    );
-
     if (gameStatus === "game_over") {
         return (
-            <div className="max-w-2xl mx-auto w-full text-center py-24 animate-in zoom-in duration-500">
-                <h2 className="text-5xl md:text-6xl font-black text-red-500 mb-2 tracking-tight drop-shadow-lg">Game Over</h2>
-                <p className="text-xl text-neutral-400 mb-12">You ran out of lives!</p>
-                {renderMetrics()}
-                <EndScreenButtons primaryLabel="Try Again" onPrimaryClick={clearSessionAndReload} />
-            </div>
+            <SessionEndScreen
+                title="Game Over"
+                titleColorClass="text-red-500"
+                subtitle="You ran out of lives!"
+                primaryButtonLabel="Try Again"
+                onPrimaryClick={clearSessionAndReload}
+            >
+                <SessionMetrics
+                    score={score ?? 0}
+                    correctAnswers={correctAnswers ?? 0}
+                    incorrectAnswers={incorrectAnswers ?? 0}
+                    xpEarned={xpEarned}
+                />
+            </SessionEndScreen>
         );
     }
 
     if (gameStatus === "session_over") {
         return (
-            <div className="max-w-2xl mx-auto w-full text-center py-24 animate-in zoom-in duration-500">
-                <h2 className="text-5xl md:text-6xl font-black text-[#f9c111] mb-4 tracking-tight drop-shadow-lg">Session Over</h2>
-                <p className="text-xl text-neutral-400 mb-12">You ended the session early.</p>
-                {renderMetrics()}
-                <EndScreenButtons primaryLabel="Try Again" onPrimaryClick={clearSessionAndReload} />
-            </div>
+            <SessionEndScreen
+                title="Session Over"
+                titleColorClass="text-[#f9c111]"
+                subtitle="You ended the session early."
+                primaryButtonLabel="Try Again"
+                onPrimaryClick={clearSessionAndReload}
+            >
+                <SessionMetrics
+                    score={score ?? 0}
+                    correctAnswers={correctAnswers ?? 0}
+                    incorrectAnswers={incorrectAnswers ?? 0}
+                    xpEarned={xpEarned}
+                />
+            </SessionEndScreen>
         );
     }
 
     if (gameStatus === "completed") {
         return (
-            <div className="max-w-2xl mx-auto w-full text-center py-24 animate-in zoom-in duration-500">
-                <h2 className="text-5xl md:text-6xl font-black text-[#f9c111] mb-12 tracking-tight drop-shadow-lg">Deck Complete!</h2>
-                {renderMetrics()}
-                <EndScreenButtons primaryLabel="Study Again" onPrimaryClick={clearSessionAndReload} />
-            </div>
+            <SessionEndScreen
+                title="Deck Complete!"
+                titleColorClass="text-[#f9c111]"
+                primaryButtonLabel="Study Again"
+                onPrimaryClick={clearSessionAndReload}
+            >
+                <SessionMetrics
+                    score={score ?? 0}
+                    correctAnswers={correctAnswers ?? 0}
+                    incorrectAnswers={incorrectAnswers ?? 0}
+                    xpEarned={xpEarned}
+                />
+            </SessionEndScreen>
         );
     }
 
