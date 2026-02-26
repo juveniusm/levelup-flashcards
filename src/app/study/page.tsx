@@ -25,11 +25,10 @@ export default async function Home() {
       _count: {
         select: { cards: true },
       },
+      // We only need the IDs to query the due cards efficiently
       cards: {
-        include: {
-          sm2_stats: userId ? { where: { user_id: userId } } : false,
-        },
-      },
+        select: { id: true }
+      }
     },
     orderBy: {
       title: "asc",
@@ -38,22 +37,39 @@ export default async function Home() {
 
   const now = new Date();
 
-  const decksWithStats = decks.map((deck) => {
-    const dueCount = deck.cards.filter((card) => {
-      const stats = (card as { sm2_stats?: unknown[] }).sm2_stats?.[0] as { next_review?: string | Date } | undefined;
-      const nextReview = stats?.next_review ? new Date(stats.next_review) : null;
-      // ONLY due if nextReview exists AND is in the past
-      return nextReview && nextReview <= now;
-    }).length;
+  // Fetch due counts per deck efficiently
+  const decksWithStats = await Promise.all(decks.map(async (deck) => {
+    if (!userId || deck.cards.length === 0) {
+      return {
+        id: deck.id,
+        user_id: deck.user_id,
+        title: deck.title,
+        deck_seq: deck.deck_seq,
+        _count: deck._count,
+        dueCount: 0
+      };
+    }
 
-    // Remove the heavy cards array before sending to the client, we just need the counts
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { cards: _cards, ...deckWithoutCards } = deck;
+    const cardIds = deck.cards.map(c => c.id);
+
+    // Count SM2 stats for this user's cards that are due
+    const dueCount = await prisma.sM2Stats.count({
+      where: {
+        user_id: userId,
+        card_id: { in: cardIds },
+        next_review: { lte: now }
+      }
+    });
+
     return {
-      ...deckWithoutCards,
-      dueCount,
+      id: deck.id,
+      user_id: deck.user_id,
+      title: deck.title,
+      deck_seq: deck.deck_seq,
+      _count: deck._count,
+      dueCount
     };
-  });
+  }));
 
   const dueDecks = decksWithStats.filter((d) => d.dueCount > 0);
   const totalDueCards = dueDecks.reduce((sum, deck) => sum + deck.dueCount, 0);
