@@ -11,7 +11,7 @@ export default function Sidebar() {
     const pathname = usePathname();
     const { data: session } = useSession();
 
-    if (pathname === '/login' || pathname === '/') return null;
+    if (pathname === '/login' || pathname === '/admin/login' || pathname === '/') return null;
 
     // Game sessions are /:deckId/study — collapse sidebar there
     const isGameSession = /^\/[^/]+\/study/.test(pathname);
