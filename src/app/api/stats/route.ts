@@ -21,8 +21,12 @@ const getCachedStats = unstable_cache(
             cardsStudied,
             cardsDueToday
         ] = await Promise.all([
-            prisma.decks.count({ where: { user_id: userId } }),
-            prisma.cards.count({ where: { deck: { user_id: userId } } }),
+            prisma.decks.count({
+                where: { OR: [{ user_id: userId }, { user: { role: "ADMIN" } }] }
+            }),
+            prisma.cards.count({
+                where: { deck: { OR: [{ user_id: userId }, { user: { role: "ADMIN" } }] } }
+            }),
             prisma.reviewLog.count({ where: { user_id: userId } }),
             prisma.sM2Stats.count({ where: { user_id: userId } }),
             prisma.sM2Stats.count({ where: { user_id: userId, next_review: { lte: now } } }),
@@ -51,7 +55,7 @@ const getCachedStats = unstable_cache(
                 select: { total_xp: true }
             }),
             prisma.decks.findMany({
-                where: { user_id: userId },
+                where: { OR: [{ user_id: userId }, { user: { role: "ADMIN" } }] },
                 select: {
                     id: true,
                     title: true,
@@ -165,8 +169,8 @@ const getCachedStats = unstable_cache(
             xp: { totalXp, level, title },
         };
     },
-    ['user-stats'], // Cache key: user ID will be automatically appended to this key by Next.js
-    { revalidate: 60 }
+    ['user-stats'],
+    { revalidate: 10, tags: ['stats'] }
 );
 
 export async function GET() {
