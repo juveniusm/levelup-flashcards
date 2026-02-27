@@ -62,7 +62,9 @@ export async function POST(request: NextRequest) {
         // If explicitly reviewing, update intervals and next_review dates.
         // Otherwise (Study Mode, Endless Mode), ONLY adjust ease_factor to reflect understanding
         // without ruining the standard scheduled spaced-repetition timeline.
-        const updateData = isReviewMode === true
+        const isDue = existing && existing.next_review <= new Date();
+
+        const updateData = (isReviewMode === true || isDue)
             ? {
                 ease_factor: result.ease_factor,
                 interval: result.interval,
@@ -71,27 +73,17 @@ export async function POST(request: NextRequest) {
             }
             : {
                 ease_factor: result.ease_factor,
-                // Do not update interval, reps, or next review if just studying
+                // Do not update SRS schedule if practicing a non-due card
             };
 
-        const createData = isReviewMode === true
-            ? {
-                card_id: cardId,
-                user_id: userId,
-                ease_factor: result.ease_factor,
-                interval: result.interval,
-                repetitions: result.repetitions,
-                next_review: result.next_review,
-            }
-            : {
-                card_id: cardId,
-                user_id: userId,
-                ease_factor: result.ease_factor,
-                // Defaults for when a user studies a card before ever reviewing it
-                interval: 0,
-                repetitions: 0,
-                next_review: new Date(),
-            };
+        const createData = {
+            card_id: cardId,
+            user_id: userId,
+            ease_factor: result.ease_factor,
+            interval: result.interval,
+            repetitions: result.repetitions,
+            next_review: result.next_review,
+        };
 
         // Upsert the SM2 stats record
         const updated = await prisma.sM2Stats.upsert({
