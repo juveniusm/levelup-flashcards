@@ -1,4 +1,3 @@
-```typescript
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -8,10 +7,9 @@ import { unstable_cache } from 'next/cache';
 
 export const dynamic = "force-dynamic";
 
-// Data fetching logic moved to a cached function
-const getCachedStats = (userId: string) =>
-  unstable_cache(
-    async () => {
+// Data fetching logic wrapped in unstable_cache
+const getCachedStats = unstable_cache(
+    async (userId: string) => {
         const now = new Date();
 
         // --- Batch A: Counts and Basic User Stats ---
@@ -23,8 +21,8 @@ const getCachedStats = (userId: string) =>
             cardsStudied,
             cardsDueToday
         ] = await Promise.all([
-            prisma.decks.count({ where: { user_id: userId } }), // Scoped to user
-            prisma.cards.count({ where: { deck: { user_id: userId } } }), // Scoped to user
+            prisma.decks.count({ where: { user_id: userId } }),
+            prisma.cards.count({ where: { deck: { user_id: userId } } }),
             prisma.reviewLog.count({ where: { user_id: userId } }),
             prisma.sM2Stats.count({ where: { user_id: userId } }),
             prisma.sM2Stats.count({ where: { user_id: userId, next_review: { lte: now } } }),
@@ -53,7 +51,7 @@ const getCachedStats = (userId: string) =>
                 select: { total_xp: true }
             }),
             prisma.decks.findMany({
-                where: { user_id: userId }, // Scoped to user
+                where: { user_id: userId },
                 select: {
                     id: true,
                     title: true,
@@ -76,7 +74,6 @@ const getCachedStats = (userId: string) =>
 
         // --- Activity Calculations (In-Memory) ---
         const dailyMap = new Map<string, number>();
-        // Pre-fill last 30 days
         for (let i = 0; i < 30; i++) {
             const d = new Date();
             d.setDate(d.getDate() - i);
@@ -85,13 +82,11 @@ const getCachedStats = (userId: string) =>
 
         const modeBreakdown = { review: 0, study: 0, endless: 0 };
         for (const r of recentReviews) {
-            // Daily reviews
             const dateKey = r.reviewed_at.toISOString().split("T")[0];
             if (dailyMap.has(dateKey)) {
                 dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + 1);
             }
 
-            // Mode breakdown
             if (r.mode === "review") modeBreakdown.review++;
             else if (r.mode === "endless") modeBreakdown.endless++;
             else modeBreakdown.study++;
@@ -113,7 +108,6 @@ const getCachedStats = (userId: string) =>
         const reviewsThisMonth = recentReviews.filter(r => r.reviewed_at >= startOfMonth).length;
 
         // --- Optimized Deck Breakdown (In-Memory) ---
-        // Using a Map for fast lookup of card stats by card_id
         const statsMap = new Map(allStats.map(s => [s.card_id, s]));
 
         const deckBreakdown = decksWithCardIds.map((deck) => {
@@ -142,7 +136,6 @@ const getCachedStats = (userId: string) =>
             };
         });
 
-        // --- XP ---
         const totalXp = userStatsRecord?.total_xp ?? 0;
         const { level } = getLevelFromXp(totalXp);
         const title = getLevelTitle(level);
@@ -172,9 +165,9 @@ const getCachedStats = (userId: string) =>
             xp: { totalXp, level, title },
         };
     },
-    ['user-stats', userId], // CRITICAL: Unique key per user
-    { revalidate: 60, tags: [`user - stats - ${ userId } `] }
-  );
+    ['user-stats'], // Cache key: user ID will be automatically appended to this key by Next.js
+    { revalidate: 60 }
+);
 
 export async function GET() {
     try {
@@ -184,7 +177,7 @@ export async function GET() {
         }
 
         const userId = (session.user as { id: string }).id;
-        const stats = await getCachedStats(userId)();
+        const stats = await getCachedStats(userId);
 
         return NextResponse.json(stats);
     } catch (error) {
