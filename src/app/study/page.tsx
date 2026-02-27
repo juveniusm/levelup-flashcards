@@ -92,9 +92,9 @@ export default async function Home() {
             <Image
               src="/Logo3.svg"
               alt="LevelUp Student"
-              width={150}
-              height={48}
-              className="h-12 w-auto object-contain drop-shadow-md"
+              width={200}
+              height={38}
+              className="h-10 md:h-12 w-auto object-contain drop-shadow-md"
               priority
             />
           </div>

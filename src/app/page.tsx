@@ -35,14 +35,16 @@ export default function LandingPage() {
 
                     <div className="relative max-w-5xl mx-auto text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
                         <div className="flex justify-center w-full mb-8">
-                            <Image
-                                src="/logo4.svg"
-                                alt="Master any subject, faster than ever."
-                                width={500}
-                                height={224}
-                                className="h-56 w-auto object-contain drop-shadow-2xl"
-                                priority
-                            />
+                            <div className="w-80 md:w-[500px]">
+                                <Image
+                                    src="/logo4.svg"
+                                    alt="Master any subject, faster than ever."
+                                    width={400}
+                                    height={242}
+                                    className="w-full h-auto object-contain drop-shadow-2xl"
+                                    priority
+                                />
+                            </div>
                         </div>
 
                         <p className="text-xl md:text-2xl text-neutral-400 max-w-2xl mx-auto leading-relaxed">

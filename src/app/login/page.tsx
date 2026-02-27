@@ -73,14 +73,16 @@ export default function LoginPage() {
         <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
             {/* Logo on pure black background */}
             <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <Image
-                    src="/logo4.svg"
-                    alt="LevelUp Auth"
-                    width={224}
-                    height={224}
-                    className="h-48 md:h-56 w-auto object-contain mx-auto drop-shadow-lg"
-                    priority
-                />
+                <div className="w-64 md:w-80 mx-auto">
+                    <Image
+                        src="/logo4.svg"
+                        alt="LevelUp Auth"
+                        width={400}
+                        height={242}
+                        className="w-full h-auto object-contain drop-shadow-lg"
+                        priority
+                    />
+                </div>
             </div>
 
             {/* Gray box starting from Continue with Google */}
