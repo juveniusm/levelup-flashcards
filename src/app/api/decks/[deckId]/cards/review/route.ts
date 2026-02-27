@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
                         select: {
                             id: true,
                             user_id: true,
-                            user: { select: { role: true } }
+                            is_public: true
                         }
                     }
                 }
@@ -45,11 +45,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Card not found" }, { status: 404 });
         }
 
-        // --- SECURITY CHECK: Ensure user owns the deck OR it is an Admin deck ---
+        // --- SECURITY CHECK: Ensure user owns the deck OR it is a public deck ---
         const isOwner = card.deck.user_id === userId;
-        const isAdminDeck = card.deck.user.role === "ADMIN";
+        const isPublicDeck = card.deck.is_public === true;
 
-        if (!isOwner && !isAdminDeck) {
+        if (!isOwner && !isPublicDeck) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

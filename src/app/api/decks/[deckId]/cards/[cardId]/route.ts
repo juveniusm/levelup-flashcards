@@ -3,19 +3,35 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 
-async function requireAdmin() {
+/** Check if the user has permission to manage cards in this deck */
+async function requireAccess(deckId: string) {
     const session = await getServerSession(authOptions);
     if (!session?.user) return { error: "Unauthorized", status: 401 };
+
+    const userId = (session.user as { id: string }).id;
     const role = (session.user as { role?: string }).role;
-    if (role !== "ADMIN") return { error: "Forbidden", status: 403 };
-    return { session };
+
+    const deck = await prisma.decks.findUnique({
+        where: { id: deckId },
+        select: { user_id: true }
+    });
+
+    if (!deck) return { error: "Deck not found", status: 404 };
+
+    // Owners and Admins can manage the deck
+    if (deck.user_id !== userId && role !== "ADMIN") {
+        return { error: "Forbidden", status: 403 };
+    }
+
+    return { session, userId, role };
 }
 
 export async function PUT(
     request: Request,
     { params }: { params: Promise<{ deckId: string; cardId: string }> }
 ) {
-    const auth = await requireAdmin();
+    const resolvedParams = await params;
+    const auth = await requireAccess(resolvedParams.deckId);
     if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     try {
@@ -50,7 +66,8 @@ export async function DELETE(
     _request: Request,
     { params }: { params: Promise<{ deckId: string; cardId: string }> }
 ) {
-    const auth = await requireAdmin();
+    const resolvedParams = await params;
+    const auth = await requireAccess(resolvedParams.deckId);
     if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     try {

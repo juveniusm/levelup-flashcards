@@ -22,10 +22,10 @@ const getCachedStats = unstable_cache(
             cardsDueToday
         ] = await Promise.all([
             prisma.decks.count({
-                where: { OR: [{ user_id: userId }, { user: { role: "ADMIN" } }] }
+                where: { user_id: userId } // Strictly personal creations
             }),
             prisma.cards.count({
-                where: { deck: { OR: [{ user_id: userId }, { user: { role: "ADMIN" } }] } }
+                where: { deck: { user_id: userId } } // Strictly personal creations
             }),
             prisma.reviewLog.count({ where: { user_id: userId } }),
             prisma.sM2Stats.count({ where: { user_id: userId } }),
@@ -55,7 +55,7 @@ const getCachedStats = unstable_cache(
                 select: { total_xp: true }
             }),
             prisma.decks.findMany({
-                where: { OR: [{ user_id: userId }, { user: { role: "ADMIN" } }] },
+                where: { OR: [{ user_id: userId }, { is_public: true }] },
                 select: {
                     id: true,
                     title: true,

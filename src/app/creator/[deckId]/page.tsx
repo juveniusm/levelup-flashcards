@@ -1,6 +1,8 @@
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import CreateCardForm from "../../components/cards/CreateCardForm";
 import DeleteDeckButton from "../../components/DeleteDeckButton";
 import FlashcardList from "../../components/cards/FlashcardList";
@@ -10,6 +12,10 @@ export const dynamic = "force-dynamic";
 
 export default async function DeckPage({ params }: { params: Promise<{ deckId: string }> }) {
     const { deckId } = await params;
+
+    const session = await getServerSession(authOptions);
+    const userId = (session?.user as any)?.id;
+    const userRole = (session?.user as any)?.role;
 
     const deck = await prisma.decks.findUnique({
         where: { id: deckId },
@@ -21,6 +27,11 @@ export default async function DeckPage({ params }: { params: Promise<{ deckId: s
     });
 
     if (!deck) {
+        notFound();
+    }
+
+    // Authorization check: Only owner or admin can manage
+    if (deck.user_id !== userId && userRole !== "ADMIN") {
         notFound();
     }
 

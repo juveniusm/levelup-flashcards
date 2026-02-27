@@ -74,10 +74,11 @@ model VerificationToken {
 }
 
 model Decks {
-  id       String @id @default(uuid())
-  user_id  String
-  title    String
-  deck_seq Int?
+  id        String  @id @default(uuid())
+  user_id   String
+  title     String
+  deck_seq  Int?
+  is_public Boolean @default(false)
 
   // Relations
   user  User    @relation(fields: [user_id], references: [id], onDelete: Cascade)

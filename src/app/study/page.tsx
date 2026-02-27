@@ -29,7 +29,7 @@ export default async function Home() {
       where: {
         OR: [
           { user_id: userId || 'none' },
-          { user: { role: "ADMIN" } }
+          { is_public: true }
         ]
       },
       include: {

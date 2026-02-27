@@ -1,10 +1,16 @@
 import prisma from "@/lib/prisma";
 import DeckManager from "../components/DeckManager";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id;
+
   const decks = await prisma.decks.findMany({
+    where: { user_id: userId || 'none' },
     include: {
       _count: {
         select: { cards: true },

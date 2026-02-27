@@ -3,23 +3,31 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-
         if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const userId = (session.user as { id: string }).id;
+        const { searchParams } = new URL(request.url);
+        const mode = searchParams.get("mode");
 
-        const decks = await prisma.decks.findMany({
-            where: {
+        let whereClause: any = { user_id: userId };
+
+        // If not in creator mode, include public decks
+        if (mode !== "creator") {
+            whereClause = {
                 OR: [
                     { user_id: userId },
-                    { user: { role: "ADMIN" } }
+                    { is_public: true }
                 ]
-            },
+            };
+        }
+
+        const decks = await prisma.decks.findMany({
+            where: whereClause,
             include: {
                 _count: {
                     select: { cards: true }
@@ -46,6 +54,7 @@ export async function POST(request: Request) {
         }
 
         const resolvedUserId = (session.user as { id?: string }).id as string;
+        const userRole = (session.user as { role?: string }).role;
 
         // Find max sequence
         const lastDeck = await prisma.decks.findFirst({
@@ -60,6 +69,7 @@ export async function POST(request: Request) {
                 title,
                 user_id: resolvedUserId,
                 deck_seq: nextSeq,
+                is_public: userRole === "ADMIN", // Admins create public decks by default
             },
         });
 
