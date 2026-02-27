@@ -91,24 +91,6 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                         </p>
 
                         <div className="space-y-3">
-                            {/* Review Mode */}
-                            <button
-                                onClick={() => handleSelect("review")}
-                                className="w-full text-left bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-700 hover:border-[#f9c111]/50 rounded-xl p-5 transition-all group/btn"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h4 className="font-bold text-white group-hover/btn:text-[#f9c111] transition-colors text-lg flex items-center gap-2">
-                                            Review Mode
-                                        </h4>
-                                        <p className="text-neutral-400 text-sm mt-1">
-                                            Only cards due for review. Best for daily retention.
-                                        </p>
-                                    </div>
-                                    <span className="text-neutral-600 group-hover/btn:text-[#f9c111] transition-colors text-xl">&rarr;</span>
-                                </div>
-                            </button>
-
                             {/* Study Mode */}
                             <button
                                 onClick={() => handleSelect("study")}
@@ -121,6 +103,24 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                                         </h4>
                                         <p className="text-neutral-400 text-sm mt-1">
                                             All cards, hardest first. Best for exam prep.
+                                        </p>
+                                    </div>
+                                    <span className="text-neutral-600 group-hover/btn:text-[#f9c111] transition-colors text-xl">&rarr;</span>
+                                </div>
+                            </button>
+
+                            {/* Review Mode */}
+                            <button
+                                onClick={() => handleSelect("review")}
+                                className="w-full text-left bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-700 hover:border-[#f9c111]/50 rounded-xl p-5 transition-all group/btn"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h4 className="font-bold text-white group-hover/btn:text-[#f9c111] transition-colors text-lg flex items-center gap-2">
+                                            Review Mode
+                                        </h4>
+                                        <p className="text-neutral-400 text-sm mt-1">
+                                            Only cards due for review. Best for daily retention.
                                         </p>
                                     </div>
                                     <span className="text-neutral-600 group-hover/btn:text-[#f9c111] transition-colors text-xl">&rarr;</span>

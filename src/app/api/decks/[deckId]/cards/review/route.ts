@@ -13,22 +13,40 @@ export async function POST(request: NextRequest) {
         }
 
         const userId = (session.user as { id: string }).id;
-        const { cardId, qualityGrade, isReviewMode } = await request.json();
+        const { cardId, qualityGrade, isReviewMode, timezone } = await request.json();
+
+        // Default to UTC if no timezone provided (fallback)
+        const userTz = timezone || 'UTC';
 
         if (typeof cardId !== "string" || typeof qualityGrade !== "number") {
             return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
         }
 
-        // Get existing SM2 stats or use defaults
-        const existing = await prisma.sM2Stats.findUnique({
-            where: { card_id_user_id: { card_id: cardId, user_id: userId } },
-        });
+        // Get existing SM2 stats and card info in parallel
+        const [existing, card] = await Promise.all([
+            prisma.sM2Stats.findUnique({
+                where: { card_id_user_id: { card_id: cardId, user_id: userId } },
+            }),
+            prisma.cards.findUnique({
+                where: { id: cardId },
+                include: { deck: { select: { user_id: true, id: true } } }
+            })
+        ]);
+
+        if (!card) {
+            return NextResponse.json({ error: "Card not found" }, { status: 404 });
+        }
+
+        // --- SECURITY CHECK: Ensure user owns the deck ---
+        if (card.deck.user_id !== userId) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
 
         const prevEase = existing?.ease_factor ?? 2.5;
         const prevReps = existing?.repetitions ?? 0;
 
-        // Run the SM2 algorithm
-        const result = calculateSM2(qualityGrade, prevReps, prevEase);
+        // Run the SM2 algorithm (passing the timezone for normalization)
+        const result = calculateSM2(qualityGrade, prevReps, prevEase, userTz);
 
         // If explicitly reviewing, update intervals and next_review dates.
         // Otherwise (Study Mode, Endless Mode), ONLY adjust ease_factor to reflect understanding
@@ -71,38 +89,76 @@ export async function POST(request: NextRequest) {
             create: createData,
         });
 
-        // Determine the deck ID for this card
-        const card = await prisma.cards.findUnique({ where: { id: cardId }, select: { deck_id: true } });
-
         // Log the review event for statistics
-        if (card) {
-            await prisma.reviewLog.create({
-                data: {
-                    user_id: userId,
-                    card_id: cardId,
-                    deck_id: card.deck_id,
-                    quality_grade: qualityGrade,
-                    mode: isReviewMode === true ? "review" : "study",
-                },
-            });
-        }
+        await prisma.reviewLog.create({
+            data: {
+                user_id: userId,
+                card_id: cardId,
+                deck_id: card.deck_id,
+                quality_grade: qualityGrade,
+                mode: isReviewMode === true ? "review" : "study",
+            },
+        });
 
-        // Award XP
-        const xpEarned = calculateXpForReview(qualityGrade);
-        let totalXp = 0;
-        if (xpEarned > 0) {
-            const userStats = await prisma.userStats.upsert({
-                where: { user_id: userId },
-                update: { total_xp: { increment: xpEarned } },
-                create: { user_id: userId, total_xp: xpEarned },
-            });
-            totalXp = userStats.total_xp;
+        // --- STREAK LOGIC ---
+        // 1. Get user's last review before this one
+        const lastReview = await prisma.reviewLog.findFirst({
+            where: { user_id: userId, NOT: { id: undefined } }, // Just a safety check
+            orderBy: { reviewed_at: 'desc' },
+            skip: 1, // Skip the one we just created
+        });
+
+        const now = new Date();
+        const dateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: userTz, year: 'numeric', month: '2-digit', day: '2-digit' });
+        const todayStr = dateFormatter.format(now);
+
+        let streakIncrement = 0;
+        let setStreakTo = undefined;
+
+        if (!lastReview) {
+            // First review ever
+            setStreakTo = 1;
         } else {
-            const existing = await prisma.userStats.findUnique({ where: { user_id: userId } });
-            totalXp = existing?.total_xp ?? 0;
+            const lastDateStr = dateFormatter.format(lastReview.reviewed_at);
+
+            if (todayStr === lastDateStr) {
+                // Already reviewed today, keep streak same
+            } else {
+                // Check if yesterday
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = dateFormatter.format(yesterday);
+
+                if (lastDateStr === yesterdayStr) {
+                    streakIncrement = 1;
+                } else {
+                    // Missed a day
+                    setStreakTo = 1;
+                }
+            }
         }
 
-        return NextResponse.json({ success: true, stats: updated, xpEarned, totalXp });
+        // Award XP and Update Streak
+        const xpEarned = calculateXpForReview(qualityGrade);
+
+        const userStats = await prisma.userStats.upsert({
+            where: { user_id: userId },
+            update: {
+                total_xp: { increment: xpEarned },
+                ...(setStreakTo !== undefined ? { current_streak: setStreakTo } : {}),
+                ...(streakIncrement > 0 ? { current_streak: { increment: streakIncrement } } : {}),
+            },
+            create: {
+                user_id: userId,
+                total_xp: xpEarned,
+                current_streak: 1
+            },
+        });
+
+        const totalXp = userStats.total_xp;
+        const currentStreak = userStats.current_streak;
+
+        return NextResponse.json({ success: true, stats: updated, xpEarned, totalXp, currentStreak });
     } catch (error) {
         console.error("Review API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -111,7 +111,8 @@ export default function StudyInterface({
             body: JSON.stringify({
                 cardId: currentCard.id,
                 qualityGrade: quality,
-                isReviewMode
+                isReviewMode,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
             }),
         })
             .then((res) => res.json())

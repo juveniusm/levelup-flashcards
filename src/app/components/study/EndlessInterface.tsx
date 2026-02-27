@@ -158,7 +158,8 @@ export default function EndlessInterface({
             body: JSON.stringify({
                 cardId: currentCard.id,
                 qualityGrade: quality,
-                isReviewMode: false
+                isReviewMode: false,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
             }),
         })
             .then((res) => res.json())

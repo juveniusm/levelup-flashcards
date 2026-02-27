@@ -36,7 +36,8 @@ export function calculateQualityGrade(fuzzyScore: number): number {
 export function calculateSM2(
     qualityGrade: number,
     repetitions: number,
-    previousEaseFactor: number
+    previousEaseFactor: number,
+    timezone?: string
 ): SM2Result {
     let newEaseFactor = previousEaseFactor;
     let newRepetitions = repetitions;
@@ -70,8 +71,38 @@ export function calculateSM2(
     }
 
     // Determine next review date
-    const nextReviewDate = new Date();
+    let nextReviewDate = new Date();
     nextReviewDate.setDate(nextReviewDate.getDate() + newInterval);
+
+    // Normalize to 00:00:00 in the user's local timezone if provided
+    if (timezone) {
+        try {
+            // 1. Get the YYYY-MM-DD for the target day in the user's timezone
+            const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: timezone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+            const dateStr = dateFormatter.format(nextReviewDate); // "YYYY-MM-DD"
+
+            // 2. Get the timezone offset string (e.g., "+07:00" or "-05:00")
+            const offsetFormatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: timezone,
+                timeZoneName: 'longOffset'
+            });
+            const parts = offsetFormatter.formatToParts(nextReviewDate);
+            const offsetPart = parts.find(p => p.type === 'timeZoneName')?.value; // "GMT+07:00"
+            const tzOffset = offsetPart ? offsetPart.replace('GMT', '') : 'Z';
+
+            // 3. Construct the ISO string for midnight in that timezone and parse it
+            // This creates a Date object that represents the exact UTC moment of local midnight.
+            const isoString = `${dateStr}T00:00:00${tzOffset || 'Z'}`;
+            nextReviewDate = new Date(isoString);
+        } catch (e) {
+            console.error("Failed to normalize date for timezone:", timezone, e);
+        }
+    }
 
     return {
         ease_factor: Number(newEaseFactor.toFixed(3)),
