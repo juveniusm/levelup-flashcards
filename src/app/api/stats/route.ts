@@ -1,39 +1,42 @@
+```typescript
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 import { getLevelFromXp, getLevelTitle } from "@/utils/xp/xpUtils";
+import { unstable_cache } from 'next/cache';
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const userId = (session.user as { id: string }).id;
+// Data fetching logic moved to a cached function
+const getCachedStats = (userId: string) =>
+  unstable_cache(
+    async () => {
         const now = new Date();
 
-        // --- Parallel Fetching ---
-        // We fetch all global counts, user's specific stats, and recent reviews in parallel.
+        // --- Batch A: Counts and Basic User Stats ---
+        // Grouping into two batches to prevent DB connection exhaustion in serverless environments.
         const [
             totalDecks,
             totalCards,
             totalReviews,
             cardsStudied,
-            cardsDueToday,
+            cardsDueToday
+        ] = await Promise.all([
+            prisma.decks.count({ where: { user_id: userId } }), // Scoped to user
+            prisma.cards.count({ where: { deck: { user_id: userId } } }), // Scoped to user
+            prisma.reviewLog.count({ where: { user_id: userId } }),
+            prisma.sM2Stats.count({ where: { user_id: userId } }),
+            prisma.sM2Stats.count({ where: { user_id: userId, next_review: { lte: now } } }),
+        ]);
+
+        // --- Batch B: Detailed Records and Lookups ---
+        const [
             allStats,
             recentReviews,
             userStatsRecord,
             decksWithCardIds
         ] = await Promise.all([
-            prisma.decks.count(),
-            prisma.cards.count(),
-            prisma.reviewLog.count({ where: { user_id: userId } }),
-            prisma.sM2Stats.count({ where: { user_id: userId } }),
-            prisma.sM2Stats.count({ where: { user_id: userId, next_review: { lte: now } } }),
             prisma.sM2Stats.findMany({
                 where: { user_id: userId },
                 select: { card_id: true, ease_factor: true, interval: true, next_review: true },
@@ -50,6 +53,7 @@ export async function GET() {
                 select: { total_xp: true }
             }),
             prisma.decks.findMany({
+                where: { user_id: userId }, // Scoped to user
                 select: {
                     id: true,
                     title: true,
@@ -143,7 +147,7 @@ export async function GET() {
         const { level } = getLevelFromXp(totalXp);
         const title = getLevelTitle(level);
 
-        return NextResponse.json({
+        return {
             overview: {
                 totalDecks,
                 totalCards,
@@ -166,7 +170,23 @@ export async function GET() {
             deckBreakdown,
             modeBreakdown,
             xp: { totalXp, level, title },
-        });
+        };
+    },
+    ['user-stats', userId], // CRITICAL: Unique key per user
+    { revalidate: 60, tags: [`user - stats - ${ userId } `] }
+  );
+
+export async function GET() {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const userId = (session.user as { id: string }).id;
+        const stats = await getCachedStats(userId)();
+
+        return NextResponse.json(stats);
     } catch (error) {
         console.error("Stats API error:", error);
         return NextResponse.json(
