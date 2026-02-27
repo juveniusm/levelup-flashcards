@@ -43,19 +43,21 @@ export default function LoginPage() {
             }
 
             // Logging in (works for both existing users and right after registration)
-            const res = await signIn("credentials", {
-                redirect: false,
+            const result = await signIn("credentials", {
+                redirect: true,
+                callbackUrl: "/study",
                 email,
                 password,
             });
 
-            if (res?.error) {
+            if (result?.error) {
                 setErrorMsg("Invalid credentials. Please try again.");
-            } else {
-                router.push("/study");
+                setIsLoading(false);
             }
-        } catch {
+        } catch (error) {
+            console.error("Login error:", error);
             setErrorMsg("An unexpected error occurred.");
+            setIsLoading(false);
         }
 
         setIsLoading(false);

@@ -21,18 +21,20 @@ export default function AdminLoginPage() {
 
         try {
             const res = await signIn("credentials", {
-                redirect: false,
+                redirect: true,
+                callbackUrl: "/study",
                 email,
                 password,
             });
 
             if (res?.error) {
                 setErrorMsg("Invalid credentials. Please try again.");
-            } else {
-                router.push("/study");
+                setIsLoading(false);
             }
-        } catch {
+        } catch (error) {
+            console.error("Admin login error:", error);
             setErrorMsg("An unexpected error occurred.");
+            setIsLoading(false);
         }
 
         setIsLoading(false);
