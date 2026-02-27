@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
-    const password = await bcrypt.hash('pasword123', 10); // Typos match user request
+    const password = await bcrypt.hash('password123', 10);
 
     const admin = await prisma.user.upsert({
         where: { email: 'admin@example.com' },

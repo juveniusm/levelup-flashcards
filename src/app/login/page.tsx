@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -72,11 +73,13 @@ export default function LoginPage() {
         <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
             {/* Logo on pure black background */}
             <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                     src="/logo4.png"
                     alt="LevelUp Auth"
+                    width={224}
+                    height={224}
                     className="h-48 md:h-56 w-auto object-contain mx-auto drop-shadow-lg"
+                    priority
                 />
             </div>
 

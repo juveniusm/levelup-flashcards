@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, BookOpen, Brain, Zap } from "lucide-react";
 
 export default function LandingPage() {
@@ -34,11 +35,13 @@ export default function LandingPage() {
 
                     <div className="relative max-w-5xl mx-auto text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
                         <div className="flex justify-center w-full mb-8">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                            <Image
                                 src="/logo4.png"
                                 alt="Master any subject, faster than ever."
+                                width={500}
+                                height={224}
                                 className="h-56 w-auto object-contain drop-shadow-2xl"
+                                priority
                             />
                         </div>
 

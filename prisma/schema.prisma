@@ -113,6 +113,7 @@ model SM2Stats {
   card Cards @relation(fields: [card_id], references: [id], onDelete: Cascade)
 
   @@index([next_review])
+  @@index([user_id, next_review])
   @@unique([card_id, user_id])
 }
 
