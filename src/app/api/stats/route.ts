@@ -16,28 +16,50 @@ export async function GET() {
         const userId = (session.user as { id: string }).id;
         const now = new Date();
 
-        // --- Overview ---
-        const totalDecks = await prisma.decks.count();
-        const totalCards = await prisma.cards.count();
-        const totalReviews = await prisma.reviewLog.count({
-            where: { user_id: userId },
-        });
+        // --- Parallel Fetching ---
+        // We fetch all global counts, user's specific stats, and recent reviews in parallel.
+        const [
+            totalDecks,
+            totalCards,
+            totalReviews,
+            cardsStudied,
+            cardsDueToday,
+            allStats,
+            recentReviews,
+            userStatsRecord,
+            decksWithCardIds
+        ] = await Promise.all([
+            prisma.decks.count(),
+            prisma.cards.count(),
+            prisma.reviewLog.count({ where: { user_id: userId } }),
+            prisma.sM2Stats.count({ where: { user_id: userId } }),
+            prisma.sM2Stats.count({ where: { user_id: userId, next_review: { lte: now } } }),
+            prisma.sM2Stats.findMany({
+                where: { user_id: userId },
+                select: { card_id: true, ease_factor: true, interval: true, next_review: true },
+            }),
+            prisma.reviewLog.findMany({
+                where: {
+                    user_id: userId,
+                    reviewed_at: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) }
+                },
+                select: { reviewed_at: true, mode: true },
+            }),
+            prisma.userStats.findUnique({
+                where: { user_id: userId },
+                select: { total_xp: true }
+            }),
+            prisma.decks.findMany({
+                select: {
+                    id: true,
+                    title: true,
+                    cards: { select: { id: true } }
+                },
+                orderBy: { title: "asc" },
+            })
+        ]);
 
-        const cardsStudied = await prisma.sM2Stats.count({
-            where: { user_id: userId },
-        });
-
-        // Due today: cards with next_review <= now
-        const cardsDueToday = await prisma.sM2Stats.count({
-            where: { user_id: userId, next_review: { lte: now } },
-        });
-
-        // --- Mastery ---
-        const allStats = await prisma.sM2Stats.findMany({
-            where: { user_id: userId },
-            select: { ease_factor: true, interval: true },
-        });
-
+        // --- Mastery Calculations (In-Memory) ---
         const masteredCards = allStats.filter(
             (s) => s.ease_factor >= 2.5 && s.interval >= 21
         ).length;
@@ -48,25 +70,27 @@ export async function GET() {
                 ? allStats.reduce((sum, s) => sum + s.ease_factor, 0) / allStats.length
                 : 2.5;
 
-        // --- Activity (last 30 days) ---
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-        const recentReviews = await prisma.reviewLog.findMany({
-            where: { user_id: userId, reviewed_at: { gte: thirtyDaysAgo } },
-            select: { reviewed_at: true, mode: true },
-        });
-
-        // Build daily reviews map
+        // --- Activity Calculations (In-Memory) ---
         const dailyMap = new Map<string, number>();
+        // Pre-fill last 30 days
         for (let i = 0; i < 30; i++) {
             const d = new Date();
             d.setDate(d.getDate() - i);
             dailyMap.set(d.toISOString().split("T")[0], 0);
         }
+
+        const modeBreakdown = { review: 0, study: 0, endless: 0 };
         for (const r of recentReviews) {
-            const key = r.reviewed_at.toISOString().split("T")[0];
-            dailyMap.set(key, (dailyMap.get(key) || 0) + 1);
+            // Daily reviews
+            const dateKey = r.reviewed_at.toISOString().split("T")[0];
+            if (dailyMap.has(dateKey)) {
+                dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + 1);
+            }
+
+            // Mode breakdown
+            if (r.mode === "review") modeBreakdown.review++;
+            else if (r.mode === "endless") modeBreakdown.endless++;
+            else modeBreakdown.study++;
         }
 
         const dailyReviews = Array.from(dailyMap.entries())
@@ -79,67 +103,43 @@ export async function GET() {
         const startOfWeek = new Date();
         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
         startOfWeek.setHours(0, 0, 0, 0);
-
-        const reviewsThisWeek = recentReviews.filter(
-            (r) => r.reviewed_at >= startOfWeek
-        ).length;
+        const reviewsThisWeek = recentReviews.filter(r => r.reviewed_at >= startOfWeek).length;
 
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const reviewsThisMonth = recentReviews.filter(
-            (r) => r.reviewed_at >= startOfMonth
-        ).length;
+        const reviewsThisMonth = recentReviews.filter(r => r.reviewed_at >= startOfMonth).length;
 
-        // --- Mode Breakdown ---
-        const modeBreakdown = { review: 0, study: 0, endless: 0 };
-        for (const r of recentReviews) {
-            if (r.mode === "review") modeBreakdown.review++;
-            else if (r.mode === "endless") modeBreakdown.endless++;
-            else modeBreakdown.study++;
-        }
+        // --- Optimized Deck Breakdown (In-Memory) ---
+        // Using a Map for fast lookup of card stats by card_id
+        const statsMap = new Map(allStats.map(s => [s.card_id, s]));
 
-        // --- Deck Breakdown ---
-        const decks = await prisma.decks.findMany({
-            include: {
-                _count: { select: { cards: true } },
-                cards: {
-                    include: {
-                        sm2_stats: { where: { user_id: userId } },
-                    },
-                },
-            },
-            orderBy: { title: "asc" },
-        });
+        const deckBreakdown = decksWithCardIds.map((deck) => {
+            let mastered = 0;
+            let due = 0;
+            let totalEase = 0;
+            let statsCount = 0;
 
-        const deckBreakdown = decks.map((deck) => {
-            const stats = deck.cards
-                .map((c) => c.sm2_stats[0])
-                .filter(Boolean);
-            const mastered = stats.filter(
-                (s) => s.ease_factor >= 2.5 && s.interval >= 21
-            ).length;
-            const due = stats.filter(
-                (s) => s.next_review <= now
-            ).length;
-            const avgEase =
-                stats.length > 0
-                    ? stats.reduce((sum, s) => sum + s.ease_factor, 0) / stats.length
-                    : 0;
+            for (const card of deck.cards) {
+                const s = statsMap.get(card.id);
+                if (s) {
+                    statsCount++;
+                    totalEase += s.ease_factor;
+                    if (s.ease_factor >= 2.5 && s.interval >= 21) mastered++;
+                    if (s.next_review <= now) due++;
+                }
+            }
 
             return {
                 deckId: deck.id,
                 title: deck.title,
-                totalCards: deck._count.cards,
+                totalCards: deck.cards.length,
                 mastered,
                 due,
-                avgEase: Math.round(avgEase * 100) / 100,
+                avgEase: statsCount > 0 ? Math.round((totalEase / statsCount) * 100) / 100 : 0,
             };
         });
 
         // --- XP ---
-        const userStats = await prisma.userStats.findUnique({
-            where: { user_id: userId },
-        });
-        const totalXp = userStats?.total_xp ?? 0;
+        const totalXp = userStatsRecord?.total_xp ?? 0;
         const { level } = getLevelFromXp(totalXp);
         const title = getLevelTitle(level);
 
