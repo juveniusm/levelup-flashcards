@@ -192,7 +192,7 @@ export async function GET() {
     } catch (error) {
         console.error("Stats API error:", error);
         return NextResponse.json(
-            { error: "Internal server error" },
+            { error: 'Database out of sync or unavailable' },
             { status: 500 }
         );
     }

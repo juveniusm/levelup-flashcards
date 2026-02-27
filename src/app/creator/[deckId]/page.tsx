@@ -17,14 +17,28 @@ export default async function DeckPage({ params }: { params: Promise<{ deckId: s
     const userId = (session?.user as any)?.id;
     const userRole = (session?.user as any)?.role;
 
-    const deck = await prisma.decks.findUnique({
-        where: { id: deckId },
-        include: {
-            cards: {
-                orderBy: { card_seq: "asc" }
+    let deck;
+    try {
+        deck = await prisma.decks.findUnique({
+            where: { id: deckId },
+            include: {
+                cards: {
+                    orderBy: { card_seq: "asc" }
+                }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error("Creator deck fetch error:", error);
+        return (
+            <div className="min-h-screen bg-black text-white flex items-center justify-center p-8">
+                <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-8 text-center max-w-md">
+                    <h1 className="text-2xl font-bold text-red-400 mb-4">Database Error</h1>
+                    <p className="text-neutral-300">We couldn't load this deck. This usually happens during database maintenance. Please try again in 30 seconds.</p>
+                    <Link href="/creator" className="mt-6 inline-block text-[#f9c111] hover:underline">Back to Dashboard</Link>
+                </div>
+            </div>
+        );
+    }
 
     if (!deck) {
         notFound();

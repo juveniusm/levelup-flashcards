@@ -23,38 +23,30 @@ export default async function Home() {
 
   const now = new Date();
 
-  // Fetch decks and due counts in parallel
-  const [decks, dueStatsCounts] = await Promise.all([
-    prisma.decks.findMany({
-      where: {
-        OR: [
-          { user_id: userId || 'none' },
-          { is_public: true }
-        ]
-      },
-      include: {
-        _count: {
-          select: { cards: true },
+  let decks: any[] = [];
+  let dueStatsCounts: any[] = [];
+  let dbError = false;
+
+  try {
+    // Fetch decks and due counts in parallel
+    const [fetchedDecks, fetchedDueStats] = await Promise.all([
+      prisma.decks.findMany({
+        where: {
+          OR: [
+            { user_id: userId || 'none' },
+            { is_public: true }
+          ]
         },
-      },
-      orderBy: {
-        title: "asc",
-      },
-    }),
-    userId ? prisma.sM2Stats.groupBy({
-      by: ['card_id'],
-      where: {
-        user_id: userId,
-        next_review: { lte: now }
-      },
-      _count: true
-    }).then(async (stats) => {
-      // Since we need it per deck, and SM2Stats doesn't have deck_id directly,
-      // we can still use findMany with select: { card: { select: { deck_id: true } } }
-      // BUT we only need the card.deck_id, not the whole object.
-      // Even better: use a simpler approach if the above is still slow.
-      // Let's stick to findMany but only select the deck_id to minimize data transfer.
-      return prisma.sM2Stats.findMany({
+        include: {
+          _count: {
+            select: { cards: true },
+          },
+        },
+        orderBy: {
+          title: "asc",
+        },
+      }),
+      userId ? prisma.sM2Stats.findMany({
         where: {
           user_id: userId,
           next_review: { lte: now }
@@ -66,9 +58,14 @@ export default async function Home() {
             }
           }
         }
-      });
-    }) : Promise.resolve([])
-  ]);
+      }) : Promise.resolve([])
+    ]);
+    decks = fetchedDecks;
+    dueStatsCounts = fetchedDueStats;
+  } catch (error) {
+    console.error("Study dashboard data fetch error:", error);
+    dbError = true;
+  }
 
   // Map of deckId -> dueCount
   const dueCountMap: Record<string, number> = {};
@@ -108,7 +105,12 @@ export default async function Home() {
 
         {/* Dynamic Welcome Message */}
         <section className="max-w-4xl mx-auto flex flex-col items-center text-center py-6 animate-in slide-in-from-bottom-8 fade-in duration-1000 ease-out fill-mode-both">
-          {totalDueCards === 0 ? (
+          {dbError ? (
+            <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-6 text-red-200">
+              <h2 className="text-xl font-bold mb-2">Notice</h2>
+              <p>Unable to load decks at this time.</p>
+            </div>
+          ) : totalDueCards === 0 ? (
             <>
               <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight drop-shadow-lg">
                 Welcome back, <span className="font-mono tracking-widest uppercase text-[#f9c111]">{displayName}</span>!
