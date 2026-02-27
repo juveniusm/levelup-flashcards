@@ -74,7 +74,7 @@ export default function LoginPage() {
             {/* Logo on pure black background */}
             <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <Image
-                    src="/logo4.png"
+                    src="/logo4.svg"
                     alt="LevelUp Auth"
                     width={224}
                     height={224}

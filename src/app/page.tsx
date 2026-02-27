@@ -36,7 +36,7 @@ export default function LandingPage() {
                     <div className="relative max-w-5xl mx-auto text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
                         <div className="flex justify-center w-full mb-8">
                             <Image
-                                src="/logo4.png"
+                                src="/logo4.svg"
                                 alt="Master any subject, faster than ever."
                                 width={500}
                                 height={224}

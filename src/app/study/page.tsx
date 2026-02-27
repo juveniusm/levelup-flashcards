@@ -90,7 +90,7 @@ export default async function Home() {
         <header className="flex justify-between items-center border-b border-neutral-800 pb-6 animate-in fade-in duration-300">
           <div>
             <Image
-              src="/Logo3.png"
+              src="/Logo3.svg"
               alt="LevelUp Student"
               width={150}
               height={48}
