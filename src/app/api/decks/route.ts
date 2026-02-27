@@ -14,7 +14,12 @@ export async function GET() {
         const userId = (session.user as { id: string }).id;
 
         const decks = await prisma.decks.findMany({
-            where: { user_id: userId },
+            where: {
+                OR: [
+                    { user_id: userId },
+                    { user: { role: "ADMIN" } }
+                ]
+            },
             include: {
                 _count: {
                     select: { cards: true }

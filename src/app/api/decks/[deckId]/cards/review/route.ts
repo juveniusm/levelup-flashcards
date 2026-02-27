@@ -29,7 +29,15 @@ export async function POST(request: NextRequest) {
             }),
             prisma.cards.findUnique({
                 where: { id: cardId },
-                include: { deck: { select: { user_id: true, id: true } } }
+                include: {
+                    deck: {
+                        select: {
+                            id: true,
+                            user_id: true,
+                            user: { select: { role: true } }
+                        }
+                    }
+                }
             })
         ]);
 
@@ -37,8 +45,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Card not found" }, { status: 404 });
         }
 
-        // --- SECURITY CHECK: Ensure user owns the deck ---
-        if (card.deck.user_id !== userId) {
+        // --- SECURITY CHECK: Ensure user owns the deck OR it is an Admin deck ---
+        const isOwner = card.deck.user_id === userId;
+        const isAdminDeck = card.deck.user.role === "ADMIN";
+
+        if (!isOwner && !isAdminDeck) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

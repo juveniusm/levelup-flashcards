@@ -15,9 +15,31 @@ export async function GET() {
 
         const userId = (session.user as { id: string }).id;
 
-        const userStats = await prisma.userStats.findUnique({
+        if (!userId) {
+            // Fallback Level 1 if ID somehow missing
+            const { level, currentXp, xpForNextLevel } = getLevelFromXp(0);
+            return NextResponse.json({ totalXp: 0, level, currentXp, xpForNextLevel, title: getLevelTitle(level) });
+        }
+
+        let userStats = await prisma.userStats.findUnique({
             where: { user_id: userId },
         });
+
+        if (!userStats) {
+            // Proactively create user stats if missing (common for new OAuth users)
+            try {
+                userStats = await prisma.userStats.create({
+                    data: {
+                        user_id: userId,
+                        total_xp: 0,
+                        current_streak: 0
+                    }
+                });
+            } catch (e) {
+                // If creation fails (e.g. race condition), just use default 0
+                console.warn("Could not create UserStats:", e);
+            }
+        }
 
         const totalXp = userStats?.total_xp ?? 0;
         const { level, currentXp, xpForNextLevel } = getLevelFromXp(totalXp);

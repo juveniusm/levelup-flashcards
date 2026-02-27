@@ -10,8 +10,8 @@ export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
     providers: [
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID || "dummy_client_id",
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "dummy_client_secret",
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
         }),
         CredentialsProvider({
             name: "Email and Password",
@@ -54,8 +54,8 @@ export const authOptions: NextAuthOptions = {
         },
         async session({ session, token }) {
             if (session.user) {
-                (session.user as { id?: string; role?: string }).id = token.id as string;
-                (session.user as { id?: string; role?: string }).role = token.role as string;
+                (session.user as { id?: string; role?: string }).id = (token.id as string) || (token.sub as string);
+                (session.user as { id?: string; role?: string }).role = (token.role as string) || "STUDENT";
             }
             return session;
         },

@@ -26,7 +26,12 @@ export default async function Home() {
   // Fetch decks and due counts in parallel
   const [decks, dueStatsCounts] = await Promise.all([
     prisma.decks.findMany({
-      where: { user_id: userId || 'none' }, // Filter by user_id
+      where: {
+        OR: [
+          { user_id: userId || 'none' },
+          { user: { role: "ADMIN" } }
+        ]
+      },
       include: {
         _count: {
           select: { cards: true },

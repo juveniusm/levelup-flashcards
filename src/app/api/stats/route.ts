@@ -177,6 +177,11 @@ export async function GET() {
         }
 
         const userId = (session.user as { id: string }).id;
+
+        if (!userId) {
+            return NextResponse.json({ error: "User ID missing in session" }, { status: 400 });
+        }
+
         const stats = await getCachedStats(userId);
 
         return NextResponse.json(stats);
