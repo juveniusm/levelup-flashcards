@@ -40,6 +40,14 @@ export async function PATCH(
         if (username !== undefined) updateData.username = username;
 
         if (newRole !== undefined) {
+            // Only Super Admin can change roles
+            const userEmail = session.user.email;
+            const SUPER_ADMIN_EMAIL = 'juveniusm@gmail.com';
+
+            if (userEmail !== SUPER_ADMIN_EMAIL) {
+                return NextResponse.json({ error: "Only the Super Admin can manage user roles." }, { status: 403 });
+            }
+
             // Prevent self-demotion
             const adminId = (session.user as { id: string }).id;
             if (userId === adminId && newRole !== "ADMIN") {

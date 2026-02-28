@@ -38,6 +38,7 @@ export default function AdminUsersPage() {
     const { data: session } = useSession();
     const router = useRouter();
     const isAdmin = session?.user && (session.user as { role?: string }).role === "ADMIN";
+    const isSuperAdmin = session?.user?.email === "juveniusm@gmail.com";
 
     const [users, setUsers] = useState<UserRow[]>([]);
     const [loading, setLoading] = useState(true);
@@ -243,14 +244,24 @@ export default function AdminUsersPage() {
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <input type="password" value={editForm.newPassword} onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })} placeholder="New password (leave blank to keep current)" className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#f9c111] transition-colors" />
-                                        <select
-                                            value={editForm.role}
-                                            onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                                            className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#f9c111] transition-colors cursor-pointer"
-                                        >
-                                            <option value="STUDENT">STUDENT</option>
-                                            <option value="ADMIN">ADMIN</option>
-                                        </select>
+
+                                        {isSuperAdmin ? (
+                                            <select
+                                                value={editForm.role}
+                                                onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                                                className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#f9c111] transition-colors cursor-pointer"
+                                            >
+                                                <option value="STUDENT">STUDENT</option>
+                                                <option value="ADMIN">ADMIN</option>
+                                            </select>
+                                        ) : (
+                                            <div className="bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-[10px] text-neutral-500 flex items-center gap-2">
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                </svg>
+                                                Role management restricted to Super Admin
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex gap-2">
                                         <button onClick={saveEdit} disabled={saving} className="bg-[#f9c111] hover:bg-yellow-400 text-black font-bold text-sm px-5 py-2 rounded-lg transition-all disabled:opacity-50">
