@@ -45,21 +45,19 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                 <h3 className="font-semibold text-lg text-white group-hover:text-[#f9c111] transition-colors leading-tight">
                     {deck.title}
                 </h3>
-                <div className="mt-6 flex justify-between items-center text-sm">
-                    <div className="flex gap-2">
-                        <span className="bg-neutral-800 text-neutral-300 px-3 py-1 rounded-full text-xs font-semibold tracking-wider">
-                            {deck._count.cards} Total
-                        </span>
-                        {typeof deck.dueCount === 'number' && deck.dueCount > 0 && (
-                            <span className="bg-[#f9c111]/20 text-[#f9c111] px-3 py-1 rounded-full text-xs font-bold tracking-wider">
-                                {deck.dueCount} Due
+                <div className="mt-auto pt-6 flex justify-between items-center text-sm">
+                    <div className="bg-neutral-900 border border-neutral-800 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest flex items-center gap-3 whitespace-nowrap shadow-inner">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-neutral-500 uppercase">Total</span>
+                            <span className="text-white">{deck._count.cards}</span>
+                        </div>
+                        <div className="w-px h-3 bg-neutral-800" />
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-neutral-500 uppercase">Due</span>
+                            <span className={deck.dueCount && deck.dueCount > 0 ? "text-[#f9c111]" : "text-neutral-500"}>
+                                {deck.dueCount || 0}
                             </span>
-                        )}
-                        {typeof deck.dueCount === 'number' && deck.dueCount === 0 && (
-                            <span className="bg-neutral-800 text-neutral-500 px-3 py-1 rounded-full text-xs font-semibold tracking-wider">
-                                0 Due
-                            </span>
-                        )}
+                        </div>
                     </div>
                     {isHighlighted ? (
                         <span className="flex items-center gap-1 font-bold text-[#f9c111] group-hover:translate-x-1 transition-transform">
