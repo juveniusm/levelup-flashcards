@@ -163,8 +163,8 @@ export default function AdminUsersPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white p-8">
-            <main className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700">
+        <div className="min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
+            <main className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700 pt-12 lg:pt-0">
                 <header className="border-b border-neutral-800 pb-6">
                     <h1 className="text-3xl font-black tracking-tight">Manage Users</h1>
                     <p className="text-neutral-500 mt-1">{users.length} user{users.length !== 1 ? "s" : ""} registered</p>

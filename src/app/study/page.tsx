@@ -87,8 +87,8 @@ export default async function Home() {
   const totalDueCards = dueDecks.reduce((sum, deck) => sum + deck.dueCount, 0);
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <main className="max-w-6xl mx-auto space-y-12">
+    <div className="min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
+      <main className="max-w-6xl mx-auto space-y-8 md:space-y-12">
         <header className="flex justify-between items-center border-b border-neutral-800 pb-6 animate-in fade-in duration-300">
           <div>
             <Image
@@ -134,7 +134,7 @@ export default async function Home() {
         <section className="max-w-4xl mx-auto space-y-12">
           {dueDecks.length > 0 && (
             <div id="due-cards" className="w-full">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {dueDecks.map((deck) => (
                   <StudyDeckCard key={`due-${deck.id}`} deck={deck} variant="highlighted" />
                 ))}

@@ -47,7 +47,7 @@ function StatCard({ label, value, subtext, color }: {
     return (
         <div className="flex flex-col gap-1">
             <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">{label}</span>
-            <span className={`text-3xl font-black font-mono tracking-wider ${color || "text-white"}`}>
+            <span className={`text-2xl sm:text-3xl font-black font-mono tracking-wider ${color || "text-white"}`}>
                 {value}
             </span>
             {subtext && <span className="text-xs text-neutral-500">{subtext}</span>}
@@ -218,8 +218,8 @@ export default function StatsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white p-8">
-            <main className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700">
+        <div className="min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
+            <main className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700 pt-12 lg:pt-0">
                 <header className="border-b border-neutral-800 pb-6">
                     <h1 className="text-4xl font-extrabold tracking-tight">
                         Your <span className="text-[#f9c111]">Statistics</span>

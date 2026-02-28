@@ -136,7 +136,7 @@ export default function StudyDashboardList({ decks }: StudyDashboardListProps) {
                     <p className="text-neutral-500 text-sm mt-1">Try a different search term.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredAndSortedDecks.map((deck) => (
                         <StudyDeckCard key={deck.id} deck={deck} />
                     ))}

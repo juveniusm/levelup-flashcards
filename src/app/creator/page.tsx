@@ -33,8 +33,8 @@ export default async function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <main className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-1000">
+    <div className="min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
+      <main className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-1000 pt-12 lg:pt-0">
         <header className="flex justify-between items-end border-b border-neutral-800 pb-6">
           <div>
             <h1 className="text-4xl font-extrabold tracking-tight">LevelUp <span className="text-[#f9c111]">Creator</span></h1>
