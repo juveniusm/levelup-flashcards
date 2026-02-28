@@ -8,9 +8,20 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
+  const userRole = (session?.user as any)?.role;
+
+  // Admins see all admin decks. Students see only their own.
+  let whereClause: any = { user_id: userId || 'none' };
+  if (userRole === "ADMIN") {
+    whereClause = {
+      user: {
+        role: "ADMIN"
+      }
+    };
+  }
 
   const decks = await prisma.decks.findMany({
-    where: { user_id: userId || 'none' },
+    where: whereClause,
     include: {
       _count: {
         select: { cards: true },

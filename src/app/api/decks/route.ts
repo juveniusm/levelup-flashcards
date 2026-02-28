@@ -11,6 +11,7 @@ export async function GET(request: Request) {
         }
 
         const userId = (session.user as { id: string }).id;
+        const userRole = (session.user as { role?: string }).role;
         const { searchParams } = new URL(request.url);
         const mode = searchParams.get("mode");
 
@@ -23,6 +24,13 @@ export async function GET(request: Request) {
                     { user_id: userId },
                     { is_public: true }
                 ]
+            };
+        } else if (userRole === "ADMIN") {
+            // Admins in creator mode see all admin-created decks
+            whereClause = {
+                user: {
+                    role: "ADMIN"
+                }
             };
         }
 
