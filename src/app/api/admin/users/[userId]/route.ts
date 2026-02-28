@@ -23,7 +23,7 @@ export async function PATCH(
 
         const { userId } = await params;
         const body = await request.json();
-        const { firstName, lastName, email, username, newPassword } = body;
+        const { firstName, lastName, email, username, newPassword, role: newRole } = body;
 
         // Verify user exists
         const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -38,6 +38,15 @@ export async function PATCH(
         if (lastName !== undefined) updateData.lastName = lastName;
         if (email !== undefined) updateData.email = email;
         if (username !== undefined) updateData.username = username;
+
+        if (newRole !== undefined) {
+            // Prevent self-demotion
+            const adminId = (session.user as { id: string }).id;
+            if (userId === adminId && newRole !== "ADMIN") {
+                return NextResponse.json({ error: "You cannot revoke your own admin privileges." }, { status: 400 });
+            }
+            updateData.role = newRole;
+        }
 
         // Admin can set a new password without knowing the current one
         if (newPassword) {

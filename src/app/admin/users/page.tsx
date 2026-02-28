@@ -19,6 +19,7 @@ interface EditForm {
     email: string;
     username: string;
     newPassword: string;
+    role: string;
 }
 
 const USERS_PER_PAGE = 10;
@@ -41,7 +42,7 @@ export default function AdminUsersPage() {
     const [users, setUsers] = useState<UserRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [editForm, setEditForm] = useState<EditForm>({ firstName: "", lastName: "", email: "", username: "", newPassword: "" });
+    const [editForm, setEditForm] = useState<EditForm>({ firstName: "", lastName: "", email: "", username: "", newPassword: "", role: "STUDENT" });
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -102,7 +103,14 @@ export default function AdminUsersPage() {
     // ── Edit ─────────────────────────────────────────────────────────────────
     const startEdit = (user: UserRow) => {
         setEditingId(user.id);
-        setEditForm({ firstName: user.firstName || "", lastName: user.lastName || "", email: user.email || "", username: user.username || "", newPassword: "" });
+        setEditForm({
+            firstName: user.firstName || "",
+            lastName: user.lastName || "",
+            email: user.email || "",
+            username: user.username || "",
+            newPassword: "",
+            role: user.role
+        });
         setMessage(null);
         setConfirmDeleteId(null);
     };
@@ -116,7 +124,14 @@ export default function AdminUsersPage() {
             const res = await fetch(`/api/admin/users/${editingId}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ firstName: editForm.firstName, lastName: editForm.lastName, email: editForm.email, username: editForm.username, ...(editForm.newPassword ? { newPassword: editForm.newPassword } : {}) }),
+                body: JSON.stringify({
+                    firstName: editForm.firstName,
+                    lastName: editForm.lastName,
+                    email: editForm.email,
+                    username: editForm.username,
+                    role: editForm.role,
+                    ...(editForm.newPassword ? { newPassword: editForm.newPassword } : {})
+                }),
             });
             const data = await res.json();
             if (res.ok) { setMessage({ type: "success", text: "User updated." }); setEditingId(null); fetchUsers(); }
@@ -226,7 +241,17 @@ export default function AdminUsersPage() {
                                         <input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} placeholder="Email" className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#f9c111] transition-colors" />
                                         <input type="text" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} placeholder="Username" className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#f9c111] transition-colors" />
                                     </div>
-                                    <input type="password" value={editForm.newPassword} onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })} placeholder="New password (leave blank to keep current)" className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#f9c111] transition-colors" />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <input type="password" value={editForm.newPassword} onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })} placeholder="New password (leave blank to keep current)" className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#f9c111] transition-colors" />
+                                        <select
+                                            value={editForm.role}
+                                            onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                                            className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#f9c111] transition-colors cursor-pointer"
+                                        >
+                                            <option value="STUDENT">STUDENT</option>
+                                            <option value="ADMIN">ADMIN</option>
+                                        </select>
+                                    </div>
                                     <div className="flex gap-2">
                                         <button onClick={saveEdit} disabled={saving} className="bg-[#f9c111] hover:bg-yellow-400 text-black font-bold text-sm px-5 py-2 rounded-lg transition-all disabled:opacity-50">
                                             {saving ? "Saving…" : "Save"}
