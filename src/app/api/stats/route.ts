@@ -137,8 +137,9 @@ const getCachedStats = unstable_cache(
                 mastered,
                 due,
                 avgEase: statsCount > 0 ? Math.round((totalEase / statsCount) * 100) / 100 : 0,
+                statsCount, // Helper for filtering
             };
-        });
+        }).filter(d => d.statsCount > 0);
 
         const totalXp = userStatsRecord?.total_xp ?? 0;
         const { level } = getLevelFromXp(totalXp);
