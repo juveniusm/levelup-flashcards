@@ -134,6 +134,9 @@ export default async function Home() {
         <section className="max-w-4xl mx-auto space-y-12">
           {dueDecks.length > 0 && (
             <div id="due-cards" className="w-full">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-neutral-800 pb-4 gap-4">
+                <h2 className="text-2xl font-bold">Review Due</h2>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {dueDecks.map((deck) => (
                   <StudyDeckCard key={`due-${deck.id}`} deck={deck} variant="highlighted" />

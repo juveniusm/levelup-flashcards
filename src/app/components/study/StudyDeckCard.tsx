@@ -59,13 +59,9 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                             </span>
                         </div>
                     </div>
-                    {isHighlighted ? (
-                        <span className="flex items-center gap-1 font-bold text-[#f9c111] group-hover:translate-x-1 transition-transform">
-                            Review Now <span>&rarr;</span>
-                        </span>
-                    ) : (
+                    {isHighlighted ? null : (
                         <span className="opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1 font-medium text-[#f9c111]">
-                            Study Options <span>&rarr;</span>
+                            <span>&rarr;</span>
                         </span>
                     )}
                 </div>
