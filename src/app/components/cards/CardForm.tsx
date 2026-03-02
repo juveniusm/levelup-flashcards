@@ -18,7 +18,6 @@ export const cardSchema = z.object({
 export type CardFormValues = z.infer<typeof cardSchema>;
 
 // ─── Types ───────────────────────────────────────────────────────────
-// ExistingCard is now replaced by the centralized Card interface
 
 interface CardFormProps {
     deckId: string;
