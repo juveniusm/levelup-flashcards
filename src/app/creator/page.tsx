@@ -1,36 +1,19 @@
-import prisma from "@/lib/prisma";
+import { getAuthenticatedUser } from "@/lib/auth-utils";
+import { deckService } from "@/lib/services/deckService";
 import DeckManager from "../components/DeckManager";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  const userRole = (session?.user as any)?.role;
+  const user = await getAuthenticatedUser();
+  const userId = user?.id;
+  const userRole = user?.role || "STUDENT";
 
-  // Admins see all admin decks. Students see only their own.
-  let whereClause: any = { user_id: userId || 'none' };
-  if (userRole === "ADMIN") {
-    whereClause = {
-      user: {
-        role: "ADMIN"
-      }
-    };
+  let decks: any[] = [];
+  if (userId) {
+    decks = await deckService.fetchDecksWithStats(userId, userRole, "creator");
   }
 
-  const decks = await prisma.decks.findMany({
-    where: whereClause,
-    include: {
-      _count: {
-        select: { cards: true },
-      },
-    },
-    orderBy: {
-      title: "asc",
-    },
-  });
 
   return (
     <div className="min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">

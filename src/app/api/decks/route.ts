@@ -1,48 +1,18 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { getAuthenticatedUser } from "@/lib/auth-utils";
+import { deckService } from "@/lib/services/deckService";
 
 export async function GET(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
+        const user = await getAuthenticatedUser();
+        if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const userId = (session.user as { id: string }).id;
-        const userRole = (session.user as { role?: string }).role;
         const { searchParams } = new URL(request.url);
-        const mode = searchParams.get("mode");
+        const mode = searchParams.get("mode") || undefined;
 
-        let whereClause: any = { user_id: userId };
-
-        // If not in creator mode, include public decks
-        if (mode !== "creator") {
-            whereClause = {
-                OR: [
-                    { user_id: userId },
-                    { is_public: true }
-                ]
-            };
-        } else if (userRole === "ADMIN") {
-            // Admins in creator mode see all admin-created decks
-            whereClause = {
-                user: {
-                    role: "ADMIN"
-                }
-            };
-        }
-
-        const decks = await prisma.decks.findMany({
-            where: whereClause,
-            include: {
-                _count: {
-                    select: { cards: true }
-                }
-            },
-            orderBy: { title: 'asc' }
-        });
+        const decks = await deckService.fetchDecksWithStats(user.id, user.role, mode);
 
         return NextResponse.json(decks);
     } catch (error) {
@@ -53,33 +23,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
+        const user = await getAuthenticatedUser();
         const { title } = await request.json();
 
-        // Ensure session exists
-        if (!session || !session.user || !(session.user as { id?: string }).id) {
+        if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const resolvedUserId = (session.user as { id?: string }).id as string;
-        const userRole = (session.user as { role?: string }).role;
-
-        // Find max sequence
-        const lastDeck = await prisma.decks.findFirst({
-            where: { user_id: resolvedUserId },
-            orderBy: { deck_seq: 'desc' },
-        });
-
-        const nextSeq = (lastDeck?.deck_seq || 0) + 1;
-
-        const deck = await prisma.decks.create({
-            data: {
-                title,
-                user_id: resolvedUserId,
-                deck_seq: nextSeq,
-                is_public: userRole === "ADMIN", // Admins create public decks by default
-            },
-        });
+        const deck = await deckService.createDeck(user.id, title, user.role);
 
         return NextResponse.json(deck, { status: 201 });
     } catch (error) {

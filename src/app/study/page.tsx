@@ -1,17 +1,16 @@
 import Image from "next/image";
-import prisma from "@/lib/prisma";
+import { getAuthenticatedUser } from "@/lib/auth-utils";
+import { deckService } from "@/lib/services/deckService";
 import StudyDeckCard from "@/app/components/study/StudyDeckCard";
 import StudyDashboardList from "@/app/components/study/StudyDashboardList";
 import XpWidget from "@/app/components/XpWidget";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { getServerSession } from "next-auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
-  const user = session?.user as { id?: string; name?: string; email?: string } | undefined;
+  const user = await getAuthenticatedUser();
   const userId = user?.id;
+  const userRole = user?.role || "STUDENT";
 
   // Derive a friendly display name (prefer first name if name exists, else email prefix)
   let displayName = "Student";
@@ -21,70 +20,21 @@ export default async function Home() {
     displayName = user.email.split("@")[0];
   }
 
-  const now = new Date();
-
-  let decks: any[] = [];
-  let dueStatsCounts: any[] = [];
+  let decksWithStats: any[] = [];
   let dbError = false;
 
   try {
-    // Fetch decks and due counts in parallel
-    const [fetchedDecks, fetchedDueStats] = await Promise.all([
-      prisma.decks.findMany({
-        where: {
-          OR: [
-            { user_id: userId || 'none' },
-            { is_public: true }
-          ]
-        },
-        include: {
-          _count: {
-            select: { cards: true },
-          },
-        },
-        orderBy: {
-          title: "asc",
-        },
-      }),
-      userId ? prisma.sM2Stats.findMany({
-        where: {
-          user_id: userId,
-          next_review: { lte: now }
-        },
-        select: {
-          card: {
-            select: {
-              deck_id: true
-            }
-          }
-        }
-      }) : Promise.resolve([])
-    ]);
-    decks = fetchedDecks;
-    dueStatsCounts = fetchedDueStats;
+    if (userId) {
+      decksWithStats = await deckService.fetchDecksWithStats(userId, userRole);
+    }
   } catch (error) {
     console.error("Study dashboard data fetch error:", error);
     dbError = true;
   }
 
-  // Map of deckId -> dueCount
-  const dueCountMap: Record<string, number> = {};
-  dueStatsCounts.forEach(stat => {
-    const deckId = stat.card.deck_id;
-    dueCountMap[deckId] = (dueCountMap[deckId] || 0) + 1;
-  });
-
-  const decksWithStats = decks.map((deck) => ({
-    id: deck.id,
-    user_id: deck.user_id,
-    title: deck.title,
-    deck_seq: deck.deck_seq,
-    _count: deck._count,
-    dueCount: dueCountMap[deck.id] || 0
-  }));
-
   const dueDecks = decksWithStats.filter((d) => d.dueCount > 0);
   const totalDueCards = dueDecks.reduce((sum, deck) => sum + deck.dueCount, 0);
+
 
   return (
     <div className="min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
