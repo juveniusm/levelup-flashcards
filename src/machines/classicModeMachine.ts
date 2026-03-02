@@ -1,10 +1,6 @@
 import { setup, assign } from 'xstate';
 
-export interface Card {
-    id: string;
-    front: string;
-    back: string;
-}
+import { Card } from '@/types/card';
 
 export interface StudyContext {
     cards: Card[];

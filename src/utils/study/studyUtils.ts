@@ -1,11 +1,6 @@
-export interface Card {
-    id: string;
-    front: string;
-    back: string;
-    front_image_url?: string | null;
-    back_image_url?: string | null;
-    ease_factor?: number;
-}
+import { Card } from "@/types/card";
+
+export type { Card };
 
 export function getDifficultyLabel(ef: number): { label: string; color: string } {
     if (ef <= 1.5) return { label: "Very Hard", color: "text-red-500" };

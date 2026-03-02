@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { Card } from "@/types/card";
 
 // ─── Schema ──────────────────────────────────────────────────────────
 export const cardSchema = z.object({
@@ -17,18 +18,12 @@ export const cardSchema = z.object({
 export type CardFormValues = z.infer<typeof cardSchema>;
 
 // ─── Types ───────────────────────────────────────────────────────────
-export interface ExistingCard {
-    id: string;
-    front: string;
-    back: string;
-    front_image_url: string | null;
-    back_image_url: string | null;
-}
+// ExistingCard is now replaced by the centralized Card interface
 
 interface CardFormProps {
     deckId: string;
     mode: "create" | "edit";
-    existingCard?: ExistingCard;
+    existingCard?: Card;
 }
 
 // ─── Shared upload helper ─────────────────────────────────────────────
