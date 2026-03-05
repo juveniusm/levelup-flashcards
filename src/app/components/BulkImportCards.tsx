@@ -72,7 +72,9 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
             }
 
             const result = await response.json();
-            setSuccessMessage(`Successfully imported ${result.count} cards!`);
+            const parts = [`Successfully imported ${result.count} card(s).`];
+            if (result.skipped > 0) parts.push(`${result.skipped} duplicate(s) were skipped.`);
+            setSuccessMessage(parts.join(" "));
 
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";

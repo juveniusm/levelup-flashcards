@@ -129,7 +129,10 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                 body: JSON.stringify(payload),
             });
 
-            if (!res.ok) throw new Error(isEdit ? "Failed to update card" : "Failed to add card");
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body.error ?? (isEdit ? "Failed to update card" : "Failed to add card"));
+            }
 
             if (isEdit) {
                 router.push(`/creator/${deckId}`);

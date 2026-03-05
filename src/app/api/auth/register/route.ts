@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
         if (!email || !password) {
             return NextResponse.json(
-                { message: "Missing email or password." },
+                { error: "Missing email or password." },
                 { status: 400 }
             );
         }
@@ -25,10 +25,10 @@ export async function POST(req: Request) {
 
         if (existingUser) {
             if (existingUser.email === email) {
-                return NextResponse.json({ message: "User with this email already exists." }, { status: 409 });
+                return NextResponse.json({ error: "User with this email already exists." }, { status: 409 });
             }
             if (existingUser.username && existingUser.username === username) {
-                return NextResponse.json({ message: "Username is already taken." }, { status: 409 });
+                return NextResponse.json({ error: "Username is already taken." }, { status: 409 });
             }
         }
 
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     } catch (error: unknown) {
         console.error("Registration error:", error);
         return NextResponse.json(
-            { message: "An error occurred during registration." },
+            { error: "An error occurred during registration." },
             { status: 500 }
         );
     }

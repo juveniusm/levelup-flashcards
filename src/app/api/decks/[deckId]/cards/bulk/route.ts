@@ -1,39 +1,15 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
+import { requireDeckAccess } from "@/lib/deck-access";
 
 const MAX_BULK_CARDS = 500;
-
-/** Check if the user has permission to manage cards in this deck */
-async function requireAccess(deckId: string) {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) return { error: "Unauthorized", status: 401 };
-
-    const userId = (session.user as { id: string }).id;
-    const role = (session.user as { role?: string }).role;
-
-    const deck = await prisma.decks.findUnique({
-        where: { id: deckId },
-        select: { user_id: true }
-    });
-
-    if (!deck) return { error: "Deck not found", status: 404 };
-
-    // Owners and Admins can manage the deck
-    if (deck.user_id !== userId && role !== "ADMIN") {
-        return { error: "Forbidden", status: 403 };
-    }
-
-    return { session, userId, role };
-}
 
 export async function POST(
     request: Request,
     { params }: { params: Promise<{ deckId: string }> }
 ) {
     const { deckId } = await params;
-    const auth = await requireAccess(deckId);
+    const auth = await requireDeckAccess(deckId);
     if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     try {
@@ -55,6 +31,40 @@ export async function POST(
             return NextResponse.json({ error: "No valid cards found. Ensure front and back are provided." }, { status: 400 });
         }
 
+        // ── Step 1: Deduplicate within the uploaded batch ─────────────────
+        const batchSeen = new Set<string>();
+        const deduped = validCards.filter((c) => {
+            const key = `${String(c.front).trim().toLowerCase()}|||${String(c.back).trim().toLowerCase()}`;
+            if (batchSeen.has(key)) return false;
+            batchSeen.add(key);
+            return true;
+        });
+
+        // ── Step 2: Fetch existing cards for this deck ────────────────────
+        const existingCards = await prisma.cards.findMany({
+            where: { deck_id: deckId },
+            select: { front: true, back: true },
+        });
+        const existingSet = new Set<string>(
+            existingCards.map((c) => `${c.front.trim().toLowerCase()}|||${c.back.trim().toLowerCase()}`)
+        );
+
+        // ── Step 3: Filter out duplicates versus the existing deck ────────
+        const newCards = deduped.filter(
+            (c) => !existingSet.has(`${String(c.front).trim().toLowerCase()}|||${String(c.back).trim().toLowerCase()}`)
+        );
+        const skippedCount = validCards.length - newCards.length;
+
+        // ── Step 4: Nothing new to insert ─────────────────────────────────
+        if (newCards.length === 0) {
+            return NextResponse.json({
+                success: true,
+                count: 0,
+                skipped: skippedCount,
+                message: "All cards already exist in this deck. Nothing was imported.",
+            });
+        }
+
         const lastCard = await prisma.cards.findFirst({
             where: { deck_id: deckId },
             orderBy: { card_seq: "desc" },
@@ -64,7 +74,7 @@ export async function POST(
         let createdCount = 0;
 
         await prisma.$transaction(async (tx) => {
-            for (const cardData of validCards) {
+            for (const cardData of newCards) {
                 await tx.cards.create({
                     data: {
                         front: String(cardData.front).trim(),
@@ -77,7 +87,8 @@ export async function POST(
             }
         });
 
-        return NextResponse.json({ success: true, count: createdCount });
+        return NextResponse.json({ success: true, count: createdCount, skipped: skippedCount });
+
     } catch (error) {
         console.error("Bulk import error:", error);
         return NextResponse.json({ error: "Failed to create cards via bulk import" }, { status: 500 });

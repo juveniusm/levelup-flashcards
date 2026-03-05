@@ -18,19 +18,18 @@ export const deckService = {
 
         let whereClause: any = { user_id: userId };
 
-        // Logic matched from original implementations
-        if (mode !== "creator") {
+        if (mode === "creator") {
+            // Creator view: admins see all admin-owned decks; users see their own
+            whereClause = role === "ADMIN"
+                ? { user: { role: "ADMIN" } }
+                : { user_id: userId };
+        } else {
+            // Study/dashboard view: own decks + all public decks
             whereClause = {
                 OR: [
                     { user_id: userId },
-                    { is_public: true }
-                ]
-            };
-        } else if (role === "ADMIN") {
-            whereClause = {
-                user: {
-                    role: "ADMIN"
-                }
+                    { is_public: true },
+                ],
             };
         }
 

@@ -24,11 +24,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const user = await getAuthenticatedUser();
-        const { title } = await request.json();
 
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const { title } = await request.json();
 
         const deck = await deckService.createDeck(user.id, title, user.role);
 

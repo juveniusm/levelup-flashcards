@@ -1,45 +1,35 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
-
-/** Check if the user has permission to manage cards in this deck */
-async function requireAccess(deckId: string) {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) return { error: "Unauthorized", status: 401 };
-
-    const userId = (session.user as { id: string }).id;
-    const role = (session.user as { role?: string }).role;
-
-    const deck = await prisma.decks.findUnique({
-        where: { id: deckId },
-        select: { user_id: true }
-    });
-
-    if (!deck) return { error: "Deck not found", status: 404 };
-
-    // Owners and Admins can manage the deck
-    if (deck.user_id !== userId && role !== "ADMIN") {
-        return { error: "Forbidden", status: 403 };
-    }
-
-    return { session, userId, role };
-}
+import { requireDeckAccess } from "@/lib/deck-access";
 
 export async function POST(
     request: Request,
     { params }: { params: Promise<{ deckId: string }> }
 ) {
     const { deckId } = await params;
-    const auth = await requireAccess(deckId);
+    const auth = await requireDeckAccess(deckId);
     if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     try {
-        const { deckId } = await params;
         const { front, back, front_image_url, back_image_url } = await request.json();
 
         if (!front || !back || typeof front !== "string" || typeof back !== "string") {
             return NextResponse.json({ error: "Front and back text are required" }, { status: 400 });
+        }
+
+        // Duplicate check — same front + back (case-insensitive) in the same deck
+        const duplicate = await prisma.cards.findFirst({
+            where: {
+                deck_id: deckId,
+                front: { equals: front.trim(), mode: "insensitive" },
+                back: { equals: back.trim(), mode: "insensitive" },
+            },
+        });
+        if (duplicate) {
+            return NextResponse.json(
+                { error: "A card with the same prompt and answer already exists in this deck." },
+                { status: 409 }
+            );
         }
 
         const lastCard = await prisma.cards.findFirst({
