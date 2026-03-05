@@ -81,9 +81,8 @@ export const deckService = {
      * Creates a new deck with an incremented sequence.
      */
     async createDeck(userId: string, title: string, role: string) {
-        // Find max sequence for this user
+        // Find max sequence across ALL decks (global counter, not per-user)
         const lastDeck = await prisma.decks.findFirst({
-            where: { user_id: userId },
             orderBy: { deck_seq: 'desc' },
         });
 
