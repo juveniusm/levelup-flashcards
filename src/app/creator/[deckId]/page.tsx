@@ -23,7 +23,7 @@ export default async function DeckPage({ params }: { params: Promise<{ deckId: s
             where: { id: deckId },
             include: {
                 cards: {
-                    orderBy: { card_seq: "asc" }
+                    orderBy: { card_seq: "desc" }
                 }
             }
         });
