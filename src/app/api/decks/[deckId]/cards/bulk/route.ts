@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireDeckAccess } from "@/lib/deck-access";
 
-const MAX_BULK_CARDS = 500;
+const MAX_BULK_CARDS = 2000;
 
 export async function POST(
     request: Request,
@@ -13,7 +13,6 @@ export async function POST(
     if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     try {
-        const { deckId } = await params;
         const cards = await request.json();
 
         if (!Array.isArray(cards) || cards.length === 0) {
@@ -65,29 +64,27 @@ export async function POST(
             });
         }
 
+        // ── Step 5: Get sequence and Bulk Insert ──────────────────────────
         const lastCard = await prisma.cards.findFirst({
             where: { deck_id: deckId },
             orderBy: { card_seq: "desc" },
         });
 
         let nextSeq = (lastCard?.card_seq || 0) + 1;
-        let createdCount = 0;
 
-        await prisma.$transaction(async (tx) => {
-            for (const cardData of newCards) {
-                await tx.cards.create({
-                    data: {
-                        front: String(cardData.front).trim(),
-                        back: String(cardData.back).trim(),
-                        deck_id: deckId,
-                        card_seq: nextSeq++,
-                    },
-                });
-                createdCount++;
-            }
+        // Map to DB objects with calculated sequence
+        const cardsToInsert = newCards.map((cardData) => ({
+            front: String(cardData.front).trim(),
+            back: String(cardData.back).trim(),
+            deck_id: deckId,
+            card_seq: nextSeq++,
+        }));
+
+        const result = await prisma.cards.createMany({
+            data: cardsToInsert,
         });
 
-        return NextResponse.json({ success: true, count: createdCount, skipped: skippedCount });
+        return NextResponse.json({ success: true, count: result.count, skipped: skippedCount });
 
     } catch (error) {
         console.error("Bulk import error:", error);

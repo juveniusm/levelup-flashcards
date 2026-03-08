@@ -26,14 +26,29 @@ export default function StudyInterface({
             const saved = sessionStorage.getItem(storageKey);
             if (saved) {
                 const parsed = JSON.parse(saved);
-                if (parsed.context && parsed.context.cards?.length === cards.length) {
-                    return classicModeMachine.resolveState({
-                        value: parsed.stateValue,
-                        context: {
-                            ...parsed.context,
-                            cards,
-                        },
-                    });
+
+                // If we have saved order (IDs), we must re-order the 'cards' prop to match
+                if (parsed.context && parsed.context.cardIds) {
+                    const cardMap = new Map(cards.map(c => [c.id, c]));
+
+                    // Reconstruct the ordered array based on saved IDs
+                    const restoredOrder = parsed.context.cardIds
+                        .map((id: string) => cardMap.get(id))
+                        .filter(Boolean) as Card[];
+
+                    if (restoredOrder.length > 0) {
+                        // Adjust currentIndex if it's now out of bounds due to deletions
+                        const safeIndex = Math.min(parsed.context.currentIndex, restoredOrder.length - 1);
+
+                        return classicModeMachine.resolveState({
+                            value: parsed.stateValue,
+                            context: {
+                                ...parsed.context,
+                                cards: restoredOrder,
+                                currentIndex: safeIndex,
+                            },
+                        });
+                    }
                 }
             }
         } catch {
@@ -70,7 +85,7 @@ export default function StudyInterface({
                     correctAnswers: context.correctAnswers,
                     incorrectAnswers: context.incorrectAnswers,
                     gameStatus: context.gameStatus,
-                    cards: context.cards.map((c: Card) => ({ id: c.id })),
+                    cardIds: context.cards.map((c: Card) => c.id), // Only save IDs
                 },
             }));
         } else {
