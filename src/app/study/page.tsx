@@ -4,6 +4,7 @@ import { deckService, DeckWithStats } from "@/lib/services/deckService";
 import StudyDeckCard from "@/app/components/study/StudyDeckCard";
 import StudyDashboardList from "@/app/components/study/StudyDashboardList";
 import XpWidget from "@/app/components/XpWidget";
+import StudyToast from "@/app/components/study/StudyToast";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
+      <StudyToast />
       <main className="max-w-6xl mx-auto space-y-8 md:space-y-12">
         <header className="flex justify-between items-center border-b border-neutral-800 pb-6 animate-in fade-in duration-300">
           <div>

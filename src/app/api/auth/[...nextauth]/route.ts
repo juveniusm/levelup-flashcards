@@ -18,15 +18,54 @@ export const authOptions: NextAuthOptions = {
             credentials: {
                 email: { label: "Email", type: "email", placeholder: "student@example.com" },
                 password: { label: "Password", type: "password" },
+                token: { label: "Token", type: "text" },
+                isVerifying: { label: "Is Verifying", type: "text" },
             },
             async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) return null;
+                if (!credentials?.email) return null;
 
                 const user = await prisma.user.findUnique({
                     where: { email: credentials.email }
                 });
 
-                if (!user || !user.password) {
+                if (!user) {
+                    return null;
+                }
+
+                // Handle Auto-Login Verification Flow
+                if (credentials.isVerifying === "true" && credentials.token) {
+                    const verificationToken = await prisma.verificationToken.findUnique({
+                        where: {
+                            identifier_token: {
+                                identifier: credentials.email,
+                                token: credentials.token,
+                            }
+                        }
+                    });
+
+                    if (!verificationToken || new Date() > verificationToken.expires) {
+                        throw new Error("InvalidVerificationLink");
+                    }
+
+                    // Separation of Concerns: Execute the DB mutation securely within a transaction
+                    const updatedUser = await prisma.$transaction(async (tx) => {
+                        const verifiedUser = await tx.user.update({
+                            where: { email: credentials.email },
+                            data: { emailVerified: new Date() }
+                        });
+
+                        await tx.verificationToken.delete({
+                            where: { identifier_token: { identifier: credentials.email, token: credentials.token } }
+                        });
+
+                        return verifiedUser;
+                    });
+
+                    return { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role };
+                }
+
+                // Standard Password Login Flow
+                if (!credentials.password || !user.password) {
                     return null;
                 }
 

@@ -23,6 +23,40 @@ function LoginContent() {
 
     useEffect(() => {
         if (searchParams) {
+            const action = searchParams.get("action");
+            const tokenParam = searchParams.get("token");
+            const emailParam = searchParams.get("email");
+
+            if (action === "verify" && tokenParam && emailParam) {
+                // Scrub the raw token from the URL history
+                router.replace("/login");
+
+                setIsLoading(true);
+                setSuccessMsg("Verifying your email and logging you in...");
+                setIsLogin(true);
+
+                signIn("credentials", {
+                    redirect: false,
+                    email: emailParam,
+                    token: tokenParam,
+                    isVerifying: "true",
+                }).then((result) => {
+                    if (result?.error) {
+                        setErrorMsg("This verification link has expired or is invalid.");
+                        setSuccessMsg("");
+                        setIsLoading(false);
+                    } else if (result?.ok) {
+                        router.push("/study?toast=verified");
+                    }
+                }).catch(() => {
+                    setErrorMsg("An unexpected error occurred during verification.");
+                    setSuccessMsg("");
+                    setIsLoading(false);
+                });
+
+                return;
+            }
+
             if (searchParams.get("verified") === "true") {
                 // eslint-disable-next-line
                 setSuccessMsg("Email successfully verified! You may now sign in.");
@@ -36,7 +70,7 @@ function LoginContent() {
                 }
             }
         }
-    }, [searchParams]);
+    }, [searchParams, router]);
 
     const handleCredentialsSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
