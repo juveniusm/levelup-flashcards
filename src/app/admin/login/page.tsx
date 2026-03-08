@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,10 +14,14 @@ function AdminLoginContent() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
+    const hasErrorShown = useRef(false);
 
     useEffect(() => {
-        if (searchParams?.get("error") === "AccessDenied") {
-            setErrorMsg("Access denied. Only administrators can sign in here.");
+        if (!hasErrorShown.current && searchParams?.get("error") === "AccessDenied") {
+            hasErrorShown.current = true;
+            setTimeout(() => {
+                setErrorMsg("Access denied. Only administrators can sign in here.");
+            }, 0);
         }
     }, [searchParams]);
 

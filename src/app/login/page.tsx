@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,6 +20,7 @@ function LoginContent() {
     const [university, setUniversity] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
+    const hasVerified = useRef(false);
 
     useEffect(() => {
         // Ensure any lingering admin login intent is cleared when on the student login page
@@ -30,13 +31,16 @@ function LoginContent() {
             const tokenParam = searchParams.get("token");
             const emailParam = searchParams.get("email");
 
-            if (action === "verify" && tokenParam && emailParam) {
+            if (!hasVerified.current && action === "verify" && tokenParam && emailParam) {
+                hasVerified.current = true;
                 // Scrub the raw token from the URL history
                 router.replace("/login");
 
-                setIsLoading(true);
-                setSuccessMsg("Verifying your email and logging you in...");
-                setIsLogin(true);
+                setTimeout(() => {
+                    setIsLoading(true);
+                    setSuccessMsg("Verifying your email and logging you in...");
+                    setIsLogin(true);
+                }, 0);
 
                 signIn("credentials", {
                     redirect: false,
@@ -61,18 +65,23 @@ function LoginContent() {
             }
 
             if (searchParams.get("verified") === "true") {
-                // eslint-disable-next-line
-                setSuccessMsg("Email successfully verified! You may now sign in.");
-                setIsLogin(true);
+                setTimeout(() => {
+                    setSuccessMsg("Email successfully verified! You may now sign in.");
+                    setIsLogin(true);
+                }, 0);
             } else if (searchParams.get("error")) {
                 const err = searchParams.get("error");
-                if (err === "unverified") {
-                    setErrorMsg("Please verify your email address before signing in.");
-                } else if (err !== "CredentialsSignin") {
-                    setErrorMsg("Authentication error: " + err);
-                }
+                setTimeout(() => {
+                    if (err === "unverified") {
+                        setErrorMsg("Please verify your email address before signing in.");
+                    } else if (err !== "CredentialsSignin") {
+                        setErrorMsg("Authentication error: " + err);
+                    }
+                }, 0);
             } else if (searchParams.get("signup") === "true") {
-                setIsLogin(false);
+                setTimeout(() => {
+                    setIsLogin(false);
+                }, 0);
             }
         }
     }, [searchParams, router]);

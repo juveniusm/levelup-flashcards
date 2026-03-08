@@ -18,7 +18,11 @@ export const metadata: Metadata = {
   title: "LevelUp Flashcards",
   description: "Advanced spaced repetition flashcards.",
   icons: {
-    icon: "/favicon2.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon3.png", type: "image/png", sizes: "48x48" },
+    ],
+    apple: "/apple-icon.png",
   },
 };
 

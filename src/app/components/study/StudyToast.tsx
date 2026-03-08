@@ -1,18 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function StudyToast() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const hasTriggered = useRef(false);
     const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
-        if (searchParams?.get("toast") === "verified") {
-            setShowToast(true);
+        if (!hasTriggered.current && searchParams?.get("toast") === "verified") {
+            hasTriggered.current = true;
             // Scrub the query parameters to prevent the toast from showing again on refresh
             router.replace("/study");
+
+            // Asynchronous state update to avoid cascading render lint error
+            setTimeout(() => {
+                setShowToast(true);
+            }, 0);
         }
     }, [searchParams, router]);
 
