@@ -1,21 +1,35 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function AdminLoginPage() {
+function AdminLoginContent() {
+    const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
 
+    useEffect(() => {
+        if (searchParams?.get("error") === "AccessDenied") {
+            setErrorMsg("Access denied. Only administrators can sign in here.");
+        }
+    }, [searchParams]);
+
+    const setAdminIntent = () => {
+        // Set a short-lived cookie to tell the server this is an admin login attempt
+        document.cookie = "admin_login_intent=true; path=/; max-age=300; SameSite=Lax";
+    };
+
     const handleCredentialsSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setErrorMsg("");
+        setAdminIntent();
 
         try {
             const res = await signIn("credentials", {
@@ -40,6 +54,7 @@ export default function AdminLoginPage() {
 
     const handleGoogleLogin = async () => {
         setIsLoading(true);
+        setAdminIntent();
         await signIn("google", {
             callbackUrl: "/study",
         });
@@ -140,5 +155,17 @@ export default function AdminLoginPage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function AdminLoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#f9c111]"></div>
+            </div>
+        }>
+            <AdminLoginContent />
+        </Suspense>
     );
 }

@@ -23,10 +23,17 @@ export default withAuth(
             // This ensures the user actually has a valid JWT session token
             authorized: ({ token, req }) => {
                 const path = req.nextUrl.pathname;
+
                 // Allow public access to login pages so the middleware function can handle the redirect logic
                 if (path === "/login" || path === "/admin/login") {
                     return true;
                 }
+
+                // Strictly enforce ADMIN role for all other /admin routes
+                if (path.startsWith("/admin")) {
+                    return token?.role === "ADMIN";
+                }
+
                 return !!token;
             },
         },
