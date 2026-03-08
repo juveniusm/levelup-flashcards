@@ -18,7 +18,7 @@ export async function sendVerificationEmail(email: string, token: string, baseUr
 
     try {
         const { data, error } = await resend.emails.send({
-            from: 'LevelUp <noreply@send.levelupflash.com>', // Change to your verified domain later
+            from: 'LevelUp <noreply@levelupflash.com>', // Matches the verified domain
             to: email,
             subject: 'Welcome to LevelUp - Please verify your email',
             html: `
