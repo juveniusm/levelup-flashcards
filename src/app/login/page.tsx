@@ -68,6 +68,8 @@ function LoginContent() {
                 } else if (err !== "CredentialsSignin") {
                     setErrorMsg("Authentication error: " + err);
                 }
+            } else if (searchParams.get("signup") === "true") {
+                setIsLogin(false);
             }
         }
     }, [searchParams, router]);
