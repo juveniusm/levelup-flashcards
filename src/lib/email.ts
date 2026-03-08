@@ -26,7 +26,7 @@ export async function sendVerificationEmail(email: string, token: string, baseUr
                     <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); overflow: hidden;">
                         <tr>
                             <td style="padding: 40px 40px 20px 40px; text-align: center;">
-                                <img src="https://levelupflash.com/logo5.svg" alt="LevelUp Flashcards" style="width: 120px; margin-bottom: 24px;" onerror="this.style.display='none';">
+                                <img src="https://levelupflash.com/logo5.png" alt="LevelUp Flashcards" style="width: 120px; margin-bottom: 24px;" onerror="this.style.display='none';">
                                 <h1 style="color: #111827; font-size: 24px; font-weight: 700; margin: 0 0 16px 0;">Welcome to LevelUp Flashcards!</h1>
                                 <p style="font-size: 16px; color: #4B5563; line-height: 1.6; margin: 0;">
                                     Thank you for registering. You're just one step away from mastering any subject faster than ever. Please confirm your email address to get started.
