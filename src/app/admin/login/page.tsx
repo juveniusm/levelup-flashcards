@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 function AdminLoginContent() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -33,15 +34,20 @@ function AdminLoginContent() {
 
         try {
             const res = await signIn("credentials", {
-                redirect: true,
-                callbackUrl: "/study",
+                redirect: false, // Handle redirect manually for cleaner error states
                 email,
                 password,
             });
 
             if (res?.error) {
-                setErrorMsg("Invalid credentials. Please try again.");
+                if (res.error === "AccessDenied") {
+                    setErrorMsg("Access denied. Only administrators can sign in here.");
+                } else {
+                    setErrorMsg("Invalid credentials. Please try again.");
+                }
                 setIsLoading(false);
+            } else if (res?.ok) {
+                router.push("/study");
             }
         } catch (error) {
             console.error("Admin login error:", error);
