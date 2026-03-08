@@ -1,13 +1,14 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function LoginPage() {
+function LoginContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
 
@@ -18,11 +19,30 @@ export default function LoginPage() {
     const [username, setUsername] = useState("");
     const [university, setUniversity] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
+    const [successMsg, setSuccessMsg] = useState("");
+
+    useEffect(() => {
+        if (searchParams) {
+            if (searchParams.get("verified") === "true") {
+                // eslint-disable-next-line
+                setSuccessMsg("Email successfully verified! You may now sign in.");
+                setIsLogin(true);
+            } else if (searchParams.get("error")) {
+                const err = searchParams.get("error");
+                if (err === "unverified") {
+                    setErrorMsg("Please verify your email address before signing in.");
+                } else if (err !== "CredentialsSignin") {
+                    setErrorMsg("Authentication error: " + err);
+                }
+            }
+        }
+    }, [searchParams]);
 
     const handleCredentialsSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setErrorMsg("");
+        setSuccessMsg("");
 
         try {
             if (!isLogin) {
@@ -40,19 +60,35 @@ export default function LoginPage() {
                     setIsLoading(false);
                     return;
                 }
+
+                // Registration successful - do not auto login.
+                setSuccessMsg(data.message || "Registration successful. Please check your email.");
+                setIsLogin(true); // switch view to login
+                setIsLoading(false);
+                // Clear password field just in case
+                setPassword("");
+                return;
             }
 
-            // Logging in (works for both existing users and right after registration)
+            // Logging in
             const result = await signIn("credentials", {
-                redirect: true,
-                callbackUrl: "/study",
+                redirect: false,
                 email,
                 password,
             });
 
             if (result?.error) {
-                setErrorMsg("Invalid credentials. Please try again.");
+                if (result.error === "unverified") {
+                    setErrorMsg("Please verify your email address before signing in.");
+                } else {
+                    setErrorMsg("Invalid credentials. Please try again.");
+                }
                 setIsLoading(false);
+                return;
+            }
+
+            if (result?.ok) {
+                router.push("/study");
             }
         } catch (error) {
             console.error("Login error:", error);
@@ -199,7 +235,11 @@ export default function LoginPage() {
                     </div>
 
                     {errorMsg && (
-                        <p className="text-red-400 text-sm">{errorMsg}</p>
+                        <p className="text-red-400 text-sm bg-red-900/30 p-3 rounded-lg border border-red-500/50">{errorMsg}</p>
+                    )}
+
+                    {successMsg && (
+                        <p className="text-green-400 text-sm bg-green-900/30 p-3 rounded-lg border border-green-500/50">{successMsg}</p>
                     )}
 
                     <button
@@ -234,5 +274,13 @@ export default function LoginPage() {
 
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black text-white flex items-center justify-center p-4" />}>
+            <LoginContent />
+        </Suspense>
     );
 }

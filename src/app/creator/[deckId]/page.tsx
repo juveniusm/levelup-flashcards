@@ -1,8 +1,7 @@
-import prisma from "@/lib/prisma";
+import { deckService } from "@/lib/services/deckService";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getAuthenticatedUser } from "@/lib/auth-utils";
 import CreateCardForm from "../../components/cards/CreateCardForm";
 import DeleteDeckButton from "../../components/DeleteDeckButton";
 import FlashcardList from "../../components/cards/FlashcardList";
@@ -13,27 +12,20 @@ export const dynamic = "force-dynamic";
 export default async function DeckPage({ params }: { params: Promise<{ deckId: string }> }) {
     const { deckId } = await params;
 
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id;
-    const userRole = (session?.user as any)?.role;
+    const user = await getAuthenticatedUser();
+    const userId = user?.id;
+    const userRole = user?.role;
 
     let deck;
     try {
-        deck = await prisma.decks.findUnique({
-            where: { id: deckId },
-            include: {
-                cards: {
-                    orderBy: { card_seq: "desc" }
-                }
-            }
-        });
+        deck = await deckService.getDeckByIdWithCards(deckId);
     } catch (error) {
         console.error("Creator deck fetch error:", error);
         return (
             <div className="min-h-screen bg-black text-white flex items-center justify-center p-8">
                 <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-8 text-center max-w-md">
                     <h1 className="text-2xl font-bold text-red-400 mb-4">Database Error</h1>
-                    <p className="text-neutral-300">We couldn't load this deck. This usually happens during database maintenance. Please try again in 30 seconds.</p>
+                    <p className="text-neutral-300">We couldn&apos;t load this deck. This usually happens during database maintenance. Please try again in 30 seconds.</p>
                     <Link href="/creator" className="mt-6 inline-block text-[#f9c111] hover:underline">Back to Dashboard</Link>
                 </div>
             </div>

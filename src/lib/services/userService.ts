@@ -1,6 +1,16 @@
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { calculateXpForReview } from "@/utils/xp/xpUtils";
+
+export interface UserProfileUpdateData {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    username?: string;
+    currentPassword?: string;
+    newPassword?: string;
+}
 
 export const userService = {
     /**
@@ -22,9 +32,9 @@ export const userService = {
     /**
      * Updates user profile data, including password and name syncing.
      */
-    async updateUserProfile(userId: string, userRole: string, data: any) {
+    async updateUserProfile(userId: string, userRole: string, data: UserProfileUpdateData) {
         const { firstName, lastName, email, username, currentPassword, newPassword } = data;
-        const updateData: Record<string, any> = {};
+        const updateData: Prisma.UserUpdateInput = {};
 
         if (firstName !== undefined) updateData.firstName = firstName;
         if (lastName !== undefined) updateData.lastName = lastName;

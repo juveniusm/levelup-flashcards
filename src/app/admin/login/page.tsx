@@ -2,12 +2,10 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function AdminLoginPage() {
-    const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
     const [email, setEmail] = useState("");

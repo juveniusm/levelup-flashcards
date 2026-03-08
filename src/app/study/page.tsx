@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { getAuthenticatedUser } from "@/lib/auth-utils";
-import { deckService } from "@/lib/services/deckService";
+import { getAuthenticatedUser, getDisplayName } from "@/lib/auth-utils";
+import { deckService, DeckWithStats } from "@/lib/services/deckService";
 import StudyDeckCard from "@/app/components/study/StudyDeckCard";
 import StudyDashboardList from "@/app/components/study/StudyDashboardList";
 import XpWidget from "@/app/components/XpWidget";
@@ -12,15 +12,9 @@ export default async function Home() {
   const userId = user?.id;
   const userRole = user?.role || "STUDENT";
 
-  // Derive a friendly display name (prefer first name if name exists, else email prefix)
-  let displayName = "Student";
-  if (user?.name) {
-    displayName = user.name.split(" ")[0];
-  } else if (user?.email) {
-    displayName = user.email.split("@")[0];
-  }
+  const displayName = getDisplayName(user || undefined);
 
-  let decksWithStats: any[] = [];
+  let decksWithStats: DeckWithStats[] = [];
   let dbError = false;
 
   try {

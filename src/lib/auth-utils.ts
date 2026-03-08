@@ -19,7 +19,12 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
         return null;
     }
 
-    const user = session.user as any;
+    const user = session.user as {
+        id?: string;
+        email?: string;
+        name?: string;
+        role?: "ADMIN" | "STUDENT";
+    };
 
     if (!user.id || !user.email) {
         return null;
@@ -31,4 +36,17 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
         name: user.name,
         role: user.role || "STUDENT",
     };
+}
+
+/**
+ * Derives a friendly display name for a user.
+ * Prefers first name if name exists, else email prefix.
+ */
+export function getDisplayName(user?: { name?: string | null; email?: string | null }): string {
+    if (user?.name) {
+        return user.name.split(" ")[0];
+    } else if (user?.email) {
+        return user.email.split("@")[0];
+    }
+    return "Student";
 }

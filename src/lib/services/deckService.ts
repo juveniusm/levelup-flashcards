@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export interface DeckWithStats {
     id: string;
@@ -16,7 +17,7 @@ export const deckService = {
     async fetchDecksWithStats(userId: string, role: string, mode?: string): Promise<DeckWithStats[]> {
         const now = new Date();
 
-        let whereClause: any = { user_id: userId };
+        let whereClause: Prisma.DecksWhereInput = { user_id: userId };
 
         if (mode === "creator") {
             // Creator view: admins see all admin-owned decks; users see their own
@@ -33,19 +34,22 @@ export const deckService = {
             };
         }
 
-        const [decks, dueStats] = await Promise.all([
-            prisma.decks.findMany({
-                where: whereClause,
-                include: {
-                    _count: {
-                        select: { cards: true },
-                    },
+        let dueStats: { card: { deck_id: string } }[] = [];
+
+        const decks = await prisma.decks.findMany({
+            where: whereClause,
+            include: {
+                _count: {
+                    select: { cards: true },
                 },
-                orderBy: {
-                    title: "asc",
-                },
-            }),
-            prisma.sM2Stats.findMany({
+            },
+            orderBy: {
+                title: "asc",
+            },
+        });
+
+        if (mode !== "creator") {
+            dueStats = await prisma.sM2Stats.findMany({
                 where: {
                     user_id: userId,
                     next_review: { lte: now }
@@ -57,12 +61,12 @@ export const deckService = {
                         }
                     }
                 }
-            })
-        ]);
+            });
+        }
 
         // Map of deckId -> dueCount
         const dueCountMap: Record<string, number> = {};
-        dueStats.forEach((stat: any) => {
+        dueStats.forEach((stat) => {
             const deckId = stat.card.deck_id;
             dueCountMap[deckId] = (dueCountMap[deckId] || 0) + 1;
         });
@@ -95,6 +99,21 @@ export const deckService = {
                 deck_seq: nextSeq,
                 is_public: role === "ADMIN",
             },
+        });
+    },
+
+    /**
+     * Retrieves a single deck by its ID along with its cards, 
+     * ordered by card sequence in descending order.
+     */
+    async getDeckByIdWithCards(deckId: string) {
+        return await prisma.decks.findUnique({
+            where: { id: deckId },
+            include: {
+                cards: {
+                    orderBy: { card_seq: "desc" }
+                }
+            }
         });
     }
 };

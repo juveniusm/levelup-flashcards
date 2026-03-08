@@ -32,10 +32,17 @@ export async function PATCH(request: NextRequest) {
         const updated = await userService.updateUserProfile(user.id, user.role, body);
 
         return NextResponse.json({ success: true, updated });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Profile PATCH error:", error);
-        const status = error.message.includes("Unauthorized") || error.message.includes("Only admins") ? 403 :
-            error.message.includes("required") || error.message.includes("incorrect") ? 400 : 500;
-        return NextResponse.json({ error: error.message || "Internal server error" }, { status });
+        let errorMsg = "Internal server error";
+        let status = 500;
+
+        if (error instanceof Error) {
+            errorMsg = error.message;
+            if (errorMsg.includes("Unauthorized") || errorMsg.includes("Only admins")) status = 403;
+            else if (errorMsg.includes("required") || errorMsg.includes("incorrect")) status = 400;
+        }
+
+        return NextResponse.json({ error: errorMsg }, { status });
     }
 }

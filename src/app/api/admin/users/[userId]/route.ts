@@ -42,7 +42,7 @@ export async function PATCH(
         if (newRole !== undefined) {
             // Only Super Admin can change roles
             const userEmail = session.user.email;
-            const SUPER_ADMIN_EMAIL = 'juveniusm@gmail.com';
+            const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL;
 
             if (userEmail !== SUPER_ADMIN_EMAIL) {
                 return NextResponse.json({ error: "Only the Super Admin can manage user roles." }, { status: 403 });
@@ -113,26 +113,17 @@ export async function DELETE(
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Delete associated data first (FK constraints)
-        await prisma.sM2Stats.deleteMany({ where: { user_id: userId } });
-        await prisma.reviewLog.deleteMany({ where: { user_id: userId } });
-        await prisma.userStats.deleteMany({ where: { user_id: userId } });
-
-        // Delete user's decks and their cards
-        const userDecks = await prisma.decks.findMany({ where: { user_id: userId }, select: { id: true } });
-        const deckIds = userDecks.map((d) => d.id);
-        if (deckIds.length > 0) {
-            // Delete SM2 stats for cards in those decks
-            const deckCards = await prisma.cards.findMany({ where: { deck_id: { in: deckIds } }, select: { id: true } });
-            const cardIds = deckCards.map((c) => c.id);
-            if (cardIds.length > 0) {
-                await prisma.sM2Stats.deleteMany({ where: { card_id: { in: cardIds } } });
-                await prisma.reviewLog.deleteMany({ where: { card_id: { in: cardIds } } });
-            }
-            await prisma.cards.deleteMany({ where: { deck_id: { in: deckIds } } });
-            await prisma.decks.deleteMany({ where: { id: { in: deckIds } } });
+        // If the user being deleted is an admin, preserve their decks by 
+        // reassigning them to the admin performing the deletion
+        if (user.role === "ADMIN") {
+            await prisma.decks.updateMany({
+                where: { user_id: userId },
+                data: { user_id: adminId }
+            });
         }
 
+        // Deleting the user will cascade delete their cards, stats, and logs
+        // as long as the Prisma schema is configured correctly.
         await prisma.user.delete({ where: { id: userId } });
 
         return NextResponse.json({ success: true });

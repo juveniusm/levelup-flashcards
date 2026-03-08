@@ -34,8 +34,10 @@ model User {
   sessions      Session[]
 
   // Relations
-  decks Decks[]
-  stats UserStats?
+  decks       Decks[]
+  stats       UserStats?
+  sm2_stats   SM2Stats[]
+  review_logs ReviewLog[]
 }
 
 model Account {
@@ -112,6 +114,7 @@ model SM2Stats {
 
   // Relations
   card Cards @relation(fields: [card_id], references: [id], onDelete: Cascade)
+  user User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([next_review])
   @@index([user_id, next_review])
@@ -138,6 +141,7 @@ model ReviewLog {
 
   // Relations
   card Cards @relation(fields: [card_id], references: [id], onDelete: Cascade)
+  user User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, reviewed_at])
   @@index([deck_id])

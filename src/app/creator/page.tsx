@@ -1,5 +1,5 @@
 import { getAuthenticatedUser } from "@/lib/auth-utils";
-import { deckService } from "@/lib/services/deckService";
+import { deckService, DeckWithStats } from "@/lib/services/deckService";
 import DeckManager from "../components/DeckManager";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export default async function Home() {
   const userId = user?.id;
   const userRole = user?.role || "STUDENT";
 
-  let decks: any[] = [];
+  let decks: DeckWithStats[] = [];
   if (userId) {
     decks = await deckService.fetchDecksWithStats(userId, userRole, "creator");
   }
