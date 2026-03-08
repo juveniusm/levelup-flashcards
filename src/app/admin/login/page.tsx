@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
         <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
             {/* Logo on pure black background */}
             <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <div className="w-32 md:w-40 mx-auto">
+                <div className="w-48 md:w-56 mx-auto">
                     <Image
                         src="/logo4.svg"
                         alt="LevelUp Admin Auth"
