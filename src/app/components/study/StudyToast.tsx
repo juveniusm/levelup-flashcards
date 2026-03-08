@@ -13,14 +13,17 @@ export default function StudyToast() {
             setShowToast(true);
             // Scrub the query parameters to prevent the toast from showing again on refresh
             router.replace("/study");
+        }
+    }, [searchParams, router]);
 
+    useEffect(() => {
+        if (showToast) {
             const timer = setTimeout(() => {
                 setShowToast(false);
             }, 5000);
-
             return () => clearTimeout(timer);
         }
-    }, [searchParams, router]);
+    }, [showToast]);
 
     if (!showToast) return null;
 
