@@ -25,8 +25,13 @@ export const authOptions: NextAuthOptions = {
             async authorize(credentials) {
                 if (!credentials?.email) return null;
 
-                const user = await prisma.user.findUnique({
-                    where: { email: credentials.email }
+                const user = await prisma.user.findFirst({
+                    where: {
+                        OR: [
+                            { email: credentials.email },
+                            { username: credentials.email }
+                        ]
+                    }
                 });
 
                 if (!user) {
@@ -38,7 +43,7 @@ export const authOptions: NextAuthOptions = {
                     const verificationToken = await prisma.verificationToken.findUnique({
                         where: {
                             identifier_token: {
-                                identifier: credentials.email,
+                                identifier: user.email || credentials.email,
                                 token: credentials.token,
                             }
                         }
@@ -51,12 +56,12 @@ export const authOptions: NextAuthOptions = {
                     // Separation of Concerns: Execute the DB mutation securely within a transaction
                     const updatedUser = await prisma.$transaction(async (tx) => {
                         const verifiedUser = await tx.user.update({
-                            where: { email: credentials.email },
+                            where: { id: user.id },
                             data: { emailVerified: new Date() }
                         });
 
                         await tx.verificationToken.delete({
-                            where: { identifier_token: { identifier: credentials.email, token: credentials.token } }
+                            where: { identifier_token: { identifier: user.email || credentials.email, token: credentials.token } }
                         });
 
                         return verifiedUser;
