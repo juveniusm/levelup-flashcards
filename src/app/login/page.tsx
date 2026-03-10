@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import UniversitySearchableDropdown from "@/app/components/auth/UniversitySearchableDropdown";
 
 function LoginContent() {
     const router = useRouter();
@@ -241,18 +242,11 @@ function LoginContent() {
                                 />
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-neutral-400">University</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={university}
-                                    onChange={(e) => setUniversity(e.target.value)}
-                                    disabled={isLoading}
-                                    className="w-full bg-black border border-neutral-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-[#f9c111] transition-colors"
-                                    placeholder="Harvard University"
-                                />
-                            </div>
+                            <UniversitySearchableDropdown
+                                value={university}
+                                onChange={setUniversity}
+                                disabled={isLoading}
+                            />
                         </>
                     )}
 
