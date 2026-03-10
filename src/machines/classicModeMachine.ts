@@ -14,6 +14,7 @@ export interface StudyContext {
 
 type StudyEvent =
     | { type: 'SUBMIT_ANSWER', isCorrect: boolean, isPerfect: boolean }
+    | { type: 'PASS' }
     | { type: 'NEXT_CARD' }
     | { type: 'RESTART' }
     | { type: 'QUIT' };
@@ -73,6 +74,17 @@ export const classicModeMachine = setup({
                         target: 'feedback_correct',
                         actions: ['handleCorrectAnswer']
                     },
+                    {
+                        guard: ({ context }) => context.lives <= 1,
+                        target: 'game_over',
+                        actions: ['handleIncorrectAnswer']
+                    },
+                    {
+                        target: 'feedback_incorrect',
+                        actions: ['handleIncorrectAnswer']
+                    }
+                ],
+                PASS: [
                     {
                         guard: ({ context }) => context.lives <= 1,
                         target: 'game_over',

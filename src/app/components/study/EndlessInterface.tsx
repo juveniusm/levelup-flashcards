@@ -169,6 +169,30 @@ export default function EndlessInterface({
             .catch((err) => console.error("Failed to save review:", err));
     };
 
+    const handlePass = () => {
+        setTotalCardsSeen((prev: number) => prev + 1);
+        setScore((prev: number) => Math.max(0, prev - 3));
+        setIncorrectAnswers((prev: number) => prev + 1);
+        setInputAnswer("");
+        setLastInputAnswer("(Passed)");
+
+        // Send SRS update (quality 0 = mistake/forgotten)
+        fetch(`/api/decks/${deckId}/cards/review`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                cardId: currentCard.id,
+                qualityGrade: 0,
+                isReviewMode: false,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            }),
+        })
+            .then((res) => res.json())
+            .catch((err) => console.error("Failed to save review:", err));
+
+        setFeedbackState("feedback_incorrect");
+    };
+
     const handleNext = () => {
         const wasIncorrect = feedbackState === "feedback_incorrect";
         setInputAnswer("");
@@ -262,12 +286,21 @@ export default function EndlessInterface({
                         autoComplete="off"
                         className="flex-1 bg-neutral-900 border-2 border-neutral-800 rounded-xl px-6 py-4 text-xl text-white focus:outline-none focus:border-[#f9c111] transition-colors shadow-inner"
                     />
-                    <button
-                        type="submit"
-                        className="bg-[#f9c111] hover:bg-yellow-400 text-black font-bold px-8 rounded-xl transition-all shadow-[0_4px_14px_0_rgba(249,193,17,0.39)] hover:shadow-[0_6px_20px_rgba(249,193,17,0.23)] hover:-translate-y-0.5"
-                    >
-                        Submit
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            type="button"
+                            onClick={handlePass}
+                            className="bg-neutral-800 hover:bg-neutral-700 text-neutral-400 font-bold px-6 rounded-xl transition-all border border-neutral-700 hover:text-white"
+                        >
+                            Pass
+                        </button>
+                        <button
+                            type="submit"
+                            className="bg-[#f9c111] hover:bg-yellow-400 text-black font-bold px-8 rounded-xl transition-all shadow-[0_4px_14px_0_rgba(249,193,17,0.39)] hover:shadow-[0_6px_20px_rgba(249,193,17,0.23)] hover:-translate-y-0.5"
+                        >
+                            Submit
+                        </button>
+                    </div>
                 </form>
             ) : (
                 <button
