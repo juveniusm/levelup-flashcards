@@ -20,6 +20,7 @@ export default async function StudyDeckPage({
     const { mode } = await searchParams;
     const isReviewMode = mode === "review";
     const isEndlessMode = mode === "endless";
+    const isFocusMode = mode === "focus";
 
     const session = await getServerSession(authOptions);
     const userId = (session?.user as { id?: string })?.id;
@@ -58,19 +59,27 @@ export default async function StudyDeckPage({
         };
     });
 
-    // In review mode, only show cards that are due for review
-    const filteredCards = isReviewMode
-        ? cardsWithPriority.filter((c) => c._isDue)
-        : cardsWithPriority;
+    // Filter cards based on mode
+    let filteredCards = cardsWithPriority;
 
-    // If review mode and no cards are due, show a message
-    if (isReviewMode && filteredCards.length === 0) {
+    if (isReviewMode) {
+        filteredCards = cardsWithPriority.filter(c => c._isDue);
+    } else if (isFocusMode) {
+        // Focus Mode: only Hard (EF <= 1.8) and Very Hard (EF <= 1.5)
+        filteredCards = cardsWithPriority.filter(c => c._easeFactor <= 1.8 && c._easeFactor > 0);
+    }
+
+    if (filteredCards.length === 0) {
         return (
             <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
                 <div className="max-w-md text-center animate-in fade-in zoom-in duration-500">
-                    <h2 className="text-4xl font-black text-[#f9c111] mb-4">All Caught Up! 🎉</h2>
+                    <h2 className="text-4xl font-black text-[#f9c111] mb-4">
+                        {isFocusMode ? "No 'Bad' Cards! 💎" : "All Caught Up! 🎉"}
+                    </h2>
                     <p className="text-neutral-400 text-lg mb-8">
-                        No cards are due for review right now. Check back later, or switch to Study Mode to practice the full deck.
+                        {isFocusMode
+                            ? "You don't have any cards in the Hard or Very Hard categories right now. Your mastery is looking strong!"
+                            : "No cards are due for review right now. Check back later, or switch to Study Mode to practice the full deck."}
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                         <Link
