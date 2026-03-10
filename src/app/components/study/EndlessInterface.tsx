@@ -131,7 +131,10 @@ export default function EndlessInterface({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inputAnswer.trim()) return;
+        if (!inputAnswer.trim()) {
+            handlePass();
+            return;
+        }
 
         const fuzzyScore = evaluateAnswer(inputAnswer, currentCard.back);
         const quality = calculateQualityGrade(fuzzyScore);

@@ -2,12 +2,12 @@ import { Card } from "@/types/card";
 
 export type { Card };
 
-export function getDifficultyLabel(ef: number): { label: string; color: string } {
+export function getDifficultyLabel(ef: number, interval: number = 0): { label: string; color: string } {
+    if (ef >= 2.5 && interval >= 21) return { label: "Mastered", color: "text-emerald-400" };
     if (ef <= 1.5) return { label: "Very Hard", color: "text-red-500" };
     if (ef <= 1.8) return { label: "Hard", color: "text-orange-400" };
     if (ef <= 2.2) return { label: "Medium", color: "text-yellow-400" };
-    if (ef <= 2.5) return { label: "Easy", color: "text-green-400" };
-    return { label: "Mastered", color: "text-emerald-400" };
+    return { label: "Easy", color: "text-green-400" };
 }
 
 export function formatTime(seconds: number): string {

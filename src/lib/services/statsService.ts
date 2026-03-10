@@ -131,16 +131,29 @@ const calculateDeckBreakdown = (
 
     return decksWithCardIds.map((deck) => {
         let mastered = 0;
+        let easy = 0;
+        let medium = 0;
+        let hard = 0;
+        let veryHard = 0;
         let due = 0;
-        let totalEase = 0;
         let statsCount = 0;
 
         for (const card of deck.cards) {
             const s = statsMap.get(card.id);
             if (s) {
                 statsCount++;
-                totalEase += s.ease_factor;
-                if (s.ease_factor >= 2.5 && s.interval >= 21) mastered++;
+                if (s.ease_factor >= 2.5 && s.interval >= 21) {
+                    mastered++;
+                } else if (s.ease_factor <= 1.5) {
+                    veryHard++;
+                } else if (s.ease_factor <= 1.8) {
+                    hard++;
+                } else if (s.ease_factor <= 2.2) {
+                    medium++;
+                } else {
+                    easy++;
+                }
+
                 if (s.next_review <= now) due++;
             }
         }
@@ -150,8 +163,11 @@ const calculateDeckBreakdown = (
             title: deck.title,
             totalCards: deck.cards.length,
             mastered,
+            easy,
+            medium,
+            hard,
+            veryHard,
             due,
-            avgEase: statsCount > 0 ? Math.round((totalEase / statsCount) * 100) / 100 : 0,
             statsCount,
         };
     }).filter(d => d.statsCount > 0);

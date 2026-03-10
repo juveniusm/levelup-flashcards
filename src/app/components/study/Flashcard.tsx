@@ -32,7 +32,7 @@ export default function Flashcard({
                     </span>
 
                     {card.ease_factor !== undefined && (() => {
-                        const { label: diffLabel, color } = getDifficultyLabel(card.ease_factor!);
+                        const { label: diffLabel, color } = getDifficultyLabel(card.ease_factor!, card.interval ?? 0);
                         return (
                             <span className={`absolute top-6 right-6 text-xs font-bold uppercase tracking-widest ${color}`}>
                                 {diffLabel}

@@ -44,14 +44,16 @@ export default async function StudyDeckPage({
     const now = new Date();
 
     const cardsWithPriority = [...deck.cards].map((card) => {
-        const stats = (card as { sm2_stats?: unknown[] }).sm2_stats?.[0] as { ease_factor?: number; next_review?: string | Date } | undefined;
+        const stats = (card as { sm2_stats?: unknown[] }).sm2_stats?.[0] as { ease_factor?: number; interval?: number; next_review?: string | Date } | undefined;
         const easeFactor = stats?.ease_factor ?? 2.5;
+        const interval = stats?.interval ?? 0;
         const nextReview = stats?.next_review ? new Date(stats.next_review) : null;
         const isDue = nextReview && nextReview <= now; // ONLY due if has stats AND past due
 
         return {
             ...card,
             _easeFactor: easeFactor,
+            _interval: interval,
             _isDue: isDue,
         };
     });
@@ -101,9 +103,10 @@ export default async function StudyDeckPage({
     const finalCards = [...byEaseBand.entries()]
         .sort(([a], [b]) => a - b)
         .flatMap(([, bandCards]) => shuffleArray(bandCards))
-        .map(({ _easeFactor, ...card }) => ({
+        .map(({ _easeFactor, _interval, ...card }) => ({
             ...card,
             ease_factor: _easeFactor,
+            interval: _interval,
         }));
 
     // Endless mode: render the EndlessInterface with shuffled cards

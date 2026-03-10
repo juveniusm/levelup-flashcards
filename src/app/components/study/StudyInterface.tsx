@@ -111,9 +111,31 @@ export default function StudyInterface({
         }
     }, [state.value]);
 
+    const handlePass = () => {
+        setInputAnswer("");
+        // Send SRS update (quality 0 = mistake/forgotten)
+        fetch(`/api/decks/${deckId}/cards/review`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                cardId: currentCard.id,
+                qualityGrade: 0,
+                isReviewMode,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            }),
+        })
+            .then((res) => res.json())
+            .catch((err) => console.error("Failed to save review:", err));
+
+        send({ type: "PASS" });
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inputAnswer.trim()) return;
+        if (!inputAnswer.trim()) {
+            handlePass();
+            return;
+        }
 
         const fuzzyScore = evaluateAnswer(inputAnswer, currentCard.back);
         const quality = calculateQualityGrade(fuzzyScore);
@@ -268,24 +290,7 @@ export default function StudyInterface({
                     <div className="flex gap-3">
                         <button
                             type="button"
-                            onClick={() => {
-                                setInputAnswer("");
-                                // Send SRS update (quality 0 = mistake/forgotten)
-                                fetch(`/api/decks/${deckId}/cards/review`, {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                        cardId: currentCard.id,
-                                        qualityGrade: 0,
-                                        isReviewMode,
-                                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-                                    }),
-                                })
-                                    .then((res) => res.json())
-                                    .catch((err) => console.error("Failed to save review:", err));
-
-                                send({ type: "PASS" });
-                            }}
+                            onClick={handlePass}
                             className="bg-neutral-800 hover:bg-neutral-700 text-neutral-400 font-bold px-6 rounded-xl transition-all border border-neutral-700 hover:text-white"
                         >
                             Pass

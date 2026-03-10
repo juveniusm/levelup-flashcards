@@ -28,8 +28,11 @@ interface StatsData {
         title: string;
         totalCards: number;
         mastered: number;
+        easy: number;
+        medium: number;
+        hard: number;
+        veryHard: number;
         due: number;
-        avgEase: number;
     }[];
     modeBreakdown: {
         review: number;
@@ -73,9 +76,12 @@ function DeckPerformanceTable({ deckBreakdown }: { deckBreakdown: StatsData["dec
                             <tr className="border-t border-neutral-800 text-neutral-500 text-xs uppercase tracking-wider">
                                 <th className="text-left px-6 py-3 font-semibold">Deck</th>
                                 <th className="text-center px-4 py-3 font-semibold">Cards</th>
-                                <th className="text-center px-4 py-3 font-semibold">Mastered</th>
+                                <th className="text-center px-4 py-3 font-semibold text-emerald-500/80">Mastered</th>
+                                <th className="text-center px-4 py-3 font-semibold text-green-500/80">Easy</th>
+                                <th className="text-center px-4 py-3 font-semibold text-yellow-500/80">Medium</th>
+                                <th className="text-center px-4 py-3 font-semibold text-orange-500/80">Hard</th>
+                                <th className="text-center px-4 py-3 font-semibold text-red-500/80">Very Hard</th>
                                 <th className="text-center px-4 py-3 font-semibold">Due</th>
-                                <th className="text-center px-4 py-3 font-semibold">Avg Ease</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -86,13 +92,16 @@ function DeckPerformanceTable({ deckBreakdown }: { deckBreakdown: StatsData["dec
                                         <td className="px-6 py-4 font-medium text-white">{deck.title}</td>
                                         <td className="text-center px-4 py-4 text-white">{deck.totalCards}</td>
                                         <td className="text-center px-4 py-4">
-                                            <span className="text-green-400 font-bold">{deck.mastered}</span>
+                                            <span className="text-emerald-400 font-bold">{deck.mastered}</span>
                                             <span className="text-neutral-600 ml-1 text-xs">({masteryPct}%)</span>
                                         </td>
+                                        <td className="text-center px-4 py-4 text-green-400 font-mono">{deck.easy}</td>
+                                        <td className="text-center px-4 py-4 text-yellow-400 font-mono">{deck.medium}</td>
+                                        <td className="text-center px-4 py-4 text-orange-400 font-mono">{deck.hard}</td>
+                                        <td className="text-center px-4 py-4 text-red-400 font-mono">{deck.veryHard}</td>
                                         <td className="text-center px-4 py-4">
                                             <span className={deck.due > 0 ? "text-[#f9c111] font-bold" : "text-neutral-500"}>{deck.due}</span>
                                         </td>
-                                        <td className="text-center px-4 py-4 text-white font-mono">{deck.avgEase || "—"}</td>
                                     </tr>
                                 );
                             })}
