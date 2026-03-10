@@ -92,18 +92,43 @@ export default function UniversitySearchableDropdown({
                     {/* Results Area */}
                     <div className="max-h-60 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-neutral-800">
                         {filteredUniversities.length > 0 ? (
-                            filteredUniversities.map((uni) => (
-                                <button
-                                    key={uni}
-                                    type="button"
-                                    onClick={() => handleSelect(uni)}
-                                    className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-neutral-800 transition-colors ${value === uni ? 'text-[#f9c111] bg-neutral-800/40' : 'text-neutral-300'}`}
-                                >
-                                    <span className="truncate pr-4">{uni}</span>
-                                    {value === uni && <Check className="w-4 h-4 shrink-0" />}
-                                </button>
-                            ))
+                            <>
+                                {filteredUniversities.map((uni) => (
+                                    <button
+                                        key={uni}
+                                        type="button"
+                                        onClick={() => handleSelect(uni)}
+                                        className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-neutral-800 transition-colors ${value === uni ? 'text-[#f9c111] bg-neutral-800/40' : 'text-neutral-300'}`}
+                                    >
+                                        <span className="truncate pr-4">{uni}</span>
+                                        {value === uni && <Check className="w-4 h-4 shrink-0" />}
+                                    </button>
+                                ))}
+                                {/* If searching and not an exact match, still offer others */}
+                                {searchTerm && !filteredUniversities.some(u => u.toLowerCase() === searchTerm.toLowerCase()) && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSelect("Others")}
+                                        className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-neutral-800 transition-colors border-t border-neutral-800/50 ${value === "Others" ? 'text-[#f9c111] bg-neutral-800/40' : 'text-neutral-400 italic'}`}
+                                    >
+                                        <span>Others</span>
+                                        {value === "Others" && <Check className="w-4 h-4 shrink-0" />}
+                                    </button>
+                                )}
+                            </>
                         ) : (
+                            searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleSelect("Others")}
+                                    className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-neutral-800 transition-colors ${value === "Others" ? 'text-[#f9c111] bg-neutral-800/40' : 'text-neutral-400 italic'}`}
+                                >
+                                    <span>Others</span>
+                                    {value === "Others" && <Check className="w-4 h-4 shrink-0" />}
+                                </button>
+                            )
+                        )}
+                        {!searchTerm && filteredUniversities.length === 0 && (
                             <div className="px-4 py-6 text-center text-neutral-500 text-sm">
                                 No universities found.
                             </div>
