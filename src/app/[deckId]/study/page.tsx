@@ -27,12 +27,28 @@ export default async function StudyDeckPage({
 
     const deck = await prisma.decks.findUnique({
         where: { id: deckId },
-        include: {
+        select: {
+            id: true,
+            title: true,
             cards: {
-                include: {
+                select: {
+                    id: true,
+                    front: true,
+                    back: true,
+                    front_image_url: true,
+                    back_image_url: true,
                     sm2_stats: userId
-                        ? { where: { user_id: userId } }
-                        : false,
+                        ? {
+                            where: { user_id: userId },
+                            select: {
+                                ease_factor: true,
+                                interval: true,
+                                next_review: true,
+                            },
+                        }
+                        : {
+                            take: 0,
+                        },
                 },
             },
         },
