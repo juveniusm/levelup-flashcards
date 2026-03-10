@@ -15,6 +15,15 @@ export async function POST(req: Request) {
             );
         }
 
+        // Email format regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return NextResponse.json(
+                { error: "Invalid email format." },
+                { status: 400 }
+            );
+        }
+
         // Check if user already exists
         const existingUser = await prisma.user.findFirst({
             where: {

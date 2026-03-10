@@ -95,6 +95,14 @@ function LoginContent() {
 
         try {
             if (!isLogin) {
+                // Email format regex
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    setErrorMsg("Please enter a valid email address.");
+                    setIsLoading(false);
+                    return;
+                }
+
                 // Register flow
                 const res = await fetch("/api/auth/register", {
                     method: "POST",
@@ -253,7 +261,7 @@ function LoginContent() {
                     <div className="space-y-1">
                         <label className="text-sm font-medium text-neutral-400">{isLogin ? "Username or Email" : "Email Address"}</label>
                         <input
-                            type="text"
+                            type="email"
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
