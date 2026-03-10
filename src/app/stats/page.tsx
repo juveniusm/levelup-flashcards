@@ -154,10 +154,10 @@ export default function StatsPage() {
                 {/* Overview Cards */}
                 <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <StatCard label="Decks" value={stats.overview.totalDecks} color="text-[#f9c111]" />
-                    <StatCard label="Cards Studied" value={stats.overview.cardsStudied} subtext={`of ${stats.overview.totalCards} total`} color="text-blue-400" />
-                    <StatCard label="Total Reviews" value={stats.overview.totalReviews} color="text-purple-400" />
+                    <StatCard label="Cards Studied" value={stats.overview.cardsStudied} subtext={`of ${stats.overview.totalCards} total`} color="text-[#f9c111]" />
+                    <StatCard label="Total Reviews" value={stats.overview.totalReviews} color="text-[#f9c111]" />
                     <StatCard label="Due Today" value={stats.overview.cardsDueToday} color="text-[#f9c111]" />
-                    <StatCard label="Today" value={stats.activity.reviewsToday} subtext={`${stats.activity.reviewsThisWeek} this week`} color="text-green-400" />
+                    <StatCard label="Today" value={stats.activity.reviewsToday} subtext={`${stats.activity.reviewsThisWeek} this week`} color="text-[#f9c111]" />
                 </section>
 
                 {/* Deck Performance */}
