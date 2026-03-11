@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -203,13 +204,17 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                     <label className="block text-sm font-medium text-neutral-400 mb-2">{imgLabel} — Optional</label>
 
                     {showExisting && existingUrl && (
-                        <div className="relative mb-3 inline-block group">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={existingUrl} alt={`Current ${side}`} className="h-24 object-cover rounded shadow-md border border-neutral-700" />
+                        <div className="relative mb-3 inline-block group h-24 w-40 overflow-hidden rounded shadow-md border border-neutral-700">
+                            <Image
+                                src={existingUrl}
+                                alt={`Current ${side}`}
+                                fill
+                                className="object-cover"
+                            />
                             <button
                                 type="button"
                                 onClick={onClear}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10"
                             >×</button>
                         </div>
                     )}

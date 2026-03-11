@@ -19,12 +19,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
         return null;
     }
 
-    const user = session.user as {
-        id?: string;
-        email?: string;
-        name?: string;
-        role?: "ADMIN" | "STUDENT";
-    };
+    const { user } = session;
 
     if (!user.id || !user.email) {
         return null;
@@ -33,8 +28,8 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
     return {
         id: user.id,
         email: user.email,
-        name: user.name,
-        role: user.role || "STUDENT",
+        name: user.name || undefined,
+        role: (user.role as "ADMIN" | "STUDENT") || "STUDENT",
     };
 }
 

@@ -98,24 +98,15 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async signIn({ user, account }) {
             // Check if this login is coming from the admin login page
-            const { cookies } = await import("next/headers");
-            const cookieStore = await cookies();
-            const adminLoginIntent = (await cookieStore).get("admin_login_intent")?.value === "true";
-
-            if (adminLoginIntent) {
-                let role = (user as { role?: string }).role;
-
-                // For OAuth, the 'user' object might be the raw profile. 
-                // We must look up the database record to be sure of the role.
-                if (account?.provider === "google") {
-                    const dbUser = await prisma.user.findUnique({
-                        where: { email: user.email! }
-                    });
-                    role = dbUser?.role;
-                }
-
-                if (role !== "ADMIN") {
-                    return false; // Triggers redirect to error page
+            if (account?.provider === "google") {
+                const dbUser = await prisma.user.findUnique({
+                    where: { email: user.email! }
+                });
+                if (dbUser?.role !== "ADMIN") {
+                    const { cookies } = await import("next/headers");
+                    const cookieStore = await cookies();
+                    const adminLoginIntent = cookieStore.get("admin_login_intent")?.value === "true";
+                    if (adminLoginIntent) return false;
                 }
             }
             return true;
@@ -123,15 +114,15 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, user }) {
             if (user) {
                 // We capture the initial assigned role on login
-                token.role = (user as { role?: string }).role || "STUDENT";
+                token.role = (user as { role: string }).role || "STUDENT";
                 token.id = user.id;
             }
             return token;
         },
         async session({ session, token }) {
             if (session.user) {
-                (session.user as { id?: string; role?: string }).id = (token.id as string) || (token.sub as string);
-                (session.user as { id?: string; role?: string }).role = (token.role as string) || "STUDENT";
+                session.user.id = token.id || token.sub || "";
+                session.user.role = token.role || "STUDENT";
             }
             return session;
         },

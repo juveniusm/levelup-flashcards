@@ -15,7 +15,7 @@ export async function GET(request: Request) {
         const decks = await deckService.fetchDecksWithStats(user.id, user.role, mode);
 
         return NextResponse.json(decks);
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("GET decks error:", error);
         return NextResponse.json({ error: "Failed to fetch decks" }, { status: 500 });
     }
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         const deck = await deckService.createDeck(user.id, title, user.role);
 
         return NextResponse.json(deck, { status: 201 });
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("POST deck error:", error);
         return NextResponse.json({ error: "Failed to create deck" }, { status: 500 });
     }

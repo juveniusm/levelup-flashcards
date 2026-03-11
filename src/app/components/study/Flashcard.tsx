@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Card, getDifficultyLabel } from "@/utils/study/studyUtils";
 
 interface FlashcardProps {
@@ -41,12 +42,14 @@ export default function Flashcard({
                     })()}
 
                     {card.front_image_url && (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                            src={card.front_image_url}
-                            alt="Front Image"
-                            className="min-w-[250px] min-h-[200px] max-h-[336px] max-w-[90%] object-contain mb-6 rounded-lg shadow-md border border-neutral-700 bg-neutral-950/50"
-                        />
+                        <div className="relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg shadow-md border border-neutral-700 bg-neutral-950/50">
+                            <Image
+                                src={card.front_image_url}
+                                alt="Front"
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
                     )}
 
                     <h2 className="text-3xl font-semibold text-white leading-tight">
@@ -61,12 +64,14 @@ export default function Flashcard({
                     </span>
 
                     {card.back_image_url && (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                            src={card.back_image_url}
-                            alt="Back Image"
-                            className="min-w-[250px] min-h-[200px] max-h-[336px] max-w-[90%] object-contain mb-6 rounded-lg shadow-md border border-neutral-700 bg-neutral-950/50"
-                        />
+                        <div className="relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg shadow-md border border-neutral-700 bg-neutral-950/50">
+                            <Image
+                                src={card.back_image_url}
+                                alt="Back"
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
                     )}
 
                     <h2 className="text-3xl font-semibold text-[#f9c111] leading-tight mb-8">

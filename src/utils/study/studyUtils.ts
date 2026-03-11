@@ -10,6 +10,16 @@ export function getDifficultyLabel(ef: number, interval: number = 0): { label: s
     return { label: "Easy", color: "text-green-400" };
 }
 
+export function getCardStats(sm2_stats: any[], now: Date = new Date()) {
+    const stats = sm2_stats?.[0] as { ease_factor?: number; interval?: number; next_review?: string | Date } | undefined;
+    const easeFactor = stats?.ease_factor ?? 2.5;
+    const interval = stats?.interval ?? 0;
+    const nextReview = stats?.next_review ? new Date(stats.next_review) : null;
+    const isDue = !!(nextReview && nextReview <= now);
+
+    return { easeFactor, interval, nextReview, isDue };
+}
+
 export function formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -26,4 +36,16 @@ export function shuffleArray<T>(array: T[]): T[] {
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+}
+
+export const DIFFICULTY_RANGES: Record<string, { min: number; max: number }> = {
+    "Very Hard": { min: 0, max: 1.5 },
+    "Hard": { min: 1.51, max: 1.8 },
+    "Medium": { min: 1.81, max: 2.2 },
+    "Easy": { min: 2.21, max: 2.5 },
+    "Mastered": { min: 2.51, max: 10 },
+};
+
+export function getDifficultyFromEf(ef: number, interval: number = 0): string {
+    return getDifficultyLabel(ef, interval).label;
 }

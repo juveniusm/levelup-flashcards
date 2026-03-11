@@ -18,7 +18,7 @@ export default function Sidebar() {
     const isGameSession = /^\/[^/]+\/study/.test(pathname);
     const isStudyPage = pathname === '/study';
     const isStatsPage = pathname === '/stats';
-    const isAdmin = session?.user && (session.user as { role?: string }).role === 'ADMIN';
+    const isAdmin = session?.user?.role === 'ADMIN';
 
     // Always expanded on non-game pages; collapsible only during game sessions
     const isCollapsed = isGameSession ? isHoverCollapsed : false;
@@ -123,7 +123,7 @@ export default function Sidebar() {
                     {(!isCollapsed || isMobileMenuOpen) && (
                         <div className="flex flex-col overflow-hidden">
                             <span className="text-sm font-medium text-white truncate">{session.user?.name || 'User'}</span>
-                            <span className="text-xs text-neutral-500 truncate">{(session.user as { role?: string })?.role}</span>
+                            <span className="text-xs text-neutral-500 truncate">{session.user?.role}</span>
                         </div>
                     )}
                 </div>

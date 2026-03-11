@@ -5,7 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import StudyInterface from "../../components/study/StudyInterface";
 import EndlessInterface from "../../components/study/EndlessInterface";
 import Link from "next/link";
-import { shuffleArray } from "@/utils/study/studyUtils";
+import { shuffleArray, getCardStats, DIFFICULTY_RANGES } from "@/utils/study/studyUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -14,16 +14,17 @@ export default async function StudyDeckPage({
     searchParams,
 }: {
     params: Promise<{ deckId: string }>;
-    searchParams: Promise<{ mode?: string }>;
+    searchParams: Promise<{ mode?: string; limit?: string; difficulties?: string }>;
 }) {
     const { deckId } = await params;
-    const { mode } = await searchParams;
+    const { mode, limit, difficulties } = await searchParams;
     const isReviewMode = mode === "review";
     const isEndlessMode = mode === "endless";
     const isFocusMode = mode === "focus";
+    const isCustomMode = mode === "custom";
 
     const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id?: string })?.id;
+    const userId = session?.user?.id;
 
     const deck = await prisma.decks.findUnique({
         where: { id: deckId },
@@ -60,18 +61,21 @@ export default async function StudyDeckPage({
 
     const now = new Date();
 
-    const cardsWithPriority = [...deck.cards].map((card) => {
-        const stats = (card as { sm2_stats?: unknown[] }).sm2_stats?.[0] as { ease_factor?: number; interval?: number; next_review?: string | Date } | undefined;
-        const easeFactor = stats?.ease_factor ?? 2.5;
-        const interval = stats?.interval ?? 0;
-        const nextReview = stats?.next_review ? new Date(stats.next_review) : null;
-        const isDue = nextReview && nextReview <= now; // ONLY due if has stats AND past due
+    const cardsWithPriority = deck.cards.map((card) => {
+        const { easeFactor, interval, isDue } = getCardStats(card.sm2_stats, now);
 
         return {
             ...card,
             _easeFactor: easeFactor,
             _interval: interval,
             _isDue: isDue,
+            _difficultyLabel: isDue ? "Due" : (() => {
+                if (easeFactor >= 2.5 && interval >= 21) return "Mastered";
+                if (easeFactor <= 1.5) return "Very Hard";
+                if (easeFactor <= 1.8) return "Hard";
+                if (easeFactor <= 2.2) return "Medium";
+                return "Easy";
+            })()
         };
     });
 
@@ -83,6 +87,19 @@ export default async function StudyDeckPage({
     } else if (isFocusMode) {
         // Focus Mode: only Hard (EF <= 1.8) and Very Hard (EF <= 1.5)
         filteredCards = cardsWithPriority.filter(c => c._easeFactor <= 1.8 && c._easeFactor > 0);
+    } else if (isCustomMode) {
+        const selectedDifficulties = difficulties?.split(',') || [];
+        if (selectedDifficulties.length > 0) {
+            filteredCards = cardsWithPriority.filter(c => selectedDifficulties.includes(c._difficultyLabel));
+        }
+    }
+
+    // Apply limit if provided (shuffle first to get random cards if limited)
+    if (isCustomMode && limit) {
+        const numLimit = parseInt(limit);
+        if (!isNaN(numLimit)) {
+            filteredCards = shuffleArray(filteredCards).slice(0, numLimit);
+        }
     }
 
     if (filteredCards.length === 0) {
@@ -90,12 +107,12 @@ export default async function StudyDeckPage({
             <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
                 <div className="max-w-md text-center animate-in fade-in zoom-in duration-500">
                     <h2 className="text-4xl font-black text-[#f9c111] mb-4">
-                        {isFocusMode ? "No 'Bad' Cards! 💎" : "All Caught Up! 🎉"}
+                        {isFocusMode ? "No 'Bad' Cards! 💎" : "No cards found! 🎈"}
                     </h2>
                     <p className="text-neutral-400 text-lg mb-8">
                         {isFocusMode
                             ? "You don't have any cards in the Hard or Very Hard categories right now. Your mastery is looking strong!"
-                            : "No cards are due for review right now. Check back later, or switch to Study Mode to practice the full deck."}
+                            : "We couldn't find any cards matching your criteria. Try adjusting your filters or card limit."}
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                         <Link
@@ -116,23 +133,14 @@ export default async function StudyDeckPage({
         );
     }
 
-    // Group by ease_factor bands (rounded to 1 decimal)
-    const byEaseBand = new Map<number, typeof filteredCards>();
-    for (const card of filteredCards) {
-        const key = Math.round(card._easeFactor * 10);
-        if (!byEaseBand.has(key)) byEaseBand.set(key, []);
-        byEaseBand.get(key)!.push(card);
-    }
+    // Sorting logic (Hardest first)
+    const sortedCards = [...filteredCards].sort((a, b) => a._easeFactor - b._easeFactor);
 
-    // Sort bands ascending (lowest ease = hardest first), shuffle within each band
-    const finalCards = [...byEaseBand.entries()]
-        .sort(([a], [b]) => a - b)
-        .flatMap(([, bandCards]) => shuffleArray(bandCards))
-        .map(({ _easeFactor, _interval, ...card }) => ({
-            ...card,
-            ease_factor: _easeFactor,
-            interval: _interval,
-        }));
+    const finalCards = sortedCards.map(({ _easeFactor, _interval, _isDue, _difficultyLabel, ...card }) => ({
+        ...card,
+        ease_factor: _easeFactor,
+        interval: _interval,
+    }));
 
     // Endless mode: render the EndlessInterface with shuffled cards
     if (isEndlessMode) {
