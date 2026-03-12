@@ -107,7 +107,7 @@ export default async function StudyDeckPage({
             <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
                 <div className="max-w-md text-center animate-in fade-in zoom-in duration-500">
                     <h2 className="text-4xl font-black text-[#f9c111] mb-4">
-                        {isFocusMode ? "No 'Bad' Cards!" : "No cards found! 🎈"}
+                        {isFocusMode ? "No 'Bad' Cards!" : "No cards found!"}
                     </h2>
                     <p className="text-neutral-400 text-lg mb-8">
                         {isFocusMode

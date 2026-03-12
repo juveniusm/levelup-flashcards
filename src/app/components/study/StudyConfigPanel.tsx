@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Play, Settings2, Check } from "lucide-react";
+import { X, Play, Settings2 } from "lucide-react";
 import { DIFFICULTY_RANGES } from "@/utils/study/studyUtils";
 
 interface StudyConfigPanelProps {
@@ -70,7 +70,6 @@ export default function StudyConfigPanel({ totalCards, onStart, onCancel }: Stud
                                         : "bg-neutral-800/50 border-neutral-700 text-neutral-400 hover:border-neutral-500"
                                         }`}
                                 >
-                                    {isSelected && <Check className="w-3 h-3" />}
                                     {label}
                                 </button>
                             );
