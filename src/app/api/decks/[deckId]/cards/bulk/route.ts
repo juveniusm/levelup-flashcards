@@ -14,6 +14,10 @@ export async function POST(
 
     try {
         const cards = await request.json();
+        console.log(`[API] Bulk POST to deckId: ${deckId}. Card count: ${cards?.length}`);
+        if (Array.isArray(cards) && cards.length > 0) {
+            console.log(`[API] First card sample:`, JSON.stringify(cards[0]));
+        }
 
         if (!Array.isArray(cards) || cards.length === 0) {
             return NextResponse.json({ error: "Payload must be a non-empty array of cards" }, { status: 400 });

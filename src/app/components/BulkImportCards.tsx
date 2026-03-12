@@ -41,9 +41,17 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
         setSuccessMessage(null);
 
         try {
+            console.group(`Bulk Import: ${file.name}`);
+            console.log(`File info: size=${file.size}, type=${file.type}`);
+            
             const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data);
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            console.log(`Workbook sheets:`, workbook.SheetNames);
+            
+            const sheetName = workbook.SheetNames[0];
+            console.log(`Reading sheet: "${sheetName}"`);
+            const worksheet = workbook.Sheets[sheetName];
 
             // Raw JSON data from sheet
             const rawJson = XLSX.utils.sheet_to_json(worksheet);
@@ -51,9 +59,14 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
             // Map rows back to expectations ({ front, back })
             const rawRows = rawJson as Array<Record<string, unknown>>;
             const cardsToImport = rawRows.map((row) => ({
-                front: String(row["Front (Prompt)"] || ""),
-                back: String(row["Back (Target Answer)"] || "")
-            })).filter((card) => card.front.trim() !== "" && card.back.trim() !== "");
+                front: String(row["Front (Prompt)"] || "").trim(),
+                back: String(row["Back (Target Answer)"] || "").trim()
+            })).filter((card) => card.front !== "" && card.back !== "");
+
+            console.log(`Total valid cards parsed: ${cardsToImport.length}`);
+            if (cardsToImport.length > 0) {
+                console.log(`First card sample:`, cardsToImport[0]);
+            }
 
             if (cardsToImport.length === 0) {
                 throw new Error("No valid cards found. Ensure the template has 'Front (Prompt)' and 'Back (Target Answer)' columns.");
@@ -81,7 +94,9 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
             }
 
             router.refresh();
+            console.groupEnd();
         } catch (err: unknown) {
+            console.error(`Import failed:`, err);
             setError(err instanceof Error ? err.message : "An error occurred during import.");
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
