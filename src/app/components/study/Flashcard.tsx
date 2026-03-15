@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, MouseEvent as ReactMouseEvent } from "react";
 import Image from "next/image";
 import { Card, getDifficultyLabel } from "@/utils/study/studyUtils";
 import { X, SearchCode } from "lucide-react";
@@ -22,6 +22,20 @@ export default function Flashcard({
     userAnswer,
 }: FlashcardProps) {
     const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
+    const [magnifier, setMagnifier] = useState({ x: 0, y: 0, show: false });
+    const imgContainerRef = useRef<HTMLDivElement>(null);
+
+    const handleMouseMove = (e: ReactMouseEvent) => {
+        if (!imgContainerRef.current) return;
+
+        const { left, top, width, height } = imgContainerRef.current.getBoundingClientRect();
+        
+        // Calculate percentage position
+        const x = ((e.clientX - left) / width) * 100;
+        const y = ((e.clientY - top) / height) * 100;
+
+        setMagnifier({ x, y, show: true });
+    };
 
     return (
         <div className="perspective-1000 mb-12">
@@ -114,27 +128,58 @@ export default function Flashcard({
             {/* Enlarged Image Modal */}
             {enlargedImage && (
                 <div 
-                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-300 cursor-zoom-out"
+                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-300"
                     onClick={() => setEnlargedImage(null)}
                 >
                     <button 
-                        className="absolute top-6 right-6 p-2 text-white/50 hover:text-white transition-colors bg-white/10 rounded-full hover:bg-white/20"
+                        className="absolute top-6 right-6 p-3 text-white/50 hover:text-white transition-colors bg-white/10 hover:bg-white/20 rounded-full z-[210] shadow-xl backdrop-blur-md"
                         onClick={(e) => {
                             e.stopPropagation();
                             setEnlargedImage(null);
                         }}
                     >
-                        <X size={32} />
+                        <X size={28} />
                     </button>
                     
-                    <div className="relative w-full h-full max-w-5xl max-h-[85vh] animate-in zoom-in-95 duration-300 flex items-center justify-center">
+                    <div 
+                        ref={imgContainerRef}
+                        className="relative w-full h-full max-w-5xl max-h-[90vh] animate-in zoom-in-95 duration-300 flex items-center justify-center overflow-hidden cursor-none"
+                        onMouseMove={handleMouseMove}
+                        onMouseEnter={() => setMagnifier(m => ({ ...m, show: true }))}
+                        onMouseLeave={() => setMagnifier(m => ({ ...m, show: false }))}
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <Image
                             src={enlargedImage}
                             alt="Enlarged"
                             fill
-                            className="object-contain select-none"
+                            className="object-contain select-none pointer-events-none"
                             priority
                         />
+
+                        {/* Magnifier Lens */}
+                        {magnifier.show && (
+                            <div 
+                                className="absolute pointer-events-none w-48 h-48 border-4 border-[#f9c111]/80 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)] z-[205] overflow-hidden"
+                                style={{
+                                    left: `${magnifier.x}%`,
+                                    top: `${magnifier.y}%`,
+                                    transform: "translate(-50%, -50%)",
+                                    backgroundImage: `url(${enlargedImage})`,
+                                    backgroundRepeat: "no-repeat",
+                                    backgroundSize: "400% 400%", // 4x Zoom
+                                    backgroundPosition: `${magnifier.x}% ${magnifier.y}%`,
+                                    backgroundColor: "black"
+                                }}
+                            >
+                                {/* Inner lens glow/reflection */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10" />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-neutral-500 font-bold uppercase tracking-widest text-[10px] bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-neutral-800/50">
+                        Click outer area or X to close
                     </div>
                 </div>
             )}
