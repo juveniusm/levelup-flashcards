@@ -65,7 +65,13 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
     return (
         <>
             <div
-                onClick={() => setShowSelector(true)}
+                onClick={() => {
+                    if (isHighlighted) {
+                        handleSelect("study");
+                    } else {
+                        setShowSelector(true);
+                    }
+                }}
                 className={`group relative bg-neutral-900 border transition-all duration-500 rounded-2xl overflow-hidden flex flex-col h-full min-h-[180px] cursor-pointer ${isHighlighted
                     ? "border-[#f9c111]/30 shadow-[0_0_20px_rgba(249,193,17,0.1)] hover:border-[#f9c111]"
                     : "border-neutral-800 hover:border-neutral-700 shadow-lg"
