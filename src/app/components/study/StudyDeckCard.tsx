@@ -111,22 +111,9 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                     </div>
                 </div>
 
-                {/* Hover States Visual Cues */}
-                <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-                    <div className="bg-[#f9c111] p-2 rounded-full text-black shadow-lg">
-                        <Play size={16} fill="currentColor" />
-                    </div>
-                </div>
 
-                {/* Stats Link */}
-                <div 
-                    className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <Link href={`/stats/${deck.id}`} className="p-1.5 text-neutral-500 hover:text-[#f9c111] transition-colors rounded-lg bg-black/20 hover:bg-black/40 backdrop-blur-sm">
-                        <BarChart3 size={16} />
-                    </Link>
-                </div>
+
+
             </div>
 
             {/* Mode Selection Modal */}
