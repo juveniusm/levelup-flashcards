@@ -84,11 +84,18 @@ export async function POST(
             card_seq: nextSeq++,
         }));
 
-        const result = await prisma.cards.createMany({
-            data: cardsToInsert,
-        });
+        let insertedCount = 0;
+        const BATCH_SIZE = 500;
 
-        return NextResponse.json({ success: true, count: result.count, skipped: skippedCount });
+        for (let i = 0; i < cardsToInsert.length; i += BATCH_SIZE) {
+            const batch = cardsToInsert.slice(i, i + BATCH_SIZE);
+            const result = await prisma.cards.createMany({
+                data: batch,
+            });
+            insertedCount += result.count;
+        }
+
+        return NextResponse.json({ success: true, count: insertedCount, skipped: skippedCount });
 
     } catch (error) {
         console.error("Bulk import error:", error);

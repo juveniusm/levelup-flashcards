@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 /** GET — list all users (admin only) */
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user) {
@@ -18,7 +18,13 @@ export async function GET() {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
+        const { searchParams } = new URL(request.url);
+        const skip = parseInt(searchParams.get("skip") || "0", 10);
+        const take = parseInt(searchParams.get("take") || "50", 10);
+
         const users = await prisma.user.findMany({
+            skip,
+            take: Math.min(take, 100), // Max 100 at a time
             select: {
                 id: true,
                 firstName: true,

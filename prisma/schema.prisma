@@ -85,6 +85,8 @@ model Decks {
   // Relations
   user  User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   cards Cards[]
+
+  @@index([user_id])
 }
 
 model Cards {
@@ -100,6 +102,8 @@ model Cards {
   deck      Decks        @relation(fields: [deck_id], references: [id], onDelete: Cascade)
   sm2_stats SM2Stats[]
   review_logs ReviewLog[]
+
+  @@index([deck_id])
 }
 
 model SM2Stats {
