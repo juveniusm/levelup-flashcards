@@ -116,6 +116,7 @@ export default function StudyInterface({
     const [inputAnswer, setInputAnswer] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
     const [xpEarned, setXpEarned] = useState(0);
+    const [isImageEnlarged, setIsImageEnlarged] = useState(false);
 
     const { currentIndex, lives, score, correctAnswers, incorrectAnswers, gameStatus } = state.context;
     const currentCard = cards[currentIndex];
@@ -288,10 +289,13 @@ export default function StudyInterface({
                 label={`Card ${currentIndex + 1} of ${cards.length}`}
                 feedbackType={feedbackType}
                 userAnswer={inputAnswer}
+                onEnlargeChange={setIsImageEnlarged}
             />
 
             {/* Input Area */}
-            {state.value === "question" ? (
+            {!isImageEnlarged && (
+                <>
+                    {state.value === "question" ? (
                 <form onSubmit={handleSubmit} className="flex gap-4">
                     <input
                         ref={inputRef}
@@ -328,6 +332,8 @@ export default function StudyInterface({
                         ? "Finish Game"
                         : "Continue (Press Enter)"}
                 </button>
+            )}
+            </>
             )}
         </div>
     );

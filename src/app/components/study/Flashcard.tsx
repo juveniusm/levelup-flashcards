@@ -11,6 +11,7 @@ interface FlashcardProps {
     feedbackType: "correct" | "incorrect" | null;
     feedbackExtra?: string; // e.g. penalty text like "(-3)"
     userAnswer?: string;
+    onEnlargeChange?: (isEnlarged: boolean) => void;
 }
 
 export default function Flashcard({
@@ -20,8 +21,15 @@ export default function Flashcard({
     feedbackType,
     feedbackExtra,
     userAnswer,
+    onEnlargeChange,
 }: FlashcardProps) {
     const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
+
+    const updateEnlargedImage = (url: string | null) => {
+        setEnlargedImage(url);
+        onEnlargeChange?.(!!url);
+    };
+
     const [magnifier, setMagnifier] = useState({ x: 0, y: 0, show: false });
     const imgContainerRef = useRef<HTMLDivElement>(null);
 
@@ -60,7 +68,7 @@ export default function Flashcard({
 
                     {card.front_image_url && (
                         <div 
-                            onClick={() => setEnlargedImage(card.front_image_url!)}
+                            onClick={() => updateEnlargedImage(card.front_image_url!)}
                             className="group relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg cursor-zoom-in transition-all active:scale-95"
                         >
                             <Image
@@ -88,7 +96,7 @@ export default function Flashcard({
 
                     {card.back_image_url && (
                         <div 
-                            onClick={() => setEnlargedImage(card.back_image_url!)}
+                            onClick={() => updateEnlargedImage(card.back_image_url!)}
                             className="group relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg cursor-zoom-in transition-all active:scale-95"
                         >
                             <Image
@@ -129,13 +137,13 @@ export default function Flashcard({
             {enlargedImage && (
                 <div 
                     className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-300"
-                    onClick={() => setEnlargedImage(null)}
+                    onClick={() => updateEnlargedImage(null)}
                 >
                     <button 
                         className="absolute top-6 right-6 p-3 text-white/50 hover:text-white transition-colors bg-white/10 hover:bg-white/20 rounded-full z-[210] shadow-xl backdrop-blur-md"
                         onClick={(e) => {
                             e.stopPropagation();
-                            setEnlargedImage(null);
+                            updateEnlargedImage(null);
                         }}
                     >
                         <X size={28} />
@@ -176,10 +184,6 @@ export default function Flashcard({
                                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10" />
                             </div>
                         )}
-                    </div>
-
-                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-neutral-500 font-bold uppercase tracking-widest text-[10px] bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-neutral-800/50">
-                        Click outer area or X to close
                     </div>
                 </div>
             )}

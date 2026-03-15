@@ -77,6 +77,7 @@ export default function EndlessInterface({
     const [incorrectAnswers, setIncorrectAnswers] = useState(saved?.incorrectAnswers ?? 0);
     const [totalCardsSeen, setTotalCardsSeen] = useState(saved?.totalCardsSeen ?? 0);
     const [xpEarned, setXpEarned] = useState(0);
+    const [isImageEnlarged, setIsImageEnlarged] = useState(false);
 
     // UI state
     const [feedbackState, setFeedbackState] = useState<"question" | "feedback_correct" | "feedback_incorrect" | "finished">("question");
@@ -290,10 +291,13 @@ export default function EndlessInterface({
                 feedbackType={feedbackType}
                 feedbackExtra="(-3)"
                 userAnswer={lastInputAnswer}
+                onEnlargeChange={setIsImageEnlarged}
             />
 
             {/* Input Area */}
-            {feedbackState === "question" ? (
+            {!isImageEnlarged && (
+                <>
+                    {feedbackState === "question" ? (
                 <form onSubmit={handleSubmit} className="flex gap-4">
                     <input
                         ref={inputRef}
