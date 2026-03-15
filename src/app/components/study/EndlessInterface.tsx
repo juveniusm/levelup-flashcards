@@ -333,6 +333,8 @@ export default function EndlessInterface({
                     Continue (Press Enter)
                 </button>
             )}
+                </>
+            )}
         </div>
     );
 }
