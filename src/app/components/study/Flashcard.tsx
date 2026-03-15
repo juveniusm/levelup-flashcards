@@ -1,7 +1,8 @@
 "use client";
-
+import { useState } from "react";
 import Image from "next/image";
 import { Card, getDifficultyLabel } from "@/utils/study/studyUtils";
+import { X, SearchCode } from "lucide-react";
 
 interface FlashcardProps {
     card: Card;
@@ -20,6 +21,8 @@ export default function Flashcard({
     feedbackExtra,
     userAnswer,
 }: FlashcardProps) {
+    const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
+
     return (
         <div className="perspective-1000 mb-12">
             <div
@@ -42,13 +45,19 @@ export default function Flashcard({
                     })()}
 
                     {card.front_image_url && (
-                        <div className="relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg shadow-md border border-neutral-700 bg-neutral-950/50">
+                        <div 
+                            onClick={() => setEnlargedImage(card.front_image_url!)}
+                            className="group relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg shadow-md border border-neutral-700 bg-neutral-950/50 cursor-zoom-in transition-all active:scale-95 hover:border-[#f9c111]/50"
+                        >
                             <Image
                                 src={card.front_image_url}
                                 alt="Front"
                                 fill
                                 className="object-contain"
                             />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <SearchCode className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={24} />
+                            </div>
                         </div>
                     )}
 
@@ -64,13 +73,19 @@ export default function Flashcard({
                     </span>
 
                     {card.back_image_url && (
-                        <div className="relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg shadow-md border border-neutral-700 bg-neutral-950/50">
+                        <div 
+                            onClick={() => setEnlargedImage(card.back_image_url!)}
+                            className="group relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg shadow-md border border-neutral-700 bg-neutral-950/50 cursor-zoom-in transition-all active:scale-95 hover:border-[#f9c111]/50"
+                        >
                             <Image
                                 src={card.back_image_url}
                                 alt="Back"
                                 fill
                                 className="object-contain"
                             />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <SearchCode className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={24} />
+                            </div>
                         </div>
                     )}
 
@@ -95,6 +110,34 @@ export default function Flashcard({
                     )}
                 </div>
             </div>
+
+            {/* Enlarged Image Modal */}
+            {enlargedImage && (
+                <div 
+                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-300 cursor-zoom-out"
+                    onClick={() => setEnlargedImage(null)}
+                >
+                    <button 
+                        className="absolute top-6 right-6 p-2 text-white/50 hover:text-white transition-colors bg-white/10 rounded-full hover:bg-white/20"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setEnlargedImage(null);
+                        }}
+                    >
+                        <X size={32} />
+                    </button>
+                    
+                    <div className="relative w-full h-full max-w-5xl max-h-[85vh] animate-in zoom-in-95 duration-300 flex items-center justify-center">
+                        <Image
+                            src={enlargedImage}
+                            alt="Enlarged"
+                            fill
+                            className="object-contain select-none"
+                            priority
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
