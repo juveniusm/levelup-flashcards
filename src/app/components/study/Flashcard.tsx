@@ -24,25 +24,65 @@ export default function Flashcard({
     onEnlargeChange,
 }: FlashcardProps) {
     const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
+    const [magnifier, setMagnifier] = useState({ x: 0, y: 0, show: false });
+    const [imgNaturalSize, setImgNaturalSize] = useState({ width: 0, height: 0 });
+    const imgContainerRef = useRef<HTMLDivElement>(null);
 
     const updateEnlargedImage = (url: string | null) => {
         setEnlargedImage(url);
         onEnlargeChange?.(!!url);
+        if (!url) {
+            setImgNaturalSize({ width: 0, height: 0 });
+            setMagnifier(m => ({ ...m, show: false }));
+        }
     };
 
-    const [magnifier, setMagnifier] = useState({ x: 0, y: 0, show: false });
-    const imgContainerRef = useRef<HTMLDivElement>(null);
-
     const handleMouseMove = (e: ReactMouseEvent) => {
-        if (!imgContainerRef.current) return;
+        if (!imgContainerRef.current || !imgNaturalSize.width) return;
 
-        const { left, top, width, height } = imgContainerRef.current.getBoundingClientRect();
+        const { left, top, width: containerWidth, height: containerHeight } = imgContainerRef.current.getBoundingClientRect();
         
-        // Calculate percentage position
-        const x = ((e.clientX - left) / width) * 100;
-        const y = ((e.clientY - top) / height) * 100;
+        // Calculate the actual image dimensions within the object-contain container
+        const containerRatio = containerWidth / containerHeight;
+        const imageRatio = imgNaturalSize.width / imgNaturalSize.height;
 
-        setMagnifier({ x, y, show: true });
+        let actualWidth, actualHeight, offsetX = 0, offsetY = 0;
+
+        if (imageRatio > containerRatio) {
+            // Image is wider than container (relative to its height)
+            actualWidth = containerWidth;
+            actualHeight = containerWidth / imageRatio;
+            offsetY = (containerHeight - actualHeight) / 2;
+        } else {
+            // Image is taller than container (relative to its width)
+            actualHeight = containerHeight;
+            actualWidth = containerHeight * imageRatio;
+            offsetX = (containerWidth - actualWidth) / 2;
+        }
+
+        const relativeX = e.clientX - left;
+        const relativeY = e.clientY - top;
+
+        // Check if cursor is within the actual image bounds
+        const isWithinBounds = 
+            relativeX >= offsetX && 
+            relativeX <= offsetX + actualWidth &&
+            relativeY >= offsetY && 
+            relativeY <= offsetY + actualHeight;
+
+        if (isWithinBounds) {
+            // Calculate percentage position relative to ONLY the actual image
+            const x = ((relativeX - offsetX) / actualWidth) * 100;
+            const y = ((relativeY - offsetY) / actualHeight) * 100;
+
+            // Also need container-relative percentages for lens positioning
+            const containerX = (relativeX / containerWidth) * 100;
+            const containerY = (relativeY / containerHeight) * 100;
+
+            setMagnifier({ x: containerX, y: containerY, show: true, imgX: x, imgY: y } as any);
+        } else {
+            setMagnifier(m => ({ ...m, show: false }));
+        }
     };
 
     return (
@@ -163,6 +203,9 @@ export default function Flashcard({
                             fill
                             className="object-contain select-none pointer-events-none"
                             priority
+                            onLoadingComplete={(img) => {
+                                setImgNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
+                            }}
                         />
 
                         {/* Magnifier Lens */}
@@ -176,7 +219,7 @@ export default function Flashcard({
                                     backgroundImage: `url(${enlargedImage})`,
                                     backgroundRepeat: "no-repeat",
                                     backgroundSize: "400% 400%", // 4x Zoom
-                                    backgroundPosition: `${magnifier.x}% ${magnifier.y}%`,
+                                    backgroundPosition: `${(magnifier as any).imgX}% ${(magnifier as any).imgY}%`,
                                     backgroundColor: "black"
                                 }}
                             >
