@@ -67,7 +67,7 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
             <div
                 onClick={() => {
                     if (isHighlighted) {
-                        handleSelect("study");
+                        handleSelect("review");
                     } else {
                         setShowSelector(true);
                     }
