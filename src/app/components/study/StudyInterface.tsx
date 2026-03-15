@@ -13,13 +13,15 @@ import SessionEndScreen from "./SessionEndScreen";
 export default function StudyInterface({
     cards,
     deckId,
+    mode = "study",
     isReviewMode = false,
 }: {
     cards: Card[];
     deckId: string;
+    mode?: string;
     isReviewMode?: boolean;
 }) {
-    const storageKey = `study-session-${deckId}`;
+    const storageKey = `study-session-${deckId}-${mode}`;
 
     const getSavedState = () => {
         try {
@@ -27,32 +29,45 @@ export default function StudyInterface({
             if (saved) {
                 const parsed = JSON.parse(saved);
 
-                // If we have saved order (IDs), we must re-order the 'cards' prop to match
+                // Validation: Ensure card set still matches
                 if (parsed.context && parsed.context.cardIds) {
-                    const cardMap = new Map(cards.map(c => [c.id, c]));
+                    // Check if the current cards match the saved IDs (order and set)
+                    const currentIds = cards.map(c => c.id);
+                    const savedIds = parsed.context.cardIds as string[];
 
-                    // Reconstruct the ordered array based on saved IDs
-                    const restoredOrder = parsed.context.cardIds
-                        .map((id: string) => cardMap.get(id))
-                        .filter(Boolean) as Card[];
+                    const isCardSetIdentical = currentIds.length === savedIds.length && 
+                        currentIds.every((id, idx) => id === savedIds[idx]);
 
-                    if (restoredOrder.length > 0) {
-                        // Adjust currentIndex if it's now out of bounds due to deletions
-                        const safeIndex = Math.min(parsed.context.currentIndex, restoredOrder.length - 1);
+                    if (!isCardSetIdentical) {
+                        console.log("Card set changed, discarding saved session state.");
+                        sessionStorage.removeItem(storageKey);
+                        // Fall through to return fresh state at the end
+                    } else {
+                        const cardMap = new Map(cards.map(c => [c.id, c]));
 
-                        return classicModeMachine.resolveState({
-                            value: parsed.stateValue,
-                            context: {
-                                ...parsed.context,
-                                cards: restoredOrder,
-                                currentIndex: safeIndex,
-                            },
-                        });
+                        // Reconstruct the ordered array based on saved IDs
+                        const restoredOrder = savedIds
+                            .map((id: string) => cardMap.get(id))
+                            .filter(Boolean) as Card[];
+
+                        if (restoredOrder.length > 0) {
+                            // Adjust currentIndex if it's now out of bounds
+                            const safeIndex = Math.min(parsed.context.currentIndex, restoredOrder.length - 1);
+
+                            return classicModeMachine.resolveState({
+                                value: parsed.stateValue,
+                                context: {
+                                    ...parsed.context,
+                                    cards: restoredOrder,
+                                    currentIndex: safeIndex,
+                                },
+                            });
+                        }
                     }
                 }
             }
-        } catch {
-            // Ignore parse errors
+        } catch (err) {
+            console.error("Session restore error:", err);
         }
         return classicModeMachine.resolveState({
             value: "question",

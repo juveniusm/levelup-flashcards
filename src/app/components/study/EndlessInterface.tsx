@@ -22,11 +22,26 @@ export default function EndlessInterface({
             const saved = sessionStorage.getItem(storageKey);
             if (saved) {
                 const parsed = JSON.parse(saved);
+                
                 if (parsed.queueIds && parsed.queueIds.length > 0) {
+                    const savedIds = parsed.queueIds as string[];
+                    
+                    // Simple validation: check if the first card ID from saved queue still exists in current cards
+                    // to prevent resuming a session with a completely different deck
+                    const allCardIds = new Set(cards.map(c => c.id));
+                    const isSessionStillValid = savedIds.every(id => allCardIds.has(id));
+
+                    if (!isSessionStillValid) {
+                        console.log("Endless session invalid for current deck, clearing.");
+                        sessionStorage.removeItem(storageKey);
+                        return null;
+                    }
+
                     const cardMap = new Map(cards.map((c) => [c.id, c]));
-                    const restoredQueue = parsed.queueIds
+                    const restoredQueue = savedIds
                         .map((id: string) => cardMap.get(id))
                         .filter(Boolean) as Card[];
+
                     if (restoredQueue.length > 0) {
                         return {
                             queue: restoredQueue,
@@ -40,8 +55,8 @@ export default function EndlessInterface({
                     }
                 }
             }
-        } catch {
-            // Ignore
+        } catch (err) {
+            console.error("Endless session restore error:", err);
         }
         return null;
     };

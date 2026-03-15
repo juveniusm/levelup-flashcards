@@ -153,7 +153,7 @@ export default async function StudyDeckPage({
 
     return (
         <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
-            <StudyInterface cards={finalCards} deckId={deck.id} isReviewMode={isReviewMode} />
+            <StudyInterface cards={finalCards} deckId={deck.id} mode={mode} isReviewMode={isReviewMode} />
         </div>
     );
 }
