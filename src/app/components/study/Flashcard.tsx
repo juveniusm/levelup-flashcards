@@ -47,7 +47,7 @@ export default function Flashcard({
                     {card.front_image_url && (
                         <div 
                             onClick={() => setEnlargedImage(card.front_image_url!)}
-                            className="group relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg shadow-md border border-neutral-700 bg-neutral-950/50 cursor-zoom-in transition-all active:scale-95 hover:border-[#f9c111]/50"
+                            className="group relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg cursor-zoom-in transition-all active:scale-95"
                         >
                             <Image
                                 src={card.front_image_url}
@@ -75,7 +75,7 @@ export default function Flashcard({
                     {card.back_image_url && (
                         <div 
                             onClick={() => setEnlargedImage(card.back_image_url!)}
-                            className="group relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg shadow-md border border-neutral-700 bg-neutral-950/50 cursor-zoom-in transition-all active:scale-95 hover:border-[#f9c111]/50"
+                            className="group relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg cursor-zoom-in transition-all active:scale-95"
                         >
                             <Image
                                 src={card.back_image_url}
