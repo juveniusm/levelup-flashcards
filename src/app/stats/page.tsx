@@ -118,7 +118,8 @@ export default function StatsPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch("/api/stats")
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        fetch(`/api/stats?timezone=${encodeURIComponent(tz)}`)
             .then((res) => res.json())
             .then(setStats)
             .catch(console.error)

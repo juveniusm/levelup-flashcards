@@ -5,23 +5,17 @@ import { unstable_cache } from 'next/cache';
 
 export const dynamic = "force-dynamic";
 
-// Data fetching logic wrapped in unstable_cache
-const getCachedStats = unstable_cache(
-    async (userId: string) => {
-        return await statsService.calculateUserStats(userId);
-    },
-    ['user-stats'],
-    { revalidate: 10, tags: ['stats'] }
-);
-
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const user = await getAuthenticatedUser();
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const stats = await getCachedStats(user.id);
+        const { searchParams } = new URL(request.url);
+        const timezone = searchParams.get("timezone") || "UTC";
+
+        const stats = await statsService.calculateUserStats(user.id, timezone);
 
         return NextResponse.json(stats);
     } catch (error) {

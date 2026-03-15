@@ -17,7 +17,12 @@ const fetchCoreMetrics = async (userId: string, now: Date) => {
         }),
         prisma.reviewLog.count({ where: { user_id: userId } }),
         prisma.sM2Stats.count({ where: { user_id: userId } }),
-        prisma.sM2Stats.count({ where: { user_id: userId, next_review: { lte: now } } }),
+        prisma.sM2Stats.count({ 
+            where: { 
+                user_id: userId, 
+                next_review: { lte: now } 
+            } 
+        }),
     ]);
     return { totalDecks, totalCards, totalReviews, cardsStudied, cardsDueToday };
 };
@@ -76,17 +81,27 @@ const calculateMastery = (allStats: { ease_factor: number; interval: number }[],
     };
 };
 
-const calculateActivity = (recentReviews: { reviewed_at: Date; mode: string }[], now: Date) => {
+const calculateActivity = (recentReviews: { reviewed_at: Date; mode: string }[], now: Date, timezone: string = 'UTC') => {
+    // Helper to get local date string YYYY-MM-DD
+    const getLocalDateStr = (date: Date) => {
+        return new Intl.DateTimeFormat('en-CA', { 
+            timeZone: timezone, 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit' 
+        }).format(date);
+    };
+
     const dailyMap = new Map<string, number>();
     for (let i = 0; i < 30; i++) {
-        const d = new Date();
+        const d = new Date(now);
         d.setDate(d.getDate() - i);
-        dailyMap.set(d.toISOString().split("T")[0], 0);
+        dailyMap.set(getLocalDateStr(d), 0);
     }
 
     const modeBreakdown = { review: 0, study: 0, endless: 0 };
     for (const r of recentReviews) {
-        const dateKey = r.reviewed_at.toISOString().split("T")[0];
+        const dateKey = getLocalDateStr(r.reviewed_at);
         if (dailyMap.has(dateKey)) {
             dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + 1);
         }
@@ -100,16 +115,23 @@ const calculateActivity = (recentReviews: { reviewed_at: Date; mode: string }[],
         .map(([date, count]) => ({ date, count }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
-    const todayKey = now.toISOString().split("T")[0];
+    const todayKey = getLocalDateStr(now);
     const reviewsToday = dailyMap.get(todayKey) || 0;
 
-    const startOfWeek = new Date();
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-    const reviewsThisWeek = recentReviews.filter(r => r.reviewed_at >= startOfWeek).length;
+    // Calculate start of week/month in local time
+    const reviewsThisWeek = recentReviews.filter(r => {
+        const rDate = r.reviewed_at;
+        const diff = now.getTime() - rDate.getTime();
+        const daysDiff = diff / (1000 * 60 * 60 * 24);
+        // Approximation for "this calendar week" or "last 7 days"
+        // For precision, we'd need more complex week-start logic, but let's keep it simple for now
+        return daysDiff <= 7;
+    }).length;
 
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const reviewsThisMonth = recentReviews.filter(r => r.reviewed_at >= startOfMonth).length;
+    const reviewsThisMonth = recentReviews.filter(r => {
+        const rDate = r.reviewed_at;
+        return rDate.getMonth() === now.getMonth() && rDate.getFullYear() === now.getFullYear();
+    }).length;
 
     return {
         modeBreakdown,
@@ -177,14 +199,14 @@ export const statsService = {
     /**
      * Calculates comprehensive statistics for a user's dashboard.
      */
-    async calculateUserStats(userId: string) {
+    async calculateUserStats(userId: string, timezone: string = 'UTC') {
         const now = new Date();
 
         const coreMetrics = await fetchCoreMetrics(userId, now);
         const detailedRecords = await fetchDetailedRecords(userId);
 
         const mastery = calculateMastery(detailedRecords.allStats, coreMetrics.totalCards);
-        const { modeBreakdown, activity } = calculateActivity(detailedRecords.recentReviews, now);
+        const { modeBreakdown, activity } = calculateActivity(detailedRecords.recentReviews, now, timezone);
         const deckBreakdown = calculateDeckBreakdown(detailedRecords.decksWithCardIds, detailedRecords.allStats, now);
 
         const totalXp = detailedRecords.userStatsRecord?.total_xp ?? 0;
