@@ -106,10 +106,9 @@ export default function CommandPalette() {
 
     const handleAction = (type: "edit" | "view", card: Card) => {
         setIsOpen(false);
-        if (type === "edit") {
-            router.push(`/creator/${(card as any).deck_id}?cardId=${card.id}`);
-        } else {
-            router.push(`/creator/${(card as any).deck_id}#card-${card.id}`);
+        const deckId = (card as any).deck_id as string;
+        if (type === "edit" || type === "view") {
+            router.push(`/creator/${deckId}/cards/${card.id}/edit`);
         }
     };
 
