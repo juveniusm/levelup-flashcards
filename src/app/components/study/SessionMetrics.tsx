@@ -1,4 +1,6 @@
-export default function SessionMetrics({
+import { memo } from "react";
+
+const SessionMetrics = memo(function SessionMetrics({
     score,
     correctAnswers,
     incorrectAnswers,
@@ -47,4 +49,6 @@ export default function SessionMetrics({
             </div>
         </div>
     );
-}
+});
+
+export default SessionMetrics;

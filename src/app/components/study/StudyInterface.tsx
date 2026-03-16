@@ -2,7 +2,7 @@
 
 import { useMachine } from "@xstate/react";
 import { classicModeMachine } from "@/machines/classicModeMachine";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { evaluateAnswer } from "@/utils/cognitive/fuzzyMatch";
 import { calculateQualityGrade } from "@/utils/cognitive/sm2";
 import { Card } from "@/utils/study/studyUtils";
@@ -128,7 +128,7 @@ export default function StudyInterface({
         }
     }, [state.value]);
 
-    const handlePass = () => {
+    const handlePass = useCallback(() => {
         setInputAnswer("");
         // Send SRS update (quality 0 = mistake/forgotten)
         fetch(`/api/decks/${deckId}/cards/review`, {
@@ -145,9 +145,9 @@ export default function StudyInterface({
             .catch((err) => console.error("Failed to save review:", err));
 
         send({ type: "PASS" });
-    };
+    }, [deckId, currentCard.id, isReviewMode, send]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
         if (!inputAnswer.trim()) {
             handlePass();
@@ -174,12 +174,12 @@ export default function StudyInterface({
                 if (data.xpEarned) setXpEarned((prev) => prev + data.xpEarned);
             })
             .catch((err) => console.error("Failed to save review:", err));
-    };
+    }, [inputAnswer, currentCard.back, currentCard.id, deckId, isReviewMode, handlePass, send]);
 
-    const handleNext = () => {
+    const handleNext = useCallback(() => {
         setInputAnswer("");
         send({ type: "NEXT_CARD" });
-    };
+    }, [send]);
 
     if (cards.length === 0) {
         return (
@@ -289,7 +289,7 @@ export default function StudyInterface({
                 isFlipped={feedbackType !== null}
                 label={`Card ${currentIndex + 1} of ${cards.length}`}
                 feedbackType={feedbackType}
-                userAnswer={inputAnswer}
+                userAnswer={state.value === "feedback_incorrect" ? inputAnswer : undefined}
                 onEnlargeChange={setIsImageEnlarged}
             />
 

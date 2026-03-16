@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, MouseEvent as ReactMouseEvent } from "react";
+import { useState, useRef, MouseEvent as ReactMouseEvent, memo } from "react";
 import Image from "next/image";
 import { Card, getDifficultyLabel } from "@/utils/study/studyUtils";
 import { X, SearchCode } from "lucide-react";
@@ -14,7 +14,7 @@ interface FlashcardProps {
     onEnlargeChange?: (isEnlarged: boolean) => void;
 }
 
-export default function Flashcard({
+const Flashcard = memo(function Flashcard({
     card,
     isFlipped,
     label,
@@ -232,4 +232,6 @@ export default function Flashcard({
             )}
         </div>
     );
-}
+});
+
+export default Flashcard;

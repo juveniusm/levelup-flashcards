@@ -17,25 +17,27 @@ export async function POST(
             return NextResponse.json({ error: "Front and back text are required" }, { status: 400 });
         }
 
-        // Duplicate check — same front + back (case-insensitive) in the same deck
-        const duplicate = await prisma.cards.findFirst({
-            where: {
-                deck_id: deckId,
-                front: { equals: front.trim(), mode: "insensitive" },
-                back: { equals: back.trim(), mode: "insensitive" },
-            },
-        });
+        // Run duplicate check and sequence check in parallel
+        const [duplicate, lastCard] = await prisma.$transaction([
+            prisma.cards.findFirst({
+                where: {
+                    deck_id: deckId,
+                    front: { equals: front.trim(), mode: "insensitive" },
+                    back: { equals: back.trim(), mode: "insensitive" },
+                },
+            }),
+            prisma.cards.findFirst({
+                where: { deck_id: deckId },
+                orderBy: { card_seq: "desc" },
+            })
+        ]);
+
         if (duplicate) {
             return NextResponse.json(
                 { error: "A card with the same prompt and answer already exists in this deck." },
                 { status: 409 }
             );
         }
-
-        const lastCard = await prisma.cards.findFirst({
-            where: { deck_id: deckId },
-            orderBy: { card_seq: "desc" },
-        });
 
         const nextSeq = (lastCard?.card_seq || 0) + 1;
 

@@ -1,7 +1,7 @@
 import EndScreenButtons from "./EndScreenButtons";
-import { ReactNode } from "react";
+import { ReactNode, memo } from "react";
 
-export default function SessionEndScreen({
+const SessionEndScreen = memo(function SessionEndScreen({
     title,
     titleColorClass,
     subtitle,
@@ -30,4 +30,6 @@ export default function SessionEndScreen({
             <EndScreenButtons primaryLabel={primaryButtonLabel} onPrimaryClick={onPrimaryClick} />
         </div>
     );
-}
+});
+
+export default SessionEndScreen;

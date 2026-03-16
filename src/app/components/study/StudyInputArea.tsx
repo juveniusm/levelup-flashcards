@@ -1,4 +1,4 @@
-import { RefObject } from "react";
+import { RefObject, memo } from "react";
 
 interface StudyInputAreaProps {
     isImageEnlarged: boolean;
@@ -12,7 +12,7 @@ interface StudyInputAreaProps {
     continueButtonText?: string;
 }
 
-export default function StudyInputArea({
+const StudyInputArea = memo(function StudyInputArea({
     isImageEnlarged,
     stateValue,
     inputRef,
@@ -65,4 +65,6 @@ export default function StudyInputArea({
             )}
         </>
     );
-}
+});
+
+export default StudyInputArea;
