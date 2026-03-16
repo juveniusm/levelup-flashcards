@@ -10,8 +10,8 @@ export function getDifficultyLabel(ef: number, interval: number = 0): { label: s
     return { label: "Easy", color: "text-green-400" };
 }
 
-export function getCardStats(sm2_stats: any[], now: Date = new Date()) {
-    const stats = sm2_stats?.[0] as { ease_factor?: number; interval?: number; next_review?: string | Date } | undefined;
+export function getCardStats(sm2_stats: { ease_factor?: number | null; interval?: number | null; next_review?: string | Date | null }[], now: Date = new Date()) {
+    const stats = sm2_stats?.[0];
     const easeFactor = stats?.ease_factor ?? 2.5;
     const interval = stats?.interval ?? 0;
     const nextReview = stats?.next_review ? new Date(stats.next_review) : null;

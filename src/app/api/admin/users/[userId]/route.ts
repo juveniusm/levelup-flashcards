@@ -31,8 +31,15 @@ export async function PATCH(
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const updateData: Record<string, any> = {};
+        const updateData: {
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+            username?: string;
+            role?: string;
+            password?: string;
+            name?: string;
+        } = {};
 
         if (firstName !== undefined) updateData.firstName = firstName;
         if (lastName !== undefined) updateData.lastName = lastName;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -60,11 +60,17 @@ export default function AdminUsersPage() {
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
+    const fetchUsers = useCallback(() => {
+        fetch("/api/admin/users")
+            .then((r) => r.json())
+            .then((data) => { if (Array.isArray(data)) setUsers(data); setLoading(false); })
+            .catch(() => setLoading(false));
+    }, []);
+
     useEffect(() => {
         if (session && !isAdmin) { router.push("/study"); return; }
         fetchUsers();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [session]);
+    }, [session, isAdmin, router, fetchUsers]);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -76,13 +82,6 @@ export default function AdminUsersPage() {
         document.addEventListener("mousedown", handle);
         return () => document.removeEventListener("mousedown", handle);
     }, []);
-
-    const fetchUsers = () => {
-        fetch("/api/admin/users")
-            .then((r) => r.json())
-            .then((data) => { if (Array.isArray(data)) setUsers(data); setLoading(false); })
-            .catch(() => setLoading(false));
-    };
 
     // ── Filter ──────────────────────────────────────────────────────────────
     const filteredUsers = users.filter((u) => {

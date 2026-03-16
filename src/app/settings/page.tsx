@@ -50,8 +50,14 @@ export default function SettingsPage() {
 
         setSaving(true);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload: Record<string, any> = { firstName, lastName };
+        const payload: {
+            firstName: string;
+            lastName: string;
+            email?: string;
+            username?: string;
+            currentPassword?: string;
+            newPassword?: string;
+        } = { firstName, lastName };
 
         if (isAdmin) {
             payload.email = email;
