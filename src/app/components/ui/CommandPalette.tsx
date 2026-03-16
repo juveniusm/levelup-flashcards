@@ -106,7 +106,7 @@ export default function CommandPalette() {
 
     const handleAction = (type: "edit" | "view", card: Card) => {
         setIsOpen(false);
-        const deckId = (card as any).deck_id as string;
+        const deckId = card.deck_id;
         if (type === "edit" || type === "view") {
             router.push(`/creator/${deckId}/cards/${card.id}/edit`);
         }
@@ -174,7 +174,7 @@ export default function CommandPalette() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-widest">
-                                                {(card as any).deck?.title || "Untithed Deck"}
+                                                {(card as any).deck?.title || "Untitled Deck"}
                                             </span>
                                             <ChevronRight size={10} className="text-neutral-700" />
                                         </div>

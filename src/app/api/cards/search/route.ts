@@ -54,7 +54,14 @@ export async function GET(req: NextRequest) {
                     }
                 ] : undefined,
             },
-            include: {
+            select: {
+                id: true,
+                deck_id: true,
+                front: true,
+                back: true,
+                front_image_url: true,
+                back_image_url: true,
+                card_seq: true,
                 deck: {
                     select: {
                         title: true,
