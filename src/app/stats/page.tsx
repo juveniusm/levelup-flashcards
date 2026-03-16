@@ -93,23 +93,23 @@ function DeckPerformanceTable({ deckBreakdown }: { deckBreakdown: StatsData["dec
                                         <td className="text-center px-4 py-4 text-white">{deck.totalCards}</td>
                                         <td className="text-center px-4 py-4">
                                             <span className="text-emerald-400 font-bold">{deck.mastered}</span>
-                                            <span className="text-neutral-600 ml-1 text-xs">({masteryPct}%)</span>
+                                            <span className="text-neutral-500 ml-1 text-[11px]">({masteryPct}%)</span>
                                         </td>
                                         <td className="text-center px-4 py-4">
                                             <span className="text-green-400 font-bold font-mono">{deck.easy}</span>
-                                            <span className="text-green-500/60 ml-1 text-xs">({deck.totalCards > 0 ? Math.round((deck.easy/deck.totalCards)*100) : 0}%)</span>
+                                            <span className="text-green-500/80 ml-1 text-[11px]">({deck.totalCards > 0 ? Math.round((deck.easy/deck.totalCards)*100) : 0}%)</span>
                                         </td>
                                         <td className="text-center px-4 py-4">
                                             <span className="text-yellow-400 font-bold font-mono">{deck.medium}</span>
-                                            <span className="text-yellow-500/60 ml-1 text-xs">({deck.totalCards > 0 ? Math.round((deck.medium/deck.totalCards)*100) : 0}%)</span>
+                                            <span className="text-yellow-500/80 ml-1 text-[11px]">({deck.totalCards > 0 ? Math.round((deck.medium/deck.totalCards)*100) : 0}%)</span>
                                         </td>
                                         <td className="text-center px-4 py-4">
                                             <span className="text-orange-400 font-bold font-mono">{deck.hard}</span>
-                                            <span className="text-orange-500/60 ml-1 text-xs">({deck.totalCards > 0 ? Math.round((deck.hard/deck.totalCards)*100) : 0}%)</span>
+                                            <span className="text-orange-500/80 ml-1 text-[11px]">({deck.totalCards > 0 ? Math.round((deck.hard/deck.totalCards)*100) : 0}%)</span>
                                         </td>
                                         <td className="text-center px-4 py-4">
                                             <span className="text-red-400 font-bold font-mono">{deck.veryHard}</span>
-                                            <span className="text-red-500/60 ml-1 text-xs">({deck.totalCards > 0 ? Math.round((deck.veryHard/deck.totalCards)*100) : 0}%)</span>
+                                            <span className="text-red-500/80 ml-1 text-[11px]">({deck.totalCards > 0 ? Math.round((deck.veryHard/deck.totalCards)*100) : 0}%)</span>
                                         </td>
                                         <td className="text-center px-4 py-4">
                                             <span className={deck.due > 0 ? "text-[#f9c111] font-bold" : "text-neutral-500"}>{deck.due}</span>
