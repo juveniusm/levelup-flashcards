@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Settings, PenTool, Clock, Library, ChevronDown, BarChart3, Users } from "lucide-react";
+import { Home, Settings, PenTool, Clock, Library, ChevronDown, BarChart3, Users, Search } from "lucide-react";
 
 interface SidebarNavProps {
     isCollapsed: boolean;
@@ -58,6 +58,23 @@ export default function SidebarNav({ isCollapsed, isMobileMenuOpen, isAdmin, set
                     </a>
                 </div>
             )}
+            {/* Search Trigger */}
+            <button
+                onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    window.dispatchEvent(new CustomEvent("open-command-palette"));
+                }}
+                className={`flex items-center gap-3 p-3 rounded-xl transition-all text-gray-400 hover:bg-[#222] hover:text-white ${isCollapsed ? "lg:justify-center" : "justify-start"}`}
+                title={isCollapsed ? "Search (Ctrl+K)" : undefined}
+            >
+                <Search size={22} className="shrink-0" />
+                {(!isCollapsed || isMobileMenuOpen) && (
+                    <div className="flex items-center justify-between flex-1">
+                        <span>Search</span>
+                        <span className="text-[10px] bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded border border-neutral-700 font-mono">Ctrl+K</span>
+                    </div>
+                )}
+            </button>
 
             {/* Stats */}
             <Link
