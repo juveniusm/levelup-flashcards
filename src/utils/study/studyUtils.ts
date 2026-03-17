@@ -3,6 +3,7 @@ import { Card } from "@/types/card";
 export type { Card };
 
 export function getDifficultyLabel(ef: number, interval: number = 0): { label: string; color: string } {
+    if (interval === 0) return { label: "Unseen", color: "text-neutral-400" };
     if (ef >= 2.5 && interval >= 21) return { label: "Mastered", color: "text-emerald-400" };
     if (ef <= 1.5) return { label: "Very Hard", color: "text-red-500" };
     if (ef <= 1.8) return { label: "Hard", color: "text-orange-400" };

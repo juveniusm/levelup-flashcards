@@ -64,13 +64,20 @@ export default async function StudyDeckPage({
 
     const cardsWithPriority = deck.cards.map((card) => {
         const { easeFactor, interval, isDue } = getCardStats(card.sm2_stats, now);
+        const isUnseen = card.sm2_stats.length === 0;
+
+        // Priority logic:
+        // Very Hard (1.3) -> Hard (1.8) -> UNSEEN (1.9) -> Medium (2.2) -> Easy (2.5) -> Mastered (2.5+)
+        const sortingEf = isUnseen ? 1.9 : (isDue ? easeFactor - 0.1 : easeFactor);
 
         return {
             ...card,
             _easeFactor: easeFactor,
+            _sortingEf: sortingEf,
             _interval: interval,
             _isDue: isDue,
             _difficultyLabel: isDue ? "Due" : (() => {
+                if (isUnseen) return "Unseen";
                 if (easeFactor >= 2.5 && interval >= 21) return "Mastered";
                 if (easeFactor <= 1.5) return "Very Hard";
                 if (easeFactor <= 1.8) return "Hard";
@@ -134,8 +141,8 @@ export default async function StudyDeckPage({
         );
     }
 
-    // Sorting logic (Hardest first)
-    const sortedCards = [...filteredCards].sort((a, b) => a._easeFactor - b._easeFactor);
+    // Sorting logic (Hardest first, then Unseen, then others)
+    const sortedCards = [...filteredCards].sort((a, b) => a._sortingEf - b._sortingEf);
 
     const finalCards = sortedCards.map(({ _easeFactor, _interval, _isDue, _difficultyLabel, ...card }) => ({
         ...card,
