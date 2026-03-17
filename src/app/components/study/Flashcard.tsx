@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, MouseEvent as ReactMouseEvent, memo } from "react";
+import { useState, useRef, useEffect, MouseEvent as ReactMouseEvent, memo } from "react";
 import Image from "next/image";
 import { Card, getDifficultyLabel } from "@/utils/study/studyUtils";
 import { X, SearchCode } from "lucide-react";
@@ -36,6 +36,22 @@ const Flashcard = memo(function Flashcard({
             setMagnifier(m => ({ ...m, show: false }));
         }
     };
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                updateEnlargedImage(null);
+            }
+        };
+
+        if (enlargedImage) {
+            window.addEventListener("keydown", handleKeyDown);
+        }
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [enlargedImage]);
 
     const handleMouseMove = (e: ReactMouseEvent) => {
         if (!imgContainerRef.current || !imgNaturalSize.width) return;
@@ -195,7 +211,6 @@ const Flashcard = memo(function Flashcard({
                         onMouseMove={handleMouseMove}
                         onMouseEnter={() => setMagnifier(m => ({ ...m, show: true }))}
                         onMouseLeave={() => setMagnifier(m => ({ ...m, show: false }))}
-                        onClick={(e) => e.stopPropagation()}
                     >
                         <Image
                             src={enlargedImage}
