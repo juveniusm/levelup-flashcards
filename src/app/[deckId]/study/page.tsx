@@ -38,6 +38,7 @@ export default async function StudyDeckPage({
                     back: true,
                     front_image_url: true,
                     back_image_url: true,
+                    deck_id: true,
                     sm2_stats: userId
                         ? {
                             where: { user_id: userId },
