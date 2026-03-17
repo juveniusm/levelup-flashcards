@@ -9,11 +9,12 @@ export interface DeckWithStats {
     _count: { cards: number };
     dueCount: number;
     mastery: number; // Percentage
+    difficultyCounts: Record<string, number>;
 }
 
 export const deckService = {
     /**
-     * Fetches decks based on user ID and role, including card counts, due counts, and mastery.
+     * Fetches decks based on user ID and role, including card counts, due counts, mastery, and difficulty breakdowns.
      */
     async fetchDecksWithStats(userId: string, role: string, mode?: string): Promise<DeckWithStats[]> {
         const now = new Date();
@@ -45,7 +46,7 @@ export const deckService = {
             },
         });
 
-        // 1. Fetch ALL SM2 stats for this user to calculate dueCount and mastery
+        // 1. Fetch ALL SM2 stats for this user
         const userStats = await prisma.sM2Stats.findMany({
             where: { user_id: userId },
             select: {
@@ -60,13 +61,27 @@ export const deckService = {
             }
         });
 
-        // Map of deckId -> { due: count, mastered: count }
-        const deckStatsMap: Record<string, { due: number, mastered: number }> = {};
+        // Map of deckId -> { due: count, mastered: count, counts: { labels... } }
+        const deckStatsMap: Record<string, { 
+            due: number, 
+            mastered: number, 
+            difficultyCounts: Record<string, number> 
+        }> = {};
         
         userStats.forEach((stat) => {
             const deckId = stat.card.deck_id;
             if (!deckStatsMap[deckId]) {
-                deckStatsMap[deckId] = { due: 0, mastered: 0 };
+                deckStatsMap[deckId] = { 
+                    due: 0, 
+                    mastered: 0, 
+                    difficultyCounts: {
+                        "Very Hard": 0,
+                        "Hard": 0,
+                        "Medium": 0,
+                        "Easy": 0,
+                        "Mastered": 0
+                    }
+                };
             }
 
             // Due if next_review <= now
@@ -74,15 +89,35 @@ export const deckService = {
                 deckStatsMap[deckId].due++;
             }
 
-            // Mastered if EF >= 2.5 AND interval >= 21 (as defined in studyUtils.ts)
-            if ((stat.ease_factor || 0) >= 2.5 && (stat.interval || 0) >= 21) {
+            // Get difficulty label using the same logic as studyUtils.ts
+            const ef = stat.ease_factor || 0;
+            const iv = stat.interval || 0;
+            
+            let label = "Easy";
+            if (ef >= 2.5 && iv >= 21) {
+                label = "Mastered";
                 deckStatsMap[deckId].mastered++;
-            }
+            } else if (ef <= 1.5) label = "Very Hard";
+            else if (ef <= 1.8) label = "Hard";
+            else if (ef <= 2.2) label = "Medium";
+            
+            deckStatsMap[deckId].difficultyCounts[label]++;
         });
 
         return decks.map((deck) => {
-            const stats = deckStatsMap[deck.id] || { due: 0, mastered: 0 };
+            const stats = deckStatsMap[deck.id] || { 
+                due: 0, 
+                mastered: 0, 
+                difficultyCounts: { "Very Hard": 0, "Hard": 0, "Medium": 0, "Easy": 0, "Mastered": 0 } 
+            };
+            
             const totalCards = deck._count.cards;
+            
+            // Adjust "Easy" count to include cards that HAVE NO STATS (new cards)
+            const cardsWithStats = Object.values(stats.difficultyCounts).reduce((a, b) => a + b, 0);
+            const cardsWithoutStats = Math.max(0, totalCards - cardsWithStats);
+            stats.difficultyCounts["Easy"] += cardsWithoutStats;
+
             const masteryPercent = totalCards > 0 
                 ? Math.round((stats.mastered / totalCards) * 100) 
                 : 0;
@@ -94,7 +129,8 @@ export const deckService = {
                 deck_seq: deck.deck_seq,
                 _count: deck._count,
                 dueCount: stats.due,
-                mastery: masteryPercent
+                mastery: masteryPercent,
+                difficultyCounts: stats.difficultyCounts
             };
         });
     },

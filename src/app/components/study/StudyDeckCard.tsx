@@ -12,6 +12,7 @@ interface StudyDeckCardProps {
         _count: { cards: number };
         dueCount?: number;
         mastery?: number;
+        difficultyCounts?: Record<string, number>;
     };
     variant?: "standard" | "highlighted";
 }
@@ -190,6 +191,7 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                             <div>
                                 <StudyConfigPanel
                                     totalCards={deck._count.cards}
+                                    difficultyCounts={deck.difficultyCounts}
                                     onCancel={() => setSelectorView("modes")}
                                     onStart={(config) => handleSelect("custom", {
                                         limit: config.limit.toString(),
