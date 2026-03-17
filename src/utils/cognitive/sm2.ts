@@ -43,7 +43,7 @@ export function calculateSM2(
     let newRepetitions = repetitions;
 
     // Fixed interval schedule (progressive growth)
-    const INTERVAL_STEPS = [1, 3, 7, 14, 30, 90];
+    const INTERVAL_STEPS = [1, 3, 7, 14, 21, 28];
 
     let newInterval: number;
 
@@ -55,7 +55,7 @@ export function calculateSM2(
         // User passed the card
         newRepetitions = repetitions + 1;
 
-        // Use the fixed schedule, capping at the last step (90 days)
+        // Use the fixed schedule, capping at the last step (28 days)
         const stepIndex = Math.min(newRepetitions - 1, INTERVAL_STEPS.length - 1);
         newInterval = INTERVAL_STEPS[stepIndex];
     }
