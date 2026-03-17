@@ -11,6 +11,7 @@ interface StudyDeckCardProps {
         title: string;
         _count: { cards: number };
         dueCount?: number;
+        mastery?: number;
     };
     variant?: "standard" | "highlighted";
 }
@@ -72,48 +73,66 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                         setShowSelector(true);
                     }
                 }}
-                className={`group relative bg-neutral-900 border transition-all duration-500 rounded-2xl overflow-hidden flex flex-col h-full min-h-[180px] cursor-pointer ${isHighlighted
-                    ? "border-[#f9c111]/30 shadow-[0_0_20px_rgba(249,193,17,0.1)] hover:border-[#f9c111]"
-                    : "border-neutral-800 hover:border-neutral-700 shadow-lg"
+                className={`group relative bg-neutral-900 border transition-all duration-300 rounded-xl overflow-hidden cursor-pointer hover:shadow-2xl ${isHighlighted
+                    ? "border-[#f9c111]/30 bg-gradient-to-r from-neutral-900 to-[#f9c111]/5 hover:border-[#f9c111]/60"
+                    : "border-neutral-800/80 hover:border-neutral-600 shadow-sm"
                     }`}
             >
-                {/* Main Content Area */}
-                <div className="p-6 flex flex-col h-full">
-                    <div className="flex justify-between items-start mb-4">
-                        <h3 className="font-bold text-xl text-white group-hover:text-[#f9c111] transition-colors leading-tight line-clamp-2 pr-6">
-                            {deck.title}
-                        </h3>
-                        {isHighlighted && (
-                            <div className="bg-[#f9c111] text-black text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter animate-pulse">
-                                Due
-                            </div>
-                        )}
+                {/* Horizontal Layout */}
+                <div className="flex flex-col sm:flex-row sm:items-center p-5 gap-4">
+                    {/* Title and ID */}
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-lg text-white group-hover:text-[#f9c111] transition-colors leading-tight truncate">
+                                {deck.title}
+                            </h3>
+                            {isHighlighted && (
+                                <div className="flex-shrink-0 bg-[#f9c111] text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter animate-pulse">
+                                    Due
+                                </div>
+                            )}
+                        </div>
+                        <div className="text-[10px] text-neutral-500 font-medium tracking-wider uppercase opacity-60">
+                            DECK ID: {deck.id.slice(0, 8)}
+                        </div>
                     </div>
 
-                    <div className="mt-auto pt-6 flex justify-between items-center text-sm">
-                        <div className="bg-black/40 backdrop-blur-sm border border-neutral-800/50 px-3 py-1.5 rounded-xl text-[10px] font-bold tracking-widest flex items-center gap-4 whitespace-nowrap shadow-inner">
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-neutral-500 uppercase text-[9px]">Total</span>
-                                <span className="text-white">{deck._count.cards}</span>
+                    {/* Stats Section */}
+                    <div className="flex items-center gap-6 sm:gap-8">
+                        {/* Total Cards */}
+                        <div className="flex flex-col items-center sm:items-start">
+                            <span className="text-neutral-500 uppercase text-[9px] font-bold tracking-widest mb-1">Total Cards</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-white font-bold text-base">{deck._count.cards}</span>
+                                {deck.dueCount !== undefined && deck.dueCount > 0 && (
+                                    <span className="text-[#f9c111] text-xs font-bold">(+{deck.dueCount})</span>
+                                )}
                             </div>
-                            {deck.dueCount !== undefined && deck.dueCount > 0 && (
-                                <>
-                                    <div className="w-px h-3 bg-neutral-800" />
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="text-[#f9c111]/70 uppercase text-[9px]">Due Today</span>
-                                        <span className="text-[#f9c111] drop-shadow-[0_0_8px_rgba(249,193,17,0.3)]">
-                                            {deck.dueCount}
-                                        </span>
-                                    </div>
-                                </>
-                            )}
+                        </div>
+
+                        {/* Mastery Percentage */}
+                        <div className="flex flex-col items-center sm:items-start min-w-[80px]">
+                            <span className="text-neutral-500 uppercase text-[9px] font-bold tracking-widest mb-1 text-center sm:text-left">Mastery</span>
+                            <div className="flex items-center gap-2">
+                                <span className={`font-black text-lg ${(deck.mastery ?? 0) > 80 ? "text-green-400" : (deck.mastery ?? 0) > 40 ? "text-yellow-400" : "text-neutral-400"}`}>
+                                    {deck.mastery ?? 0}%
+                                </span>
+                                {/* Small progress bar */}
+                                <div className="hidden xs:block w-12 h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                                    <div 
+                                        className={`h-full transition-all duration-1000 ${(deck.mastery ?? 0) > 80 ? "bg-green-500" : (deck.mastery ?? 0) > 40 ? "bg-yellow-500" : "bg-neutral-600"}`} 
+                                        style={{ width: `${deck.mastery ?? 0}%` }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Arrow indicator */}
+                        <div className="hidden sm:flex items-center text-neutral-700 group-hover:text-[#f9c111] transition-colors group-hover:translate-x-1 duration-300">
+                            <ArrowRight size={20} />
                         </div>
                     </div>
                 </div>
-
-
-
-
             </div>
 
             {/* Mode Selection Modal */}

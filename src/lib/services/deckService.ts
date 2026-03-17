@@ -8,11 +8,12 @@ export interface DeckWithStats {
     deck_seq: number | null;
     _count: { cards: number };
     dueCount: number;
+    mastery: number; // Percentage
 }
 
 export const deckService = {
     /**
-     * Fetches decks based on user ID and role, including card counts and due counts.
+     * Fetches decks based on user ID and role, including card counts, due counts, and mastery.
      */
     async fetchDecksWithStats(userId: string, role: string, mode?: string): Promise<DeckWithStats[]> {
         const now = new Date();
@@ -20,12 +21,10 @@ export const deckService = {
         let whereClause: Prisma.DecksWhereInput = { user_id: userId };
 
         if (mode === "creator") {
-            // Creator view: admins see all admin-owned decks; users see their own
             whereClause = role === "ADMIN"
                 ? { user: { role: "ADMIN" } }
                 : { user_id: userId };
         } else {
-            // Study/dashboard view: own decks + all public decks
             whereClause = {
                 OR: [
                     { user_id: userId },
@@ -33,8 +32,6 @@ export const deckService = {
                 ],
             };
         }
-
-        let dueStats: { card: { deck_id: string } }[] = [];
 
         const decks = await prisma.decks.findMany({
             where: whereClause,
@@ -48,37 +45,58 @@ export const deckService = {
             },
         });
 
-        if (mode !== "creator") {
-            dueStats = await prisma.sM2Stats.findMany({
-                where: {
-                    user_id: userId,
-                    next_review: { lte: now }
-                },
-                select: {
-                    card: {
-                        select: {
-                            deck_id: true
-                        }
+        // 1. Fetch ALL SM2 stats for this user to calculate dueCount and mastery
+        const userStats = await prisma.sM2Stats.findMany({
+            where: { user_id: userId },
+            select: {
+                ease_factor: true,
+                interval: true,
+                next_review: true,
+                card: {
+                    select: {
+                        deck_id: true
                     }
                 }
-            });
-        }
-
-        // Map of deckId -> dueCount
-        const dueCountMap: Record<string, number> = {};
-        dueStats.forEach((stat) => {
-            const deckId = stat.card.deck_id;
-            dueCountMap[deckId] = (dueCountMap[deckId] || 0) + 1;
+            }
         });
 
-        return decks.map((deck) => ({
-            id: deck.id,
-            user_id: deck.user_id,
-            title: deck.title,
-            deck_seq: deck.deck_seq,
-            _count: deck._count,
-            dueCount: dueCountMap[deck.id] || 0
-        }));
+        // Map of deckId -> { due: count, mastered: count }
+        const deckStatsMap: Record<string, { due: number, mastered: number }> = {};
+        
+        userStats.forEach((stat) => {
+            const deckId = stat.card.deck_id;
+            if (!deckStatsMap[deckId]) {
+                deckStatsMap[deckId] = { due: 0, mastered: 0 };
+            }
+
+            // Due if next_review <= now
+            if (stat.next_review <= now) {
+                deckStatsMap[deckId].due++;
+            }
+
+            // Mastered if EF >= 2.5 AND interval >= 21 (as defined in studyUtils.ts)
+            if ((stat.ease_factor || 0) >= 2.5 && (stat.interval || 0) >= 21) {
+                deckStatsMap[deckId].mastered++;
+            }
+        });
+
+        return decks.map((deck) => {
+            const stats = deckStatsMap[deck.id] || { due: 0, mastered: 0 };
+            const totalCards = deck._count.cards;
+            const masteryPercent = totalCards > 0 
+                ? Math.round((stats.mastered / totalCards) * 100) 
+                : 0;
+
+            return {
+                id: deck.id,
+                user_id: deck.user_id,
+                title: deck.title,
+                deck_seq: deck.deck_seq,
+                _count: deck._count,
+                dueCount: stats.due,
+                mastery: masteryPercent
+            };
+        });
     },
 
     /**
