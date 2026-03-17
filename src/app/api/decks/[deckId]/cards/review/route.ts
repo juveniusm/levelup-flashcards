@@ -54,8 +54,11 @@ export async function POST(request: NextRequest) {
 
         const result = calculateSM2(qualityGrade, prevReps, prevEase, userTz);
         const isDue = existing && existing.next_review <= new Date();
+        const isCorrectEarly = qualityGrade >= 4;
 
-        const updateData = (isReviewMode === true || isDue)
+        // Update interval/reps/next_review if it's a "real" review (due) 
+        // OR if the user is studying early and gets it right (reward study ahead).
+        const updateData = (isReviewMode === true || isDue || isCorrectEarly)
             ? {
                 ease_factor: result.ease_factor,
                 interval: result.interval,

@@ -42,8 +42,8 @@ export function calculateSM2(
     let newEaseFactor = previousEaseFactor;
     let newRepetitions = repetitions;
 
-    // Fixed interval schedule (capped at 28 days)
-    const INTERVAL_STEPS = [1, 2, 5, 7, 14, 28];
+    // Fixed interval schedule (progressive growth)
+    const INTERVAL_STEPS = [1, 3, 7, 14, 30, 90];
 
     let newInterval: number;
 
@@ -55,7 +55,7 @@ export function calculateSM2(
         // User passed the card
         newRepetitions = repetitions + 1;
 
-        // Use the fixed schedule, capping at the last step (28 days)
+        // Use the fixed schedule, capping at the last step (90 days)
         const stepIndex = Math.min(newRepetitions - 1, INTERVAL_STEPS.length - 1);
         newInterval = INTERVAL_STEPS[stepIndex];
     }
@@ -74,7 +74,8 @@ export function calculateSM2(
     let nextReviewDate = new Date();
     nextReviewDate.setDate(nextReviewDate.getDate() + newInterval);
 
-    // Normalize to 00:00:00 in the user's local timezone if provided
+    // Normalize to 04:00:00 (4 AM) in the user's local timezone if provided
+    // This prevents cards studied late at night from being due just a few hours later.
     if (timezone) {
         try {
             // 1. Get the YYYY-MM-DD for the target day in the user's timezone
@@ -95,9 +96,8 @@ export function calculateSM2(
             const offsetPart = parts.find(p => p.type === 'timeZoneName')?.value; // "GMT+07:00"
             const tzOffset = offsetPart ? offsetPart.replace('GMT', '') : 'Z';
 
-            // 3. Construct the ISO string for midnight in that timezone and parse it
-            // This creates a Date object that represents the exact UTC moment of local midnight.
-            const isoString = `${dateStr}T00:00:00${tzOffset || 'Z'}`;
+            // 3. Construct the ISO string for 4 AM in that timezone and parse it
+            const isoString = `${dateStr}T04:00:00${tzOffset || 'Z'}`;
             nextReviewDate = new Date(isoString);
         } catch (e) {
             console.error("Failed to normalize date for timezone:", timezone, e);
