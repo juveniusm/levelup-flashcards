@@ -39,6 +39,7 @@ export function shuffleArray<T>(array: T[]): T[] {
 }
 
 export const DIFFICULTY_RANGES: Record<string, { min: number; max: number }> = {
+    "Unseen": { min: -1, max: -1 }, // Special flag for no stats
     "Very Hard": { min: 0, max: 1.5 },
     "Hard": { min: 1.51, max: 1.8 },
     "Medium": { min: 1.81, max: 2.2 },

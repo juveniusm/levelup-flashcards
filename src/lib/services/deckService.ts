@@ -62,7 +62,8 @@ export const deckService = {
                 SUM(CASE WHEN s.id IS NOT NULL AND NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor <= 1.5 THEN 1 ELSE 0 END)::int as bucket_very_hard,
                 SUM(CASE WHEN s.id IS NOT NULL AND NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor > 1.5 AND s.ease_factor <= 1.8 THEN 1 ELSE 0 END)::int as bucket_hard,
                 SUM(CASE WHEN s.id IS NOT NULL AND NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor > 1.8 AND s.ease_factor <= 2.2 THEN 1 ELSE 0 END)::int as bucket_medium,
-                SUM(CASE WHEN s.id IS NULL OR (NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor > 2.2) THEN 1 ELSE 0 END)::int as bucket_easy
+                SUM(CASE WHEN s.id IS NOT NULL AND NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor > 2.2 THEN 1 ELSE 0 END)::int as bucket_easy,
+                SUM(CASE WHEN s.id IS NULL THEN 1 ELSE 0 END)::int as bucket_unseen
             FROM "Cards" c
             LEFT JOIN "SM2Stats" s ON c.id = s.card_id AND s.user_id = ${userId}
             WHERE c.deck_id IN (${Prisma.join(deckIds)})
@@ -75,6 +76,7 @@ export const deckService = {
                 due: row.due_count,
                 mastered: row.mastered_count,
                 difficultyCounts: {
+                    "Unseen": row.bucket_unseen,
                     "Very Hard": row.bucket_very_hard,
                     "Hard": row.bucket_hard,
                     "Medium": row.bucket_medium,
@@ -89,7 +91,7 @@ export const deckService = {
             const deckStats = statsMap[deck.id] || { 
                 due: 0, 
                 mastered: 0, 
-                difficultyCounts: { "Very Hard": 0, "Hard": 0, "Medium": 0, "Easy": 0, "Mastered": 0 } 
+                difficultyCounts: { "Unseen": 0, "Very Hard": 0, "Hard": 0, "Medium": 0, "Easy": 0, "Mastered": 0 } 
             };
             
             const totalCards = deck._count.cards;
