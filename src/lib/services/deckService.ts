@@ -46,80 +46,55 @@ export const deckService = {
             },
         });
 
-        // 1. Fetch ALL SM2 stats for this user
-        const userStats = await prisma.sM2Stats.findMany({
-            where: { user_id: userId },
-            select: {
-                ease_factor: true,
-                interval: true,
-                next_review: true,
-                card: {
-                    select: {
-                        deck_id: true
-                    }
+        const deckIds = decks.map(d => d.id);
+        if (deckIds.length === 0) return [];
+
+        // 1. Fetch Aggregated Stats in ONE query
+        // We use a LEFT JOIN on SM2Stats to ensure we count cards that have no stats (New Cards)
+        // We filter stats by user_id in the JOIN condition to get personal progress.
+        const stats: any[] = await prisma.$queryRaw`
+            SELECT 
+                c.deck_id,
+                COUNT(c.id)::int as total_cards,
+                SUM(CASE WHEN s.next_review <= ${now} THEN 1 ELSE 0 END)::int as due_count,
+                SUM(CASE WHEN s.ease_factor >= 2.5 AND s.interval >= 21 THEN 1 ELSE 0 END)::int as mastered_count,
+                SUM(CASE WHEN s.ease_factor >= 2.5 AND s.interval >= 21 THEN 1 ELSE 0 END)::int as bucket_mastered,
+                SUM(CASE WHEN s.id IS NOT NULL AND NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor <= 1.5 THEN 1 ELSE 0 END)::int as bucket_very_hard,
+                SUM(CASE WHEN s.id IS NOT NULL AND NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor > 1.5 AND s.ease_factor <= 1.8 THEN 1 ELSE 0 END)::int as bucket_hard,
+                SUM(CASE WHEN s.id IS NOT NULL AND NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor > 1.8 AND s.ease_factor <= 2.2 THEN 1 ELSE 0 END)::int as bucket_medium,
+                SUM(CASE WHEN s.id IS NULL OR (NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor > 2.2) THEN 1 ELSE 0 END)::int as bucket_easy
+            FROM "Cards" c
+            LEFT JOIN "SM2Stats" s ON c.id = s.card_id AND s.user_id = ${userId}
+            WHERE c.deck_id IN (${Prisma.join(deckIds)})
+            GROUP BY c.deck_id
+        `;
+
+        // Map aggregated stats by deckId
+        const statsMap = stats.reduce((acc, row) => {
+            acc[row.deck_id] = {
+                due: row.due_count,
+                mastered: row.mastered_count,
+                difficultyCounts: {
+                    "Very Hard": row.bucket_very_hard,
+                    "Hard": row.bucket_hard,
+                    "Medium": row.bucket_medium,
+                    "Easy": row.bucket_easy,
+                    "Mastered": row.bucket_mastered
                 }
-            }
-        });
-
-        // Map of deckId -> { due: count, mastered: count, counts: { labels... } }
-        const deckStatsMap: Record<string, { 
-            due: number, 
-            mastered: number, 
-            difficultyCounts: Record<string, number> 
-        }> = {};
-        
-        userStats.forEach((stat) => {
-            const deckId = stat.card.deck_id;
-            if (!deckStatsMap[deckId]) {
-                deckStatsMap[deckId] = { 
-                    due: 0, 
-                    mastered: 0, 
-                    difficultyCounts: {
-                        "Very Hard": 0,
-                        "Hard": 0,
-                        "Medium": 0,
-                        "Easy": 0,
-                        "Mastered": 0
-                    }
-                };
-            }
-
-            // Due if next_review <= now
-            if (stat.next_review <= now) {
-                deckStatsMap[deckId].due++;
-            }
-
-            // Get difficulty label using the same logic as studyUtils.ts
-            const ef = stat.ease_factor || 0;
-            const iv = stat.interval || 0;
-            
-            let label = "Easy";
-            if (ef >= 2.5 && iv >= 21) {
-                label = "Mastered";
-                deckStatsMap[deckId].mastered++;
-            } else if (ef <= 1.5) label = "Very Hard";
-            else if (ef <= 1.8) label = "Hard";
-            else if (ef <= 2.2) label = "Medium";
-            
-            deckStatsMap[deckId].difficultyCounts[label]++;
-        });
+            };
+            return acc;
+        }, {} as Record<string, any>);
 
         return decks.map((deck) => {
-            const stats = deckStatsMap[deck.id] || { 
+            const deckStats = statsMap[deck.id] || { 
                 due: 0, 
                 mastered: 0, 
                 difficultyCounts: { "Very Hard": 0, "Hard": 0, "Medium": 0, "Easy": 0, "Mastered": 0 } 
             };
             
             const totalCards = deck._count.cards;
-            
-            // Adjust "Easy" count to include cards that HAVE NO STATS (new cards)
-            const cardsWithStats = Object.values(stats.difficultyCounts).reduce((a, b) => a + b, 0);
-            const cardsWithoutStats = Math.max(0, totalCards - cardsWithStats);
-            stats.difficultyCounts["Easy"] += cardsWithoutStats;
-
             const masteryPercent = totalCards > 0 
-                ? Math.round((stats.mastered / totalCards) * 100) 
+                ? Math.round((deckStats.mastered / totalCards) * 100) 
                 : 0;
 
             return {
@@ -128,9 +103,9 @@ export const deckService = {
                 title: deck.title,
                 deck_seq: deck.deck_seq,
                 _count: deck._count,
-                dueCount: stats.due,
+                dueCount: deckStats.due,
                 mastery: masteryPercent,
-                difficultyCounts: stats.difficultyCounts
+                difficultyCounts: deckStats.difficultyCounts
             };
         });
     },
