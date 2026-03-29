@@ -18,13 +18,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "LevelUp Flashcards",
   description: "Advanced spaced repetition flashcards.",
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon3.png", type: "image/png", sizes: "48x48" },
-    ],
-    apple: "/apple-icon.png",
-  },
 };
 
 export default function RootLayout({
