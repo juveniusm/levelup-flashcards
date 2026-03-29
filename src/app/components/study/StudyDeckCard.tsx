@@ -93,22 +93,22 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                                 </div>
                             )}
                         </div>
-                        <div className="text-[10px] text-neutral-500 font-medium tracking-wider uppercase opacity-60">
-                            DECK ID: {deck.id.slice(0, 8)}
-                        </div>
                     </div>
 
                     {/* Stats Section */}
                     <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                        {/* Due Cards */}
+                        {deck.dueCount !== undefined && deck.dueCount > 0 && (
+                            <div className="flex flex-col items-center sm:items-start">
+                                <span className="text-[#f9c111] uppercase text-[9px] font-bold tracking-widest mb-1">Due</span>
+                                <span className="text-[#f9c111] font-bold text-base">{deck.dueCount}</span>
+                            </div>
+                        )}
+
                         {/* Total Cards */}
                         <div className="flex flex-col items-center sm:items-start">
-                            <span className="text-neutral-500 uppercase text-[9px] font-bold tracking-widest mb-1">Total Cards</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-white font-bold text-base">{deck._count.cards}</span>
-                                {deck.dueCount !== undefined && deck.dueCount > 0 && (
-                                    <span className="text-[#f9c111] text-xs font-bold">(+{deck.dueCount})</span>
-                                )}
-                            </div>
+                            <span className="text-neutral-500 uppercase text-[9px] font-bold tracking-widest mb-1">Total</span>
+                            <span className="text-white font-bold text-base">{deck._count.cards}</span>
                         </div>
 
                         {/* Mastery Percentage */}
