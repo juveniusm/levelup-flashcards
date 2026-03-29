@@ -8,6 +8,8 @@ import Flashcard from "./Flashcard";
 import SessionMetrics from "./SessionMetrics";
 import SessionEndScreen from "./SessionEndScreen";
 import StudyInputArea from "./StudyInputArea";
+import StudyHUD from "./StudyHUD";
+import { useStudyReview } from "@/hooks/useStudyReview";
 
 export default function EndlessInterface({
     cards,
@@ -79,6 +81,9 @@ export default function EndlessInterface({
     const [totalCardsSeen, setTotalCardsSeen] = useState(saved?.totalCardsSeen ?? 0);
     const [xpEarned, setXpEarned] = useState(0);
     const [isImageEnlarged, setIsImageEnlarged] = useState(false);
+
+    // Review logic
+    const { submitReview } = useStudyReview(deckId, setXpEarned);
 
     // UI state
     const [feedbackState, setFeedbackState] = useState<"question" | "feedback_correct" | "feedback_incorrect" | "finished">("question");
@@ -170,24 +175,15 @@ export default function EndlessInterface({
             setScore((prev: number) => Math.max(0, prev - 3));
             setIncorrectAnswers((prev: number) => prev + 1);
             setFeedbackState("feedback_incorrect");
-        }
+        setFeedbackState("feedback_incorrect");
+    }
 
-        fetch(`/api/decks/${deckId}/cards/review`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                cardId: currentCard.id,
-                qualityGrade: quality,
-                isReviewMode: false,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-            }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.xpEarned) setXpEarned((prev) => prev + data.xpEarned);
-            })
-            .catch((err) => console.error("Failed to save review:", err));
-    };
+    submitReview({
+        cardId: currentCard.id,
+        qualityGrade: quality,
+        isReviewMode: false,
+    });
+};
 
     const handlePass = () => {
         setTotalCardsSeen((prev: number) => prev + 1);
@@ -196,19 +192,11 @@ export default function EndlessInterface({
         setInputAnswer("");
         setLastInputAnswer("(Passed)");
 
-        // Send SRS update (quality 0 = mistake/forgotten)
-        fetch(`/api/decks/${deckId}/cards/review`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                cardId: currentCard.id,
-                qualityGrade: 0,
-                isReviewMode: false,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-            }),
-        })
-            .then((res) => res.json())
-            .catch((err) => console.error("Failed to save review:", err));
+        submitReview({
+            cardId: currentCard.id,
+            qualityGrade: 0,
+            isReviewMode: false,
+        });
 
         setFeedbackState("feedback_incorrect");
     };
@@ -262,28 +250,13 @@ export default function EndlessInterface({
 
     return (
         <div className="max-w-3xl mx-auto w-full">
-            {/* HUD */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0 mb-8 border-b border-neutral-800 pb-4">
-                <div className="flex items-center gap-4 sm:gap-6">
-                    <div className="text-lg font-bold font-mono tracking-widest text-neutral-400">
-                        <span className="text-white">{formatTime(elapsedSeconds)}</span>
-                    </div>
-                    <div className="text-lg font-bold font-mono tracking-widest text-neutral-400">
-                        CARDS <span className="text-[#f9c111]">{totalCardsSeen}</span>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4 sm:gap-6">
-                    <div className="text-xl font-bold font-mono tracking-widest text-white">
-                        SCORE <span className="text-[#f9c111]">{score.toString().padStart(4, "0")}</span>
-                    </div>
-                    <button
-                        onClick={() => setFeedbackState("finished")}
-                        className="text-sm font-bold text-neutral-500 hover:text-red-400 transition-colors uppercase tracking-widest border border-neutral-700 hover:border-red-400/50 px-4 py-2 rounded-lg"
-                    >
-                        End
-                    </button>
-                </div>
-            </div>
+            <StudyHUD 
+                mode="endless" 
+                score={score} 
+                elapsedSeconds={elapsedSeconds}
+                totalCardsSeen={totalCardsSeen}
+                onEnd={() => setFeedbackState("finished")} 
+            />
 
             <Flashcard
                 card={currentCard}

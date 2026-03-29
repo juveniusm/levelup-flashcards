@@ -8,8 +8,10 @@ import { calculateQualityGrade } from "@/utils/cognitive/sm2";
 import { Card } from "@/utils/study/studyUtils";
 import Flashcard from "./Flashcard";
 import SessionMetrics from "./SessionMetrics";
-import SessionEndScreen from "./SessionEndScreen";
 import StudyInputArea from "./StudyInputArea";
+import StudyHUD from "./StudyHUD";
+import { useStudyReview } from "@/hooks/useStudyReview";
+import ClassicModeEndScreen from "./ClassicModeEndScreen";
 
 export default function StudyInterface({
     cards,
@@ -119,6 +121,8 @@ export default function StudyInterface({
     const [xpEarned, setXpEarned] = useState(0);
     const [isImageEnlarged, setIsImageEnlarged] = useState(false);
 
+    const { submitReview } = useStudyReview(deckId, setXpEarned);
+
     const { currentIndex, lives, score, correctAnswers, incorrectAnswers, gameStatus } = state.context;
     const currentCard = cards[currentIndex];
 
@@ -130,22 +134,13 @@ export default function StudyInterface({
 
     const handlePass = useCallback(() => {
         setInputAnswer("");
-        // Send SRS update (quality 0 = mistake/forgotten)
-        fetch(`/api/decks/${deckId}/cards/review`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                cardId: currentCard.id,
-                qualityGrade: 0,
-                isReviewMode,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-            }),
-        })
-            .then((res) => res.json())
-            .catch((err) => console.error("Failed to save review:", err));
-
+        submitReview({
+            cardId: currentCard.id,
+            qualityGrade: 0,
+            isReviewMode,
+        });
         send({ type: "PASS" });
-    }, [deckId, currentCard.id, isReviewMode, send]);
+    }, [currentCard.id, isReviewMode, send, submitReview]);
 
     const handleSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
@@ -159,22 +154,12 @@ export default function StudyInterface({
 
         send({ type: "SUBMIT_ANSWER", isCorrect: quality >= 4, isPerfect: quality === 5 });
 
-        fetch(`/api/decks/${deckId}/cards/review`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                cardId: currentCard.id,
-                qualityGrade: quality,
-                isReviewMode,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-            }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.xpEarned) setXpEarned((prev) => prev + data.xpEarned);
-            })
-            .catch((err) => console.error("Failed to save review:", err));
-    }, [inputAnswer, currentCard.back, currentCard.id, deckId, isReviewMode, handlePass, send]);
+        submitReview({
+            cardId: currentCard.id,
+            qualityGrade: quality,
+            isReviewMode,
+        });
+    }, [inputAnswer, currentCard.back, currentCard.id, isReviewMode, handlePass, send, submitReview]);
 
     const handleNext = useCallback(() => {
         setInputAnswer("");
@@ -190,59 +175,16 @@ export default function StudyInterface({
         );
     }
 
-    if (gameStatus === "game_over") {
+    if (gameStatus === "game_over" || gameStatus === "session_over" || gameStatus === "completed") {
         return (
-            <SessionEndScreen
-                title="Game Over"
-                titleColorClass="text-red-500"
-                subtitle="You ran out of lives!"
-                primaryButtonLabel="Try Again"
+            <ClassicModeEndScreen
+                gameStatus={gameStatus}
+                score={score ?? 0}
+                correctAnswers={correctAnswers ?? 0}
+                incorrectAnswers={incorrectAnswers ?? 0}
+                xpEarned={xpEarned}
                 onPrimaryClick={clearSessionAndReload}
-            >
-                <SessionMetrics
-                    score={score ?? 0}
-                    correctAnswers={correctAnswers ?? 0}
-                    incorrectAnswers={incorrectAnswers ?? 0}
-                    xpEarned={xpEarned}
-                />
-            </SessionEndScreen>
-        );
-    }
-
-    if (gameStatus === "session_over") {
-        return (
-            <SessionEndScreen
-                title="Session Over"
-                titleColorClass="text-[#f9c111]"
-                subtitle="You ended the session early."
-                primaryButtonLabel="Try Again"
-                onPrimaryClick={clearSessionAndReload}
-            >
-                <SessionMetrics
-                    score={score ?? 0}
-                    correctAnswers={correctAnswers ?? 0}
-                    incorrectAnswers={incorrectAnswers ?? 0}
-                    xpEarned={xpEarned}
-                />
-            </SessionEndScreen>
-        );
-    }
-
-    if (gameStatus === "completed") {
-        return (
-            <SessionEndScreen
-                title="Deck Complete!"
-                titleColorClass="text-[#f9c111]"
-                primaryButtonLabel="Study Again"
-                onPrimaryClick={clearSessionAndReload}
-            >
-                <SessionMetrics
-                    score={score ?? 0}
-                    correctAnswers={correctAnswers ?? 0}
-                    incorrectAnswers={incorrectAnswers ?? 0}
-                    xpEarned={xpEarned}
-                />
-            </SessionEndScreen>
+            />
         );
     }
 
@@ -254,27 +196,12 @@ export default function StudyInterface({
 
     return (
         <div className="max-w-3xl mx-auto w-full">
-            {/* HUD */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0 mb-8 border-b border-neutral-800 pb-4">
-                <div className="flex gap-2 text-2xl">
-                    {Array.from({ length: Math.max(5, lives) }).map((_, i) => (
-                        <span key={i} className={i < lives ? "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "text-neutral-800"}>
-                            &hearts;
-                        </span>
-                    ))}
-                </div>
-                <div className="flex items-center gap-4 sm:gap-6">
-                    <div className="text-xl font-bold font-mono tracking-widest text-white">
-                        SCORE <span className="text-[#f9c111]">{score.toString().padStart(4, "0")}</span>
-                    </div>
-                    <button
-                        onClick={() => send({ type: "QUIT" })}
-                        className="text-sm font-bold text-neutral-500 hover:text-red-400 transition-colors uppercase tracking-widest border border-neutral-700 hover:border-red-400/50 px-4 py-2 rounded-lg"
-                    >
-                        End
-                    </button>
-                </div>
-            </div>
+            <StudyHUD 
+                mode="classic" 
+                score={score} 
+                lives={lives} 
+                onEnd={() => send({ type: "QUIT" })} 
+            />
 
             {/* Progress Bar */}
             <div className="w-full bg-neutral-900 rounded-full h-2 mb-12 overflow-hidden border border-neutral-800">

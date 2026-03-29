@@ -1,8 +1,9 @@
 "use client";
-import { useState, useRef, useEffect, MouseEvent as ReactMouseEvent, memo } from "react";
+import { useState, memo } from "react";
 import Image from "next/image";
 import { Card, getDifficultyLabel } from "@/utils/study/studyUtils";
-import { X, SearchCode } from "lucide-react";
+import { SearchCode } from "lucide-react";
+import FlashcardImageModal from "./FlashcardImageModal";
 
 interface FlashcardProps {
     card: Card;
@@ -24,81 +25,10 @@ const Flashcard = memo(function Flashcard({
     onEnlargeChange,
 }: FlashcardProps) {
     const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
-    const [magnifier, setMagnifier] = useState({ x: 0, y: 0, show: false });
-    const [imgNaturalSize, setImgNaturalSize] = useState({ width: 0, height: 0 });
-    const imgContainerRef = useRef<HTMLDivElement>(null);
 
     const updateEnlargedImage = (url: string | null) => {
         setEnlargedImage(url);
         onEnlargeChange?.(!!url);
-        if (!url) {
-            setImgNaturalSize({ width: 0, height: 0 });
-            setMagnifier(m => ({ ...m, show: false }));
-        }
-    };
-
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
-                updateEnlargedImage(null);
-            }
-        };
-
-        if (enlargedImage) {
-            window.addEventListener("keydown", handleKeyDown);
-        }
-
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [enlargedImage]);
-
-    const handleMouseMove = (e: ReactMouseEvent) => {
-        if (!imgContainerRef.current || !imgNaturalSize.width) return;
-
-        const { left, top, width: containerWidth, height: containerHeight } = imgContainerRef.current.getBoundingClientRect();
-        
-        // Calculate the actual image dimensions within the object-contain container
-        const containerRatio = containerWidth / containerHeight;
-        const imageRatio = imgNaturalSize.width / imgNaturalSize.height;
-
-        let actualWidth, actualHeight, offsetX = 0, offsetY = 0;
-
-        if (imageRatio > containerRatio) {
-            // Image is wider than container (relative to its height)
-            actualWidth = containerWidth;
-            actualHeight = containerWidth / imageRatio;
-            offsetY = (containerHeight - actualHeight) / 2;
-        } else {
-            // Image is taller than container (relative to its width)
-            actualHeight = containerHeight;
-            actualWidth = containerHeight * imageRatio;
-            offsetX = (containerWidth - actualWidth) / 2;
-        }
-
-        const relativeX = e.clientX - left;
-        const relativeY = e.clientY - top;
-
-        // Check if cursor is within the actual image bounds
-        const isWithinBounds = 
-            relativeX >= offsetX && 
-            relativeX <= offsetX + actualWidth &&
-            relativeY >= offsetY && 
-            relativeY <= offsetY + actualHeight;
-
-        if (isWithinBounds) {
-            // Calculate percentage position relative to ONLY the actual image
-            const x = ((relativeX - offsetX) / actualWidth) * 100;
-            const y = ((relativeY - offsetY) / actualHeight) * 100;
-
-            // Also need container-relative percentages for lens positioning
-            const containerX = (relativeX / containerWidth) * 100;
-            const containerY = (relativeY / containerHeight) * 100;
-
-            setMagnifier({ x: containerX, y: containerY, show: true, imgX: x, imgY: y } as any);
-        } else {
-            setMagnifier(m => ({ ...m, show: false }));
-        }
     };
 
     return (
@@ -191,59 +121,10 @@ const Flashcard = memo(function Flashcard({
 
             {/* Enlarged Image Modal */}
             {enlargedImage && (
-                <div 
-                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-300"
-                    onClick={() => updateEnlargedImage(null)}
-                >
-                    <button 
-                        className="absolute top-6 right-6 p-3 text-white/50 hover:text-white transition-colors bg-white/10 hover:bg-white/20 rounded-full z-[210] shadow-xl backdrop-blur-md"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            updateEnlargedImage(null);
-                        }}
-                    >
-                        <X size={28} />
-                    </button>
-                    
-                    <div 
-                        ref={imgContainerRef}
-                        className="relative w-full h-full max-w-5xl max-h-[90vh] animate-in zoom-in-95 duration-300 flex items-center justify-center overflow-hidden cursor-none"
-                        onMouseMove={handleMouseMove}
-                        onMouseEnter={() => setMagnifier(m => ({ ...m, show: true }))}
-                        onMouseLeave={() => setMagnifier(m => ({ ...m, show: false }))}
-                    >
-                        <Image
-                            src={enlargedImage}
-                            alt="Enlarged"
-                            fill
-                            className="object-contain select-none pointer-events-none"
-                            priority
-                            onLoadingComplete={(img) => {
-                                setImgNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
-                            }}
-                        />
-
-                        {/* Magnifier Lens */}
-                        {magnifier.show && (
-                            <div 
-                                className="absolute pointer-events-none w-48 h-48 border-4 border-[#f9c111]/80 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)] z-[205] overflow-hidden"
-                                style={{
-                                    left: `${magnifier.x}%`,
-                                    top: `${magnifier.y}%`,
-                                    transform: "translate(-50%, -50%)",
-                                    backgroundImage: `url(${enlargedImage})`,
-                                    backgroundRepeat: "no-repeat",
-                                    backgroundSize: "400% 400%", // 4x Zoom
-                                    backgroundPosition: `${(magnifier as any).imgX}% ${(magnifier as any).imgY}%`,
-                                    backgroundColor: "black"
-                                }}
-                            >
-                                {/* Inner lens glow/reflection */}
-                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10" />
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <FlashcardImageModal 
+                    imageUrl={enlargedImage} 
+                    onClose={() => updateEnlargedImage(null)} 
+                />
             )}
         </div>
     );

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Card } from "@/types/card";
+import CardSideEditor from "./CardSideEditor";
 
 // ─── Schema ──────────────────────────────────────────────────────────
 export const cardSchema = z.object({
@@ -158,85 +159,7 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
     const showFrontExisting = isEdit && !clearFrontImage && !frontImageFile && existingCard?.front_image_url;
     const showBackExisting = isEdit && !clearBackImage && !backImageFile && existingCard?.back_image_url;
 
-    // ── Card side sub-component (reused for front + back) ─────────────
-    const CardSide = ({
-        side,
-        isDragging,
-        showExisting,
-        existingUrl,
-        onClear,
-        inputRef,
-    }: {
-        side: "front" | "back";
-        isDragging: boolean;
-        showExisting?: string | null | boolean;
-        existingUrl?: string | null;
-        onClear?: () => void;
-        inputRef?: React.RefObject<HTMLInputElement>;
-    }) => {
-        const isFront = side === "front";
-        const label = isFront ? "Front (Prompt)" : "Back (Target Answer)";
-        const imgLabel = isFront ? "Image (Prompt)" : "Image (Target Answer)";
-        const placeholder = isFront
-            ? "e.g. What is the powerhouse of the cell? (Paste or drop images here)"
-            : "e.g. Mitochondria (Paste or drop images here)";
-        const imageFile = isFront ? frontImageFile : backImageFile;
-        const fieldError = isFront ? errors.front : errors.back;
 
-        return (
-            <div
-                className={`transition-colors ${isFront ? "pb-4 border-b border-neutral-800" : "pt-2"} ${isDragging ? "bg-neutral-800/50 rounded-lg p-3" : ""}`}
-                onDragOver={(e) => handleDragOver(e, side)}
-                onDragLeave={(e) => handleDragLeave(e, side)}
-                onDrop={(e) => handleDrop(e, side)}
-            >
-                <label className="block text-sm font-semibold text-neutral-300 mb-2">{label}</label>
-                <textarea
-                    {...register(side)}
-                    rows={3}
-                    onPaste={(e) => handlePaste(e, side)}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#f9c111] transition-all resize-none text-base"
-                    placeholder={placeholder}
-                />
-                {fieldError && <p className="text-red-500 text-xs mt-1">{fieldError.message}</p>}
-
-                <div className="mt-4">
-                    <label className="block text-sm font-medium text-neutral-400 mb-2">{imgLabel} — Optional</label>
-
-                    {showExisting && existingUrl && (
-                        <div className="relative mb-3 inline-block group h-24 w-40 overflow-hidden rounded shadow-md border border-neutral-700">
-                            <Image
-                                src={existingUrl}
-                                alt={`Current ${side}`}
-                                fill
-                                className="object-cover"
-                            />
-                            <button
-                                type="button"
-                                onClick={onClear}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                            >×</button>
-                        </div>
-                    )}
-
-                    <div className="flex items-center gap-3">
-                        <input
-                            id={`${mode}_${side}_image`}
-                            type="file"
-                            accept="image/*"
-                            ref={inputRef}
-                            onChange={(e) => setImageFile(side, e.target.files?.[0] || null)}
-                            disabled={isSubmitting}
-                            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#f9c111] transition-all file:mr-4 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#f9c111] file:text-black hover:file:bg-[#e0ad0e] disabled:opacity-50 text-sm"
-                        />
-                        {imageFile && (
-                            <span className="text-xs text-[#f9c111] font-semibold truncate max-w-[150px]">{imageFile.name}</span>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     // ── Render ────────────────────────────────────────────────────────
     return (
@@ -255,21 +178,41 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                 }}
                 className="space-y-6"
             >
-                <CardSide
+                <CardSideEditor
                     side="front"
+                    mode={mode}
                     isDragging={isFrontDragging}
                     showExisting={showFrontExisting}
                     existingUrl={existingCard?.front_image_url}
-                    onClear={() => setClearFrontImage(true)}
+                    imageFile={frontImageFile}
+                    fieldError={errors.front}
+                    register={register}
+                    isSubmitting={isSubmitting}
                     inputRef={frontInputRef as React.RefObject<HTMLInputElement>}
+                    onClear={() => setClearFrontImage(true)}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onPaste={handlePaste}
+                    onImageChange={setImageFile}
                 />
-                <CardSide
+                <CardSideEditor
                     side="back"
+                    mode={mode}
                     isDragging={isBackDragging}
                     showExisting={showBackExisting}
                     existingUrl={existingCard?.back_image_url}
-                    onClear={() => setClearBackImage(true)}
+                    imageFile={backImageFile}
+                    fieldError={errors.back}
+                    register={register}
+                    isSubmitting={isSubmitting}
                     inputRef={backInputRef as React.RefObject<HTMLInputElement>}
+                    onClear={() => setClearBackImage(true)}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onPaste={handlePaste}
+                    onImageChange={setImageFile}
                 />
 
                 {error && <p className="text-red-500 text-sm font-medium">{error}</p>}

@@ -1,168 +1,33 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { useState, useEffect, Suspense, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import UniversitySearchableDropdown from "@/app/components/auth/UniversitySearchableDropdown";
+import { useAuthForm } from "@/hooks/useAuthForm";
+import { useOAuthFlow } from "@/hooks/useOAuthFlow";
 
 function LoginContent() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [isLoading, setIsLoading] = useState(false);
-    const [isLogin, setIsLogin] = useState(true);
+    const {
+        isLoading, setIsLoading,
+        isLogin, setIsLogin,
+        email, setEmail,
+        password, setPassword,
+        firstName, setFirstName,
+        lastName, setLastName,
+        username, setUsername,
+        university, setUniversity,
+        errorMsg, setErrorMsg,
+        successMsg, setSuccessMsg,
+        handleCredentialsSubmit
+    } = useAuthForm();
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [username, setUsername] = useState("");
-    const [university, setUniversity] = useState("");
-    const [errorMsg, setErrorMsg] = useState("");
-    const [successMsg, setSuccessMsg] = useState("");
-    const hasVerified = useRef(false);
-
-    useEffect(() => {
-        // Ensure any lingering admin login intent is cleared when on the student login page
-        document.cookie = "admin_login_intent=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-
-        if (searchParams) {
-            const action = searchParams.get("action");
-            const tokenParam = searchParams.get("token");
-            const emailParam = searchParams.get("email");
-
-            if (!hasVerified.current && action === "verify" && tokenParam && emailParam) {
-                hasVerified.current = true;
-                // Scrub the raw token from the URL history
-                router.replace("/login");
-
-                setTimeout(() => {
-                    setIsLoading(true);
-                    setSuccessMsg("Verifying your email and logging you in...");
-                    setIsLogin(true);
-                }, 0);
-
-                signIn("credentials", {
-                    redirect: false,
-                    email: emailParam,
-                    token: tokenParam,
-                    isVerifying: "true",
-                }).then((result) => {
-                    if (result?.error) {
-                        setErrorMsg("This verification link has expired or is invalid.");
-                        setSuccessMsg("");
-                        setIsLoading(false);
-                    } else if (result?.ok) {
-                        router.push("/study?toast=verified");
-                    }
-                }).catch(() => {
-                    setErrorMsg("An unexpected error occurred during verification.");
-                    setSuccessMsg("");
-                    setIsLoading(false);
-                });
-
-                return;
-            }
-
-            if (searchParams.get("verified") === "true") {
-                setTimeout(() => {
-                    setSuccessMsg("Email successfully verified! You may now sign in.");
-                    setIsLogin(true);
-                }, 0);
-            } else if (searchParams.get("error")) {
-                const err = searchParams.get("error");
-                setTimeout(() => {
-                    if (err === "unverified") {
-                        setErrorMsg("Please verify your email address before signing in.");
-                    } else if (err !== "CredentialsSignin") {
-                        setErrorMsg("Authentication error: " + err);
-                    }
-                }, 0);
-            } else if (searchParams.get("signup") === "true") {
-                setTimeout(() => {
-                    setIsLogin(false);
-                }, 0);
-            }
-        }
-    }, [searchParams, router]);
-
-    const handleCredentialsSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setErrorMsg("");
-        setSuccessMsg("");
-
-        try {
-            if (!isLogin) {
-                // Email format regex
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
-                    setErrorMsg("Please enter a valid email address.");
-                    setIsLoading(false);
-                    return;
-                }
-
-                // Register flow
-                const res = await fetch("/api/auth/register", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password, firstName, lastName, username, university }),
-                });
-
-                const data = await res.json();
-
-                if (!res.ok) {
-                    setErrorMsg(data.message || "Something went wrong.");
-                    setIsLoading(false);
-                    return;
-                }
-
-                // Registration successful - do not auto login.
-                setSuccessMsg(data.message || "Registration successful. Please check your email.");
-                setIsLogin(true); // switch view to login
-                setIsLoading(false);
-                // Clear password field just in case
-                setPassword("");
-                return;
-            }
-
-            // Logging in
-            const result = await signIn("credentials", {
-                redirect: false,
-                email,
-                password,
-            });
-
-            if (result?.error) {
-                if (result.error === "unverified") {
-                    setErrorMsg("Please verify your email address before signing in.");
-                } else {
-                    setErrorMsg("Invalid credentials. Please try again.");
-                }
-                setIsLoading(false);
-                return;
-            }
-
-            if (result?.ok) {
-                router.push("/study");
-            }
-        } catch (error) {
-            console.error("Login error:", error);
-            setErrorMsg("An unexpected error occurred.");
-            setIsLoading(false);
-        }
-
-        setIsLoading(false);
-    };
-
-    const handleGoogleLogin = async () => {
-        setIsLoading(true);
-        await signIn("google", {
-            callbackUrl: "/study",
-        });
-        setIsLoading(false);
-    };
+    const { handleGoogleLogin } = useOAuthFlow(
+        setIsLoading,
+        setIsLogin,
+        setErrorMsg,
+        setSuccessMsg
+    );
 
     return (
         <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
