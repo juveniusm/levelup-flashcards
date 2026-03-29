@@ -79,10 +79,10 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                     : "border-neutral-800/80 hover:border-neutral-600 shadow-sm"
                     }`}
             >
-                {/* Horizontal Layout */}
-                <div className="flex flex-col sm:flex-row sm:items-center p-5 gap-4">
+                {/* Wrap Layout */}
+                <div className="flex flex-wrap sm:items-center p-5 gap-4 justify-between">
                     {/* Title and ID */}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-[150px] max-w-full">
                         <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-bold text-lg text-white group-hover:text-[#f9c111] transition-colors leading-tight truncate">
                                 {deck.title}
@@ -99,7 +99,7 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                     </div>
 
                     {/* Stats Section */}
-                    <div className="flex items-center gap-6 sm:gap-8">
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                         {/* Total Cards */}
                         <div className="flex flex-col items-center sm:items-start">
                             <span className="text-neutral-500 uppercase text-[9px] font-bold tracking-widest mb-1">Total Cards</span>
