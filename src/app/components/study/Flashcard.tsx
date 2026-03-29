@@ -108,7 +108,7 @@ const Flashcard = memo(function Flashcard({
                     }`}
             >
                 {/* Front */}
-                <div className="absolute inset-0 backface-hidden bg-neutral-900 border-2 border-neutral-800 rounded-3xl p-8 flex flex-col justify-center items-center text-center z-10 overflow-y-auto">
+                <div className="absolute inset-0 backface-hidden bg-neutral-900 border-2 border-neutral-800 rounded-3xl p-4 sm:p-8 flex flex-col justify-center items-center text-center z-10 overflow-y-auto">
                     <span className="absolute top-6 left-6 text-neutral-500 text-xs font-bold uppercase tracking-widest">
                         {label}
                     </span>
@@ -125,7 +125,7 @@ const Flashcard = memo(function Flashcard({
                     {card.front_image_url && (
                         <div 
                             onClick={() => updateEnlargedImage(card.front_image_url!)}
-                            className="group relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg cursor-zoom-in transition-all active:scale-95"
+                            className="group relative min-w-[150px] sm:min-w-[250px] min-h-[150px] sm:min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg cursor-zoom-in transition-all active:scale-95"
                         >
                             <Image
                                 src={card.front_image_url}
@@ -139,13 +139,13 @@ const Flashcard = memo(function Flashcard({
                         </div>
                     )}
 
-                    <h2 className="text-3xl font-semibold text-white leading-tight">
+                    <h2 className="text-2xl sm:text-3xl font-semibold text-white leading-tight">
                         {card.front}
                     </h2>
                 </div>
 
                 {/* Back */}
-                <div className="absolute inset-0 backface-hidden rotate-x-180 bg-neutral-900 border-2 border-neutral-800 rounded-3xl p-8 flex flex-col justify-center items-center text-center overflow-y-auto">
+                <div className="absolute inset-0 backface-hidden rotate-x-180 bg-neutral-900 border-2 border-neutral-800 rounded-3xl p-4 sm:p-8 flex flex-col justify-center items-center text-center overflow-y-auto">
                     <span className="absolute top-6 left-6 text-neutral-500 text-xs font-bold uppercase tracking-widest">
                         Target Answer
                     </span>
@@ -153,7 +153,7 @@ const Flashcard = memo(function Flashcard({
                     {card.back_image_url && (
                         <div 
                             onClick={() => updateEnlargedImage(card.back_image_url!)}
-                            className="group relative min-w-[250px] min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg cursor-zoom-in transition-all active:scale-95"
+                            className="group relative min-w-[150px] sm:min-w-[250px] min-h-[150px] sm:min-h-[200px] w-full max-h-[336px] flex items-center justify-center mb-6 overflow-hidden rounded-lg cursor-zoom-in transition-all active:scale-95"
                         >
                             <Image
                                 src={card.back_image_url}
@@ -167,7 +167,7 @@ const Flashcard = memo(function Flashcard({
                         </div>
                     )}
 
-                    <h2 className="text-3xl font-semibold text-[#f9c111] leading-tight mb-8">
+                    <h2 className="text-2xl sm:text-3xl font-semibold text-[#f9c111] leading-tight mb-8">
                         {card.back}
                     </h2>
 

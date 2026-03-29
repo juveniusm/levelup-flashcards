@@ -255,7 +255,7 @@ export default function StudyInterface({
     return (
         <div className="max-w-3xl mx-auto w-full">
             {/* HUD */}
-            <div className="flex justify-between items-center mb-8 border-b border-neutral-800 pb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0 mb-8 border-b border-neutral-800 pb-4">
                 <div className="flex gap-2 text-2xl">
                     {Array.from({ length: Math.max(5, lives) }).map((_, i) => (
                         <span key={i} className={i < lives ? "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "text-neutral-800"}>
@@ -263,7 +263,7 @@ export default function StudyInterface({
                         </span>
                     ))}
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4 sm:gap-6">
                     <div className="text-xl font-bold font-mono tracking-widest text-white">
                         SCORE <span className="text-[#f9c111]">{score.toString().padStart(4, "0")}</span>
                     </div>

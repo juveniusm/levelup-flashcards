@@ -28,7 +28,7 @@ const StudyInputArea = memo(function StudyInputArea({
     return (
         <>
             {stateValue === "question" ? (
-                <form onSubmit={onSubmit} className="flex gap-4">
+                <form onSubmit={onSubmit} className="flex flex-col sm:flex-row gap-4">
                     <input
                         ref={inputRef}
                         type="text"
@@ -36,19 +36,19 @@ const StudyInputArea = memo(function StudyInputArea({
                         onChange={(e) => onInputChange(e.target.value)}
                         placeholder="Type your answer..."
                         autoComplete="off"
-                        className="flex-1 bg-neutral-900 border-2 border-neutral-800 rounded-xl px-6 py-4 text-xl text-white focus:outline-none focus:border-[#f9c111] transition-colors shadow-inner"
+                        className="w-full sm:flex-1 bg-neutral-900 border-2 border-neutral-800 rounded-xl px-4 sm:px-6 py-3 sm:py-4 text-lg sm:text-xl text-white focus:outline-none focus:border-[#f9c111] transition-colors shadow-inner"
                     />
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 w-full sm:w-auto">
                         <button
                             type="button"
                             onClick={onPass}
-                            className="bg-neutral-800 hover:bg-neutral-700 text-neutral-400 font-bold px-6 rounded-xl transition-all border border-neutral-700 hover:text-white"
+                            className="flex-1 sm:flex-none bg-neutral-800 hover:bg-neutral-700 text-neutral-400 font-bold px-6 py-3 sm:py-0 rounded-xl transition-all border border-neutral-700 hover:text-white"
                         >
                             Pass
                         </button>
                         <button
                             type="submit"
-                            className="bg-[#f9c111] hover:bg-yellow-400 text-black font-bold px-8 rounded-xl transition-all shadow-[0_4px_14px_0_rgba(249,193,17,0.39)] hover:shadow-[0_6px_20px_rgba(249,193,17,0.23)] hover:-translate-y-0.5"
+                            className="flex-1 sm:flex-none bg-[#f9c111] hover:bg-yellow-400 text-black font-bold px-8 py-3 sm:py-0 rounded-xl transition-all shadow-[0_4px_14px_0_rgba(249,193,17,0.39)] hover:shadow-[0_6px_20px_rgba(249,193,17,0.23)] hover:-translate-y-0.5"
                         >
                             Submit
                         </button>
