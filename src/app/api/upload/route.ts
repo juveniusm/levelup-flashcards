@@ -5,9 +5,11 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 import { v2 as cloudinary } from "cloudinary";
+import { rateLimit } from "@/lib/rate-limit";
+import sharp from "sharp";
 
-const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"]);
-const ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "gif", "webp", "svg"]);
+const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
+const ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "gif", "webp"]);
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 const useCloudinary = !!(
@@ -24,8 +26,14 @@ if (useCloudinary) {
     });
 }
 
+const limiter = rateLimit({ interval: 60 * 1000, uniqueTokenPerInterval: 500 });
+
 export async function POST(req: Request) {
     try {
+        const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+        if (limiter.check(30, ip)) { // Max 30 upload calls per minute per IP
+            return NextResponse.json({ message: "Too Many Requests" }, { status: 429 });
+        }
         const session = await getServerSession(authOptions);
         if (!session?.user) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -81,9 +89,12 @@ export async function POST(req: Request) {
             await mkdir(uploadsDir, { recursive: true });
         }
 
+        // Strip payload/metadata from raster images before saving to disk
+        const safeBuffer = await sharp(buffer).toBuffer();
+
         const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1_000_000)}`;
         const safeFilename = `${uniqueSuffix}.${ext}`;
-        await writeFile(join(uploadsDir, safeFilename), buffer);
+        await writeFile(join(uploadsDir, safeFilename), safeBuffer);
 
         return NextResponse.json({ url: `/uploads/${safeFilename}` }, { status: 200 });
     } catch (error) {

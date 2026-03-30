@@ -1,0 +1,3 @@
+src/app/components/BulkImportCards.tsx(46,42): error TS2307: Cannot find module 'exceljs' or its corresponding type declarations.
+src/lib/rate-limit.ts(1,26): error TS7016: Could not find a declaration file for module 'lru-cache'. 'G:/My Drive/1. Projects/Atria/ANTIGRAVITY FLASHCARDS/level-up/node_modules/lru-cache/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lru-cache` if it exists or add a new declaration (.d.ts) file containing `declare module 'lru-cache';`

@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import * as XLSX from "xlsx";
 import { Download, Upload, Loader2 } from "lucide-react";
 
 export default function BulkImportCards({ deckId }: { deckId: string }) {
@@ -44,24 +43,44 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
             console.group(`Bulk Import: ${file.name}`);
             console.log(`File info: size=${file.size}, type=${file.type}`);
             
+            const ExcelJS = await import("exceljs");
             const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data, { type: 'array' });
             
-            console.log(`Workbook sheets:`, workbook.SheetNames);
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.load(data);
             
-            const sheetName = workbook.SheetNames[0];
-            console.log(`Reading sheet: "${sheetName}"`);
-            const worksheet = workbook.Sheets[sheetName];
+            const worksheet = workbook.worksheets[0];
+            if (!worksheet) {
+                throw new Error("No worksheets found in the file.");
+            }
 
-            // Raw JSON data from sheet
-            const rawJson = XLSX.utils.sheet_to_json(worksheet);
+            const cardsToImport: { front: string; back: string }[] = [];
+            
+            let headerRowIndex = 1;
+            let frontColIndex = -1;
+            let backColIndex = -1;
 
-            // Map rows back to expectations ({ front, back })
-            const rawRows = rawJson as Array<Record<string, unknown>>;
-            const cardsToImport = rawRows.map((row) => ({
-                front: String(row["Front (Prompt)"] || "").trim(),
-                back: String(row["Back (Target Answer)"] || "").trim()
-            })).filter((card) => card.front !== "" && card.back !== "");
+            worksheet.eachRow((row: any, rowNumber: number) => {
+                const values = row.values as any[];
+                
+                if (frontColIndex === -1 && backColIndex === -1) {
+                    // Search for headers dynamically
+                    for (let i = 1; i < values.length; i++) {
+                        const cellValue = String(values[i] || "").trim();
+                        if (cellValue === "Front (Prompt)") frontColIndex = i;
+                        if (cellValue === "Back (Target Answer)") backColIndex = i;
+                    }
+                    if (frontColIndex !== -1 || backColIndex !== -1) {
+                        headerRowIndex = rowNumber;
+                    }
+                } else if (rowNumber > headerRowIndex) {
+                    const front = String(values[frontColIndex] || "").trim();
+                    const back = String(values[backColIndex] || "").trim();
+                    if (front !== "" && back !== "") {
+                        cardsToImport.push({ front, back });
+                    }
+                }
+            });
 
             console.log(`Total valid cards parsed: ${cardsToImport.length}`);
             if (cardsToImport.length > 0) {
