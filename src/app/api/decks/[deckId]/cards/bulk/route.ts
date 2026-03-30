@@ -80,6 +80,7 @@ export async function POST(
         const cardsToInsert = newCards.map((cardData) => ({
             front: String(cardData.front).trim(),
             back: String(cardData.back).trim(),
+            acceptedAnswers: Array.isArray(cardData.acceptedAnswers) ? cardData.acceptedAnswers.filter((a: any) => typeof a === "string" && a.trim() !== "").map((a: string) => a.trim()) : [],
             deck_id: deckId,
             card_seq: nextSeq++,
         }));

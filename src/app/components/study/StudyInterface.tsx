@@ -120,6 +120,7 @@ export default function StudyInterface({
     const inputRef = useRef<HTMLInputElement>(null);
     const [xpEarned, setXpEarned] = useState(0);
     const [isImageEnlarged, setIsImageEnlarged] = useState(false);
+    const [matchedAlternative, setMatchedAlternative] = useState<string | undefined>();
 
     const { submitReview } = useStudyReview(deckId, setXpEarned);
 
@@ -134,6 +135,7 @@ export default function StudyInterface({
 
     const handlePass = useCallback(() => {
         setInputAnswer("");
+        setMatchedAlternative(undefined);
         submitReview({
             cardId: currentCard.id,
             qualityGrade: 0,
@@ -149,8 +151,24 @@ export default function StudyInterface({
             return;
         }
 
-        const fuzzyScore = evaluateAnswer(inputAnswer, currentCard.back);
+        const primaryScore = evaluateAnswer(inputAnswer, currentCard.back);
+        const altScore = currentCard.acceptedAnswers?.length ? evaluateAnswer(inputAnswer, currentCard.acceptedAnswers) : 0;
+        
+        const fuzzyScore = Math.max(primaryScore, altScore);
         const quality = calculateQualityGrade(fuzzyScore);
+
+        let altMatch: string | undefined;
+        if (quality >= 4 && altScore > primaryScore && currentCard.acceptedAnswers) {
+            let bestAltScore = 0;
+            currentCard.acceptedAnswers.forEach(alt => {
+                const score = evaluateAnswer(inputAnswer, alt);
+                if (score > bestAltScore) {
+                    bestAltScore = score;
+                    altMatch = alt;
+                }
+            });
+        }
+        setMatchedAlternative(altMatch);
 
         send({ type: "SUBMIT_ANSWER", isCorrect: quality >= 4, isPerfect: quality === 5 });
 
@@ -159,10 +177,11 @@ export default function StudyInterface({
             qualityGrade: quality,
             isReviewMode,
         });
-    }, [inputAnswer, currentCard.back, currentCard.id, isReviewMode, handlePass, send, submitReview]);
+    }, [inputAnswer, currentCard, isReviewMode, handlePass, send, submitReview]);
 
     const handleNext = useCallback(() => {
         setInputAnswer("");
+        setMatchedAlternative(undefined);
         send({ type: "NEXT_CARD" });
     }, [send]);
 
@@ -217,6 +236,7 @@ export default function StudyInterface({
                 label={`Card ${currentIndex + 1} of ${cards.length}`}
                 feedbackType={feedbackType}
                 userAnswer={state.value === "feedback_incorrect" ? inputAnswer : undefined}
+                matchedAlternative={matchedAlternative}
                 onEnlargeChange={setIsImageEnlarged}
             />
 

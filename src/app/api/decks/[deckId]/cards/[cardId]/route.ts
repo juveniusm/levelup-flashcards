@@ -11,7 +11,7 @@ export async function PUT(
     if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     try {
-        const { front, back, front_image_url, back_image_url } = await request.json();
+        const { front, back, acceptedAnswers, front_image_url, back_image_url } = await request.json();
 
         if (!front || !back || typeof front !== "string" || typeof back !== "string") {
             return NextResponse.json({ error: "Front and back text are required" }, { status: 400 });
@@ -25,6 +25,7 @@ export async function PUT(
             data: {
                 front: front.trim(),
                 back: back.trim(),
+                acceptedAnswers: Array.isArray(acceptedAnswers) ? acceptedAnswers.filter(a => typeof a === "string" && a.trim() !== "").map(a => a.trim()) : [],
                 front_image_url: front_image_url || null,
                 back_image_url: back_image_url || null,
             },

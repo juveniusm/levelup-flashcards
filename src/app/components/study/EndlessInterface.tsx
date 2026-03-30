@@ -88,6 +88,7 @@ export default function EndlessInterface({
     // UI state
     const [feedbackState, setFeedbackState] = useState<"question" | "feedback_correct" | "feedback_incorrect" | "finished">("question");
     const [lastInputAnswer, setLastInputAnswer] = useState("");
+    const [matchedAlternative, setMatchedAlternative] = useState<string | undefined>();
 
     // Persist session
     useEffect(() => {
@@ -158,8 +159,24 @@ export default function EndlessInterface({
             return;
         }
 
-        const fuzzyScore = evaluateAnswer(inputAnswer, currentCard.back);
+        const primaryScore = evaluateAnswer(inputAnswer, currentCard.back);
+        const altScore = currentCard.acceptedAnswers?.length ? evaluateAnswer(inputAnswer, currentCard.acceptedAnswers) : 0;
+        
+        const fuzzyScore = Math.max(primaryScore, altScore);
         const quality = calculateQualityGrade(fuzzyScore);
+
+        let altMatch: string | undefined;
+        if (quality >= 4 && altScore > primaryScore && currentCard.acceptedAnswers) {
+            let bestAltScore = 0;
+            currentCard.acceptedAnswers.forEach(alt => {
+                const score = evaluateAnswer(inputAnswer, alt);
+                if (score > bestAltScore) {
+                    bestAltScore = score;
+                    altMatch = alt;
+                }
+            });
+        }
+        setMatchedAlternative(altMatch);
 
         const isCorrect = quality >= 4;
         const isPerfect = quality === 5;
@@ -190,6 +207,7 @@ export default function EndlessInterface({
         setScore((prev: number) => Math.max(0, prev - 3));
         setIncorrectAnswers((prev: number) => prev + 1);
         setInputAnswer("");
+        setMatchedAlternative(undefined);
         setLastInputAnswer("(Passed)");
 
         submitReview({
@@ -204,6 +222,7 @@ export default function EndlessInterface({
     const handleNext = () => {
         const wasIncorrect = feedbackState === "feedback_incorrect";
         setInputAnswer("");
+        setMatchedAlternative(undefined);
         advanceQueue(wasIncorrect, wasIncorrect ? currentCard : undefined);
         setFeedbackState("question");
     };
@@ -265,6 +284,7 @@ export default function EndlessInterface({
                 feedbackType={feedbackType}
                 feedbackExtra="(-3)"
                 userAnswer={lastInputAnswer}
+                matchedAlternative={matchedAlternative}
                 onEnlargeChange={setIsImageEnlarged}
             />
 

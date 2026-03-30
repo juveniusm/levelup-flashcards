@@ -52,21 +52,32 @@ export function levenshteinDistance(a: string, b: string): number {
 }
 
 /**
- * Compares a user's typed input to the target answer.
+ * Compares a user's typed input to the target answer(s).
  * Both strings are normalized first.
- * Returns a fuzzy match score from 0.0 to 1.0 (1.0 being a perfect normalized match)
+ * Returns a fuzzy match score from 0.0 to 1.0 (1.0 being a perfect normalized match).
+ * If multiple targets are provided, returns the highest match score.
  */
-export function evaluateAnswer(input: string, target: string): number {
+export function evaluateAnswer(input: string, target: string | string[]): number {
+    const targets = Array.isArray(target) ? target : [target];
     const normInput = normalizeString(input);
-    const normTarget = normalizeString(target);
+    let bestScore = 0;
 
-    if (normTarget.length === 0) return 0;
-    if (normInput === normTarget) return 1.0;
+    for (const t of targets) {
+        if (!t) continue;
+        const normTarget = normalizeString(t);
 
-    const distance = levenshteinDistance(normInput, normTarget);
-    const maxLength = Math.max(normInput.length, normTarget.length);
+        if (normTarget.length === 0) continue;
+        if (normInput === normTarget) return 1.0; // Early exit on perfect match
 
-    // Calculate the percentage score based on distance vs longest string length
-    const score = (maxLength - distance) / maxLength;
-    return Math.max(0, score);
+        const distance = levenshteinDistance(normInput, normTarget);
+        const maxLength = Math.max(normInput.length, normTarget.length);
+
+        // Calculate the percentage score based on distance vs longest string length
+        const score = Math.max(0, (maxLength - distance) / maxLength);
+        if (score > bestScore) {
+            bestScore = score;
+        }
+    }
+
+    return bestScore;
 }

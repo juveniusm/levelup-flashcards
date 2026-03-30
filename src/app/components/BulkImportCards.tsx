@@ -54,11 +54,12 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
                 throw new Error("No worksheets found in the file.");
             }
 
-            const cardsToImport: { front: string; back: string }[] = [];
+            const cardsToImport: { front: string; back: string; acceptedAnswers: string[] }[] = [];
             
             let headerRowIndex = 1;
             let frontColIndex = -1;
             let backColIndex = -1;
+            let acceptedAnswersColIndex = -1;
 
             worksheet.eachRow((row: any, rowNumber: number) => {
                 const values = row.values as any[];
@@ -69,6 +70,7 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
                         const cellValue = String(values[i] || "").trim();
                         if (cellValue === "Front (Prompt)") frontColIndex = i;
                         if (cellValue === "Back (Target Answer)") backColIndex = i;
+                        if (cellValue === "Accepted Answers") acceptedAnswersColIndex = i;
                     }
                     if (frontColIndex !== -1 || backColIndex !== -1) {
                         headerRowIndex = rowNumber;
@@ -76,8 +78,17 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
                 } else if (rowNumber > headerRowIndex) {
                     const front = String(values[frontColIndex] || "").trim();
                     const back = String(values[backColIndex] || "").trim();
+                    
+                    let acceptedAnswers: string[] = [];
+                    if (acceptedAnswersColIndex !== -1) {
+                        const rawAcceptedAnswers = String(values[acceptedAnswersColIndex] || "").trim();
+                        if (rawAcceptedAnswers) {
+                            acceptedAnswers = rawAcceptedAnswers.split(";").map(a => a.trim()).filter(a => a !== "");
+                        }
+                    }
+
                     if (front !== "" && back !== "") {
-                        cardsToImport.push({ front, back });
+                        cardsToImport.push({ front, back, acceptedAnswers });
                     }
                 }
             });

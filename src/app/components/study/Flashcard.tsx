@@ -12,6 +12,7 @@ interface FlashcardProps {
     feedbackType: "correct" | "incorrect" | null;
     feedbackExtra?: string; // e.g. penalty text like "(-3)"
     userAnswer?: string;
+    matchedAlternative?: string;
     onEnlargeChange?: (isEnlarged: boolean) => void;
 }
 
@@ -22,6 +23,7 @@ const Flashcard = memo(function Flashcard({
     feedbackType,
     feedbackExtra,
     userAnswer,
+    matchedAlternative,
     onEnlargeChange,
 }: FlashcardProps) {
     const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
@@ -102,8 +104,13 @@ const Flashcard = memo(function Flashcard({
                     </h2>
 
                     {feedbackType === "correct" && (
-                        <div className="text-green-500 text-xl font-bold bg-green-500/10 px-8 py-3 rounded-full border border-green-500/20 animate-in slide-in-from-bottom-4 duration-300">
-                            Correct!
+                        <div className="text-green-500 text-xl font-bold bg-green-500/10 px-8 py-3 rounded-full border border-green-500/20 animate-in slide-in-from-bottom-4 duration-300 flex flex-col items-center">
+                            <span>Correct!</span>
+                            {matchedAlternative && (
+                                <span className="text-sm font-normal text-green-400 mt-1">
+                                    (Matched alternative: {matchedAlternative})
+                                </span>
+                            )}
                         </div>
                     )}
                     {feedbackType === "incorrect" && (

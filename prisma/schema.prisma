@@ -95,6 +95,7 @@ model Cards {
   deck_id         String
   front           String
   back            String
+  acceptedAnswers String[] @default([])
   front_image_url String?
   back_image_url  String?
   card_seq        Int?
