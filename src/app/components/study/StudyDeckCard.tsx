@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Play, Zap, Settings2, BarChart3, ArrowRight, X, Sparkles, Infinity, Target, Brain } from "lucide-react";
+import { Play, Zap, Settings2, BarChart3, ArrowRight, X, Sparkles, Infinity, Target, Brain, Layers } from "lucide-react";
 import StudyConfigPanel from "./StudyConfigPanel";
 
 interface StudyDeckCardProps {
@@ -53,6 +53,13 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
             title: "Endless Mode",
             desc: "No lives, infinite loops. Practice until you quit.",
             icon: Infinity,
+            color: "text-white"
+        },
+        {
+            id: "flip",
+            title: "Flip Mode",
+            desc: "Browse cards without typing. Just flip and go.",
+            icon: Layers,
             color: "text-white"
         },
         {

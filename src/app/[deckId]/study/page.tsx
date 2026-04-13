@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import StudyInterface from "../../components/study/StudyInterface";
 import EndlessInterface from "../../components/study/EndlessInterface";
+import FlipInterface from "../../components/study/FlipInterface";
 import Link from "next/link";
 import { shuffleArray, getCardStats, DIFFICULTY_RANGES } from "@/utils/study/studyUtils";
 
@@ -20,6 +21,7 @@ export default async function StudyDeckPage({
     const { mode, limit, difficulties } = await searchParams;
     const isReviewMode = mode === "review";
     const isEndlessMode = mode === "endless";
+    const isFlipMode = mode === "flip";
     const isFocusMode = mode === "focus";
     const isCustomMode = mode === "custom";
 
@@ -141,8 +143,25 @@ export default async function StudyDeckPage({
         );
     }
 
-    // Sorting logic (Hardest first, then Unseen, then others)
-    const sortedCards = [...filteredCards].sort((a, b) => a._sortingEf - b._sortingEf);
+    // Group by difficulty tier, shuffle within each tier, then concatenate in priority order
+    const difficultyOrder = ["Very Hard", "Hard", "Unseen", "Medium", "Easy", "Mastered"];
+
+    const getDifficultyTier = (card: typeof filteredCards[number]): string => {
+        if (card.sm2_stats.length === 0) return "Unseen";
+        if (card._easeFactor >= 2.5 && card._interval >= 21) return "Mastered";
+        if (card._easeFactor <= 1.5) return "Very Hard";
+        if (card._easeFactor <= 1.8) return "Hard";
+        if (card._easeFactor <= 2.2) return "Medium";
+        return "Easy";
+    };
+
+    const tierGroups: Record<string, typeof filteredCards> = {};
+    for (const tier of difficultyOrder) tierGroups[tier] = [];
+    for (const card of filteredCards) {
+        tierGroups[getDifficultyTier(card)].push(card);
+    }
+
+    const sortedCards = difficultyOrder.flatMap(tier => shuffleArray(tierGroups[tier]));
 
     const finalCards = sortedCards.map(({ _easeFactor, _interval, _isDue, _difficultyLabel, ...card }) => ({
         ...card,
@@ -155,6 +174,15 @@ export default async function StudyDeckPage({
         return (
             <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
                 <EndlessInterface cards={finalCards} deckId={deck.id} />
+            </div>
+        );
+    }
+
+    // Flip mode: browse cards without typing, no SM2 updates
+    if (isFlipMode) {
+        return (
+            <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
+                <FlipInterface cards={finalCards} deckId={deck.id} />
             </div>
         );
     }
