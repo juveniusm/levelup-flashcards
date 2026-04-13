@@ -34,12 +34,12 @@ export default function StudyInterface({
 
                 // Validation: Ensure card set still matches
                 if (parsed.context && parsed.context.cardIds) {
-                    // Check if the current cards match the saved IDs (order and set)
-                    const currentIds = cards.map(c => c.id);
+                    // Check if the same cards exist (ignore order since cards are shuffled per session)
+                    const currentIdSet = new Set(cards.map(c => c.id));
                     const savedIds = parsed.context.cardIds as string[];
 
-                    const isCardSetIdentical = currentIds.length === savedIds.length && 
-                        currentIds.every((id, idx) => id === savedIds[idx]);
+                    const isCardSetIdentical = savedIds.length === currentIdSet.size &&
+                        savedIds.every((id: string) => currentIdSet.has(id));
 
                     if (!isCardSetIdentical) {
                         console.log("Card set changed, discarding saved session state.");
