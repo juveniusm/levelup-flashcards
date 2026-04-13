@@ -89,6 +89,7 @@ export default function DeckItem({ deck, onDelete, onUpdate }: DeckItemProps) {
         } catch (error) {
             console.error(error);
             alert("Failed to delete deck.");
+        } finally {
             setIsDeleting(false);
             setShowConfirmDelete(false);
         }

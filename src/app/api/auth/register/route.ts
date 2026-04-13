@@ -34,7 +34,7 @@ export async function POST(req: Request) {
             },
         });
 
-        // If the user exists but is NOT verified, we can overwrite their unverified account 
+        // If the user exists but is NOT verified, we can overwrite their unverified account
         // to effectively "resend" the verification email and update their info.
         if (existingUser) {
             if (existingUser.email === email && !existingUser.emailVerified) {
@@ -43,6 +43,16 @@ export async function POST(req: Request) {
                 await prisma.verificationToken.deleteMany({
                     where: { identifier: email }
                 });
+
+                // Check if the requested username is taken by a different user
+                if (username) {
+                    const usernameOwner = await prisma.user.findFirst({
+                        where: { username, NOT: { email } }
+                    });
+                    if (usernameOwner) {
+                        return NextResponse.json({ error: "Username is already taken." }, { status: 409 });
+                    }
+                }
             } else {
                 if (existingUser.email === email) {
                     return NextResponse.json({ error: "User with this email already exists." }, { status: 409 });
@@ -56,9 +66,8 @@ export async function POST(req: Request) {
         // Hash the password securely
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Assign requested role if provided, default to STUDENT
-        // (In production, an ADMIN role shouldn't be assignable by anyone visiting /register)
-        const assignedRole = role === "ADMIN" ? "ADMIN" : "STUDENT";
+        // Always assign STUDENT role via public registration
+        const assignedRole = "STUDENT";
 
         // Upsert the user into the database
         const newUser = await prisma.user.upsert({

@@ -64,9 +64,11 @@ export default function DeckList({ decks, onDelete, onUpdate }: DeckListProps) {
     const startIndex = (currentPage - 1) * decksPerPage;
     const paginatedDecks = filteredDecks.slice(startIndex, startIndex + decksPerPage);
 
-    if (currentPage > totalPages) {
-        setCurrentPage(totalPages);
-    }
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
 
     return (
         <div className="space-y-6">

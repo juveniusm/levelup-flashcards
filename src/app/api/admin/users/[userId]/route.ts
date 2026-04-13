@@ -47,6 +47,11 @@ export async function PATCH(
         if (username !== undefined) updateData.username = username;
 
         if (newRole !== undefined) {
+            const validRoles = ["ADMIN", "STUDENT"];
+            if (!validRoles.includes(newRole)) {
+                return NextResponse.json({ error: "Invalid role. Must be ADMIN or STUDENT." }, { status: 400 });
+            }
+
             // Only Super Admin can change roles
             const userEmail = session.user.email;
             const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || "juveniusm@gmail.com";

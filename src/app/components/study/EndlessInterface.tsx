@@ -192,15 +192,14 @@ export default function EndlessInterface({
             setScore((prev: number) => Math.max(0, prev - 3));
             setIncorrectAnswers((prev: number) => prev + 1);
             setFeedbackState("feedback_incorrect");
-        setFeedbackState("feedback_incorrect");
-    }
+        }
 
-    submitReview({
-        cardId: currentCard.id,
-        qualityGrade: quality,
-        isReviewMode: false,
-    });
-};
+        submitReview({
+            cardId: currentCard.id,
+            qualityGrade: quality,
+            isReviewMode: false,
+        });
+    };
 
     const handlePass = () => {
         setTotalCardsSeen((prev: number) => prev + 1);

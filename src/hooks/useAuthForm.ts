@@ -29,7 +29,6 @@ export function useAuthForm() {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(email)) {
                     setErrorMsg("Please enter a valid email address.");
-                    setIsLoading(false);
                     return;
                 }
 
@@ -42,14 +41,12 @@ export function useAuthForm() {
                 const data = await res.json();
 
                 if (!res.ok) {
-                    setErrorMsg(data.message || "Something went wrong.");
-                    setIsLoading(false);
+                    setErrorMsg(data.error || "Something went wrong.");
                     return;
                 }
 
                 setSuccessMsg(data.message || "Registration successful. Please check your email.");
                 setIsLogin(true);
-                setIsLoading(false);
                 setPassword("");
                 return;
             }
@@ -66,7 +63,6 @@ export function useAuthForm() {
                 } else {
                     setErrorMsg("Invalid credentials. Please try again.");
                 }
-                setIsLoading(false);
                 return;
             }
 
@@ -76,10 +72,9 @@ export function useAuthForm() {
         } catch (error) {
             console.error("Login error:", error);
             setErrorMsg("An unexpected error occurred.");
+        } finally {
             setIsLoading(false);
         }
-
-        setIsLoading(false);
     };
 
     return {

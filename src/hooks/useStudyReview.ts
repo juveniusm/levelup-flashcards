@@ -21,6 +21,10 @@ export function useStudyReview(deckId: string, setXpEarned?: React.Dispatch<Reac
                     }),
                 });
 
+                if (!res.ok) {
+                    console.error("Review API error:", res.status);
+                    return;
+                }
                 const data = await res.json();
                 if (data.xpEarned && setXpEarned) {
                     setXpEarned((prev) => prev + data.xpEarned);

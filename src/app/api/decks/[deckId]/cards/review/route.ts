@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
         const { cardId, qualityGrade, isReviewMode, timezone } = await request.json();
         const userTz = timezone || 'UTC';
 
-        if (typeof cardId !== "string" || typeof qualityGrade !== "number") {
+        if (typeof cardId !== "string" || typeof qualityGrade !== "number" || qualityGrade < 0 || qualityGrade > 5) {
             return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
         }
 
