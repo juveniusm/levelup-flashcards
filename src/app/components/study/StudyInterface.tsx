@@ -3,9 +3,7 @@
 import { useMachine } from "@xstate/react";
 import { classicModeMachine } from "@/machines/classicModeMachine";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { evaluateAnswer } from "@/utils/cognitive/fuzzyMatch";
-import { calculateQualityGrade } from "@/utils/cognitive/sm2";
-import { Card } from "@/utils/study/studyUtils";
+import { Card, gradeAnswer } from "@/utils/study/studyUtils";
 import Flashcard from "./Flashcard";
 import SessionMetrics from "./SessionMetrics";
 import StudyInputArea from "./StudyInputArea";
@@ -151,26 +149,10 @@ export default function StudyInterface({
             return;
         }
 
-        const primaryScore = evaluateAnswer(inputAnswer, currentCard.back);
-        const altScore = currentCard.acceptedAnswers?.length ? evaluateAnswer(inputAnswer, currentCard.acceptedAnswers) : 0;
-        
-        const fuzzyScore = Math.max(primaryScore, altScore);
-        const quality = calculateQualityGrade(fuzzyScore);
+        const { quality, isCorrect, isPerfect, matchedAlternative } = gradeAnswer(inputAnswer, currentCard);
+        setMatchedAlternative(matchedAlternative);
 
-        let altMatch: string | undefined;
-        if (quality >= 4 && altScore > primaryScore && currentCard.acceptedAnswers) {
-            let bestAltScore = 0;
-            currentCard.acceptedAnswers.forEach(alt => {
-                const score = evaluateAnswer(inputAnswer, alt);
-                if (score > bestAltScore) {
-                    bestAltScore = score;
-                    altMatch = alt;
-                }
-            });
-        }
-        setMatchedAlternative(altMatch);
-
-        send({ type: "SUBMIT_ANSWER", isCorrect: quality >= 4, isPerfect: quality === 5 });
+        send({ type: "SUBMIT_ANSWER", isCorrect, isPerfect });
 
         submitReview({
             cardId: currentCard.id,

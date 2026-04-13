@@ -1,4 +1,6 @@
 import { Card } from "@/types/card";
+import { evaluateAnswer } from "@/utils/cognitive/fuzzyMatch";
+import { calculateQualityGrade } from "@/utils/cognitive/sm2";
 
 export type { Card };
 
@@ -50,4 +52,41 @@ export const DIFFICULTY_RANGES: Record<string, { min: number; max: number }> = {
 
 export function getDifficultyFromEf(ef: number, interval: number = 0): string {
     return getDifficultyLabel(ef, interval).label;
+}
+
+/**
+ * Grades a user's typed answer against a card's back + accepted alternatives.
+ * Returns quality grade, correctness, and which alternative was matched (if any).
+ */
+export function gradeAnswer(input: string, card: Card): {
+    quality: number;
+    isCorrect: boolean;
+    isPerfect: boolean;
+    matchedAlternative?: string;
+} {
+    const primaryScore = evaluateAnswer(input, card.back);
+    const altScore = card.acceptedAnswers?.length
+        ? evaluateAnswer(input, card.acceptedAnswers)
+        : 0;
+
+    const quality = calculateQualityGrade(Math.max(primaryScore, altScore));
+
+    let matchedAlternative: string | undefined;
+    if (quality >= 4 && altScore > primaryScore && card.acceptedAnswers) {
+        let bestAltScore = 0;
+        for (const alt of card.acceptedAnswers) {
+            const score = evaluateAnswer(input, alt);
+            if (score > bestAltScore) {
+                bestAltScore = score;
+                matchedAlternative = alt;
+            }
+        }
+    }
+
+    return {
+        quality,
+        isCorrect: quality >= 4,
+        isPerfect: quality === 5,
+        matchedAlternative,
+    };
 }

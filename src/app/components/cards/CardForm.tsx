@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
-import Image from "next/image";
+import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { Plus, X } from "lucide-react";
 import { Card } from "@/types/card";
+import { useCardImageDrop } from "@/hooks/useCardImageDrop";
 import CardSideEditor from "./CardSideEditor";
+import AlternativeAnswersEditor from "./AlternativeAnswersEditor";
 
 // ─── Schema ──────────────────────────────────────────────────────────
 export const cardSchema = z.object({
@@ -46,18 +46,16 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [frontImageFile, setFrontImageFile] = useState<File | null>(null);
-    const [backImageFile, setBackImageFile] = useState<File | null>(null);
-    const [isFrontDragging, setIsFrontDragging] = useState(false);
-    const [isBackDragging, setIsBackDragging] = useState(false);
 
-    // Edit-only: whether the user explicitly cleared an existing image
-    const [clearFrontImage, setClearFrontImage] = useState(false);
-    const [clearBackImage, setClearBackImage] = useState(false);
-
-    // Create-only: refs to reset uncontrolled file inputs after submit
-    const frontInputRef = useRef<HTMLInputElement>(null);
-    const backInputRef = useRef<HTMLInputElement>(null);
+    const {
+        frontImageFile, backImageFile,
+        isFrontDragging, isBackDragging,
+        clearFrontImage, clearBackImage,
+        frontInputRef, backInputRef,
+        setImageFile, setClearFrontImage, setClearBackImage,
+        handlePaste, handleDragOver, handleDragLeave, handleDrop,
+        resetImages,
+    } = useCardImageDrop();
 
     const {
         register,
@@ -78,39 +76,6 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
             }
             : undefined,
     });
-
-    // ── Drag / Drop / Paste handlers ──────────────────────────────────
-    const setImageFile = (side: "front" | "back", file: File | null) => {
-        if (side === "front") { setFrontImageFile(file); if (file) setClearFrontImage(false); }
-        else { setBackImageFile(file); if (file) setClearBackImage(false); }
-    };
-
-    const handlePaste = (e: React.ClipboardEvent, side: "front" | "back") => {
-        for (const item of e.clipboardData?.items ?? []) {
-            if (item.type.startsWith("image/")) {
-                const file = item.getAsFile();
-                if (file) setImageFile(side, file);
-                break;
-            }
-        }
-    };
-
-    const handleDragOver = (e: React.DragEvent, side: "front" | "back") => {
-        e.preventDefault(); e.stopPropagation();
-        if (side === "front") setIsFrontDragging(true); else setIsBackDragging(true);
-    };
-
-    const handleDragLeave = (e: React.DragEvent, side: "front" | "back") => {
-        e.preventDefault(); e.stopPropagation();
-        if (side === "front") setIsFrontDragging(false); else setIsBackDragging(false);
-    };
-
-    const handleDrop = (e: React.DragEvent, side: "front" | "back") => {
-        e.preventDefault(); e.stopPropagation();
-        if (side === "front") setIsFrontDragging(false); else setIsBackDragging(false);
-        const file = e.dataTransfer.files?.[0];
-        if (file?.type.startsWith("image/")) setImageFile(side, file);
-    };
 
     // ── Submit ────────────────────────────────────────────────────────
     const onSubmit = async (data: CardFormValues) => {
@@ -150,10 +115,7 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                 router.refresh();
             } else {
                 reset();
-                setFrontImageFile(null);
-                setBackImageFile(null);
-                if (frontInputRef.current) frontInputRef.current.value = "";
-                if (backInputRef.current) backInputRef.current.value = "";
+                resetImages();
                 router.refresh();
                 setTimeout(() => setFocus("front"), 50);
             }
@@ -229,38 +191,12 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                     onImageChange={setImageFile}
                 />
 
-                {/* Alternative Answers array */}
-                <div className="space-y-3 pt-4 border-t border-neutral-800">
-                    <div className="flex justify-between items-center">
-                        <label className="block text-sm font-semibold text-neutral-300">
-                            Accepted Alternative Answers
-                        </label>
-                        <button
-                            type="button"
-                            onClick={() => append({ value: "" })}
-                            className="text-sm flex items-center gap-1 text-[#f9c111] hover:text-[#e0ad0e] font-medium transition-colors"
-                        >
-                            <Plus className="w-4 h-4" /> Add Alternative
-                        </button>
-                    </div>
-                    {acceptedAnswersFields.map((field, index) => (
-                        <div key={field.id} className="flex gap-2 items-start">
-                            <input
-                                {...register(`acceptedAnswers.${index}.value`)}
-                                placeholder="Alternative explicitly accepted answer"
-                                className="w-full bg-neutral-800/50 border border-neutral-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f9c111]/50 text-sm"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => remove(index)}
-                                className="p-3 text-neutral-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                aria-label="Remove alternative answer"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                    ))}
-                </div>
+                <AlternativeAnswersEditor
+                    fields={acceptedAnswersFields}
+                    append={append}
+                    remove={remove}
+                    register={register}
+                />
 
                 {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
 

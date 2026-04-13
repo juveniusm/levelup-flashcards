@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { evaluateAnswer } from "@/utils/cognitive/fuzzyMatch";
-import { calculateQualityGrade } from "@/utils/cognitive/sm2";
-import { Card, formatTime, shuffleArray } from "@/utils/study/studyUtils";
+import { Card, formatTime, shuffleArray, gradeAnswer } from "@/utils/study/studyUtils";
+import { restoreEndlessSession, useEndlessSessionPersist } from "@/hooks/useEndlessSession";
 import Flashcard from "./Flashcard";
 import SessionMetrics from "./SessionMetrics";
 import SessionEndScreen from "./SessionEndScreen";
@@ -19,52 +18,7 @@ export default function EndlessInterface({
     deckId: string;
 }) {
     const storageKey = `endless-session-${deckId}`;
-
-    const getSavedSession = () => {
-        try {
-            const saved = sessionStorage.getItem(storageKey);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                
-                if (parsed.queueIds && parsed.queueIds.length > 0) {
-                    const savedIds = parsed.queueIds as string[];
-                    
-                    // Simple validation: check if the first card ID from saved queue still exists in current cards
-                    // to prevent resuming a session with a completely different deck
-                    const allCardIds = new Set(cards.map(c => c.id));
-                    const isSessionStillValid = savedIds.every(id => allCardIds.has(id));
-
-                    if (!isSessionStillValid) {
-                        console.log("Endless session invalid for current deck, clearing.");
-                        sessionStorage.removeItem(storageKey);
-                        return null;
-                    }
-
-                    const cardMap = new Map(cards.map((c) => [c.id, c]));
-                    const restoredQueue = savedIds
-                        .map((id: string) => cardMap.get(id))
-                        .filter(Boolean) as Card[];
-
-                    if (restoredQueue.length > 0) {
-                        return {
-                            queue: restoredQueue,
-                            currentCard: restoredQueue[0],
-                            score: parsed.score ?? 0,
-                            correctAnswers: parsed.correctAnswers ?? 0,
-                            incorrectAnswers: parsed.incorrectAnswers ?? 0,
-                            totalCardsSeen: parsed.totalCardsSeen ?? 0,
-                            elapsedSeconds: parsed.elapsedSeconds ?? 0,
-                        };
-                    }
-                }
-            }
-        } catch (err) {
-            console.error("Endless session restore error:", err);
-        }
-        return null;
-    };
-
-    const saved = getSavedSession();
+    const saved = restoreEndlessSession(cards, storageKey);
 
     // Dynamic card queue
     const [queue, setQueue] = useState<Card[]>(saved?.queue ?? [...cards]);
@@ -91,20 +45,9 @@ export default function EndlessInterface({
     const [matchedAlternative, setMatchedAlternative] = useState<string | undefined>();
 
     // Persist session
-    useEffect(() => {
-        if (feedbackState === "finished") {
-            sessionStorage.removeItem(storageKey);
-            return;
-        }
-        sessionStorage.setItem(storageKey, JSON.stringify({
-            queueIds: queue.map((c) => c.id),
-            score,
-            correctAnswers,
-            incorrectAnswers,
-            totalCardsSeen,
-            elapsedSeconds,
-        }));
-    }, [queue, score, correctAnswers, incorrectAnswers, totalCardsSeen, elapsedSeconds, feedbackState, storageKey]);
+    useEndlessSessionPersist(storageKey, feedbackState, {
+        queue, score, correctAnswers, incorrectAnswers, totalCardsSeen, elapsedSeconds,
+    });
 
     const clearSessionAndReload = () => {
         sessionStorage.removeItem(storageKey);
@@ -159,28 +102,8 @@ export default function EndlessInterface({
             return;
         }
 
-        const primaryScore = evaluateAnswer(inputAnswer, currentCard.back);
-        const altScore = currentCard.acceptedAnswers?.length ? evaluateAnswer(inputAnswer, currentCard.acceptedAnswers) : 0;
-        
-        const fuzzyScore = Math.max(primaryScore, altScore);
-        const quality = calculateQualityGrade(fuzzyScore);
-
-        let altMatch: string | undefined;
-        if (quality >= 4 && altScore > primaryScore && currentCard.acceptedAnswers) {
-            let bestAltScore = 0;
-            currentCard.acceptedAnswers.forEach(alt => {
-                const score = evaluateAnswer(inputAnswer, alt);
-                if (score > bestAltScore) {
-                    bestAltScore = score;
-                    altMatch = alt;
-                }
-            });
-        }
-        setMatchedAlternative(altMatch);
-
-        const isCorrect = quality >= 4;
-        const isPerfect = quality === 5;
-
+        const { quality, isCorrect, isPerfect, matchedAlternative } = gradeAnswer(inputAnswer, currentCard);
+        setMatchedAlternative(matchedAlternative);
         setTotalCardsSeen((prev: number) => prev + 1);
         setLastInputAnswer(inputAnswer);
 
