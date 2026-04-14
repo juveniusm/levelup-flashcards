@@ -38,6 +38,7 @@ export default async function StudyDeckPage({
                     id: true,
                     front: true,
                     back: true,
+                    acceptedAnswers: true,
                     front_image_url: true,
                     back_image_url: true,
                     deck_id: true,
