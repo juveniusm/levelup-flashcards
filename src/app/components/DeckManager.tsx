@@ -58,6 +58,10 @@ export default function DeckManager({ initialDecks, initialFolders }: DeckManage
             const updated = [...prev, { ...newDeck, _count: { cards: 0 } }];
             return updated.sort((a, b) => a.title.localeCompare(b.title));
         });
+        // Auto-expand the target folder so the new deck is immediately visible
+        if (newDeck.folder_id) {
+            setExpanded((prev) => ({ ...prev, [newDeck.folder_id!]: true }));
+        }
     };
 
     const handleDeleteDeck = (deletedId: string) => {
@@ -113,13 +117,13 @@ export default function DeckManager({ initialDecks, initialFolders }: DeckManage
 
     const toggleFolder = (id: string) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
-    // Folder names list for the move-to-folder menu on each deck
+    // Folder names list for the move-to-folder menu on each deck + new-deck selector
     const folderOptions = folders.map((f) => ({ id: f.id, title: f.title }));
 
     return (
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1 space-y-6">
-                <CreateDeckForm onDeckCreated={handleDeckCreated} />
+                <CreateDeckForm folders={folderOptions} onDeckCreated={handleDeckCreated} />
                 <CreateFolderForm onFolderCreated={handleFolderCreated} />
             </div>
 
