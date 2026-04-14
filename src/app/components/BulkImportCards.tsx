@@ -49,6 +49,9 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
             const workbook = new ExcelJS.Workbook();
             await workbook.xlsx.load(data);
             
+            // Intentionally read ONLY the first sheet. The downloadable template
+            // uses sheet 2 for instructions, so scanning all sheets would try to
+            // import those as cards.
             const worksheet = workbook.worksheets[0];
             if (!worksheet) {
                 throw new Error("No worksheets found in the file.");
