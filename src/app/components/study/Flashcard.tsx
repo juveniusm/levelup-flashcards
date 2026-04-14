@@ -108,7 +108,7 @@ const Flashcard = memo(function Flashcard({
                             <span>Correct!</span>
                             {matchedAlternative && (
                                 <span className="text-sm font-normal text-green-400 mt-1">
-                                    (Matched alternative: {matchedAlternative})
+                                    (Alternative: {matchedAlternative})
                                 </span>
                             )}
                         </div>
