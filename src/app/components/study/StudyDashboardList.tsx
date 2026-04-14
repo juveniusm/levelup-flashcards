@@ -1,18 +1,26 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Search, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Search, ArrowUpDown, ChevronDown, Folder as FolderIcon } from "lucide-react";
 import StudyDeckCard from "./StudyDeckCard";
 
 export interface DashboardDeck {
     id: string;
     title: string;
+    folder_id?: string | null;
     _count: { cards: number };
     dueCount: number;
 }
 
+export interface DashboardFolder {
+    id: string;
+    title: string;
+    _count: { decks: number };
+}
+
 interface StudyDashboardListProps {
     decks: DashboardDeck[];
+    folders?: DashboardFolder[];
 }
 
 type SortOption = "TITLE_ASC" | "TITLE_DESC" | "CARDS_DESC" | "CARDS_ASC" | "DUE_DESC";
@@ -25,11 +33,14 @@ const SORT_LABELS: Record<SortOption, string> = {
     DUE_DESC: "Highest Priority"
 };
 
-export default function StudyDashboardList({ decks }: StudyDashboardListProps) {
+const EXPANDED_KEY = "study-expanded-folders";
+
+export default function StudyDashboardList({ decks, folders = [] }: StudyDashboardListProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState<SortOption>("TITLE_ASC");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
     // Handle click outside to close dropdown
     useEffect(() => {
@@ -42,32 +53,58 @@ export default function StudyDashboardList({ decks }: StudyDashboardListProps) {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Restore expanded state
+    useEffect(() => {
+        try {
+            const stored = sessionStorage.getItem(EXPANDED_KEY);
+            if (stored) setExpanded(JSON.parse(stored));
+        } catch {
+            /* ignore */
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            sessionStorage.setItem(EXPANDED_KEY, JSON.stringify(expanded));
+        } catch {
+            /* ignore */
+        }
+    }, [expanded]);
+
+    const sortDecks = (list: DashboardDeck[]) => [...list].sort((a, b) => {
+        switch (sortBy) {
+            case "TITLE_ASC": return a.title.localeCompare(b.title);
+            case "TITLE_DESC": return b.title.localeCompare(a.title);
+            case "CARDS_DESC": return b._count.cards - a._count.cards;
+            case "CARDS_ASC": return a._count.cards - b._count.cards;
+            case "DUE_DESC": return b.dueCount - a.dueCount;
+            default: return 0;
+        }
+    });
+
     const filteredAndSortedDecks = useMemo(() => {
-        // Filter
-        let result = decks.filter(deck =>
-            deck.title.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-
-        // Sort
-        result = [...result].sort((a, b) => {
-            switch (sortBy) {
-                case "TITLE_ASC":
-                    return a.title.localeCompare(b.title);
-                case "TITLE_DESC":
-                    return b.title.localeCompare(a.title);
-                case "CARDS_DESC":
-                    return b._count.cards - a._count.cards;
-                case "CARDS_ASC":
-                    return a._count.cards - b._count.cards;
-                case "DUE_DESC":
-                    return b.dueCount - a.dueCount;
-                default:
-                    return 0;
-            }
-        });
-
-        return result;
+        const q = searchQuery.toLowerCase();
+        const result = decks.filter((deck) => deck.title.toLowerCase().includes(q));
+        return sortDecks(result);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [decks, searchQuery, sortBy]);
+
+    // Group: when there is no search, show folders as groups. While searching, show a flat list.
+    const { decksByFolder, uncategorizedDecks } = useMemo(() => {
+        const byFolder: Record<string, DashboardDeck[]> = {};
+        const uncategorized: DashboardDeck[] = [];
+        for (const deck of filteredAndSortedDecks) {
+            if (deck.folder_id) {
+                (byFolder[deck.folder_id] ||= []).push(deck);
+            } else {
+                uncategorized.push(deck);
+            }
+        }
+        return { decksByFolder: byFolder, uncategorizedDecks: uncategorized };
+    }, [filteredAndSortedDecks]);
+
+    const showGroups = folders.length > 0 && searchQuery.trim() === "";
+    const toggleFolder = (id: string) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
     return (
         <div className="w-full">
@@ -135,10 +172,58 @@ export default function StudyDashboardList({ decks }: StudyDashboardListProps) {
                     <p className="text-neutral-400 font-medium text-lg">No decks found for &quot;{searchQuery}&quot;</p>
                     <p className="text-neutral-500 text-sm mt-1">Try a different search term.</p>
                 </div>
+            ) : showGroups ? (
+                <div className="space-y-4">
+                    {folders.map((folder) => {
+                        const folderDecks = decksByFolder[folder.id] || [];
+                        if (folderDecks.length === 0) return null;
+                        const isOpen = expanded[folder.id] ?? true;
+                        return (
+                            <div key={folder.id} className="bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleFolder(folder.id)}
+                                    className="w-full flex items-center justify-between px-4 py-3 gap-3 hover:bg-neutral-900/80 transition-colors"
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <ChevronDown className={`w-4 h-4 text-neutral-500 flex-shrink-0 transition-transform ${isOpen ? "" : "-rotate-90"}`} />
+                                        <FolderIcon className="w-5 h-5 text-[#f9c111] flex-shrink-0" />
+                                        <h3 className="font-semibold text-white truncate">{folder.title}</h3>
+                                    </div>
+                                    <span className="text-xs text-neutral-500 flex-shrink-0">
+                                        {folderDecks.length} {folderDecks.length === 1 ? "deck" : "decks"}
+                                    </span>
+                                </button>
+                                {isOpen && (
+                                    <div className="border-t border-neutral-800 p-3 flex flex-col gap-3 bg-black/20">
+                                        {folderDecks.map((deck) => (
+                                            <StudyDeckCard key={deck.id} deck={deck as never} />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+
+                    {uncategorizedDecks.length > 0 && (
+                        <div className="pt-2">
+                            {folders.length > 0 && (
+                                <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3">
+                                    Uncategorized
+                                </h3>
+                            )}
+                            <div className="flex flex-col gap-3">
+                                {uncategorizedDecks.map((deck) => (
+                                    <StudyDeckCard key={deck.id} deck={deck as never} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             ) : (
                 <div className="flex flex-col gap-3">
                     {filteredAndSortedDecks.map((deck) => (
-                        <StudyDeckCard key={deck.id} deck={deck as any} />
+                        <StudyDeckCard key={deck.id} deck={deck as never} />
                     ))}
                 </div>
             )}

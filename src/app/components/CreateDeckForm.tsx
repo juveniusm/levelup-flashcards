@@ -13,7 +13,7 @@ const deckSchema = z.object({
 
 type DeckFormValues = z.infer<typeof deckSchema>;
 
-export default function CreateDeckForm({ onDeckCreated }: { onDeckCreated?: (deck: { id: string; title: string; deck_seq: number | null; _count: { cards: number } }) => void }) {
+export default function CreateDeckForm({ onDeckCreated }: { onDeckCreated?: (deck: { id: string; title: string; deck_seq: number | null; folder_id: string | null; _count: { cards: number } }) => void }) {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);

@@ -1,29 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { FolderInput } from "lucide-react";
 
 interface Deck {
     id: string;
     title: string;
     deck_seq: number | null;
+    folder_id?: string | null;
     _count: { cards: number };
+}
+
+interface FolderOption {
+    id: string;
+    title: string;
 }
 
 interface DeckItemProps {
     deck: Deck;
     onDelete: (id: string) => void;
     onUpdate: (id: string, newTitle: string) => void;
+    folders?: FolderOption[];
+    onMove?: (deckId: string, folderId: string | null) => void;
 }
 
-export default function DeckItem({ deck, onDelete, onUpdate }: DeckItemProps) {
+export default function DeckItem({ deck, onDelete, onUpdate, folders, onMove }: DeckItemProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState(deck.title);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+    const [isMoveMenuOpen, setIsMoveMenuOpen] = useState(false);
+    const [isMoving, setIsMoving] = useState(false);
+    const moveMenuRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (moveMenuRef.current && !moveMenuRef.current.contains(event.target as Node)) {
+                setIsMoveMenuOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleMove = async (folderId: string | null) => {
+        if (!onMove) return;
+        setIsMoving(true);
+        setIsMoveMenuOpen(false);
+        try {
+            const res = await fetch(`/api/decks/${deck.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ folder_id: folderId }),
+            });
+            if (!res.ok) throw new Error("Failed to move deck");
+            onMove(deck.id, folderId);
+            router.refresh();
+        } catch {
+            alert("Failed to move deck.");
+        } finally {
+            setIsMoving(false);
+        }
+    };
 
     const displayId = deck.deck_seq ? String(deck.deck_seq).padStart(3, '0') : deck.id;
 
@@ -106,9 +148,56 @@ export default function DeckItem({ deck, onDelete, onUpdate }: DeckItemProps) {
     return (
         <div className="bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-all duration-300 rounded-xl p-5 group flex flex-col h-full shadow-lg hover:shadow-[#f9c111]/10 relative">
 
-            <div className={`absolute top-4 right-4 flex gap-2 z-10 transition-opacity duration-200 ${showConfirmDelete ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+            <div className={`absolute top-4 right-4 flex gap-2 z-10 transition-opacity duration-200 ${showConfirmDelete || isMoveMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                 {!isEditing && (
                     <>
+                        {!showConfirmDelete && onMove && folders !== undefined && (
+                            <div className="relative" ref={moveMenuRef}>
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.preventDefault(); setIsMoveMenuOpen((v) => !v); }}
+                                    disabled={isMoving}
+                                    className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-md transition-colors disabled:opacity-50"
+                                    title="Move to folder"
+                                >
+                                    <FolderInput className="w-4 h-4" />
+                                </button>
+                                {isMoveMenuOpen && (
+                                    <div className="absolute top-full right-0 mt-1 w-56 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl overflow-hidden py-1 z-40 animate-in fade-in slide-in-from-top-1 duration-150">
+                                        <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-neutral-500 font-semibold border-b border-neutral-800">
+                                            Move to
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.preventDefault(); handleMove(null); }}
+                                            disabled={!deck.folder_id}
+                                            className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-neutral-800 flex items-center gap-2 ${!deck.folder_id ? 'text-neutral-600 cursor-default' : 'text-neutral-300'}`}
+                                        >
+                                            <span className="w-4 h-4 rounded border border-neutral-700 flex-shrink-0" />
+                                            <span className="truncate">Uncategorized</span>
+                                        </button>
+                                        {folders.length === 0 ? (
+                                            <p className="px-3 py-2 text-xs text-neutral-500 italic">
+                                                Create a folder first.
+                                            </p>
+                                        ) : (
+                                            folders.map((f) => (
+                                                <button
+                                                    key={f.id}
+                                                    type="button"
+                                                    onClick={(e) => { e.preventDefault(); handleMove(f.id); }}
+                                                    disabled={deck.folder_id === f.id}
+                                                    className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-neutral-800 flex items-center gap-2 ${deck.folder_id === f.id ? 'text-[#f9c111] cursor-default' : 'text-neutral-300'}`}
+                                                >
+                                                    <span className={`w-4 h-4 rounded flex-shrink-0 ${deck.folder_id === f.id ? 'bg-[#f9c111]' : 'border border-neutral-700'}`} />
+                                                    <span className="truncate">{f.title}</span>
+                                                </button>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         {!showConfirmDelete && (
                             <button
                                 type="button"

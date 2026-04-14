@@ -1,5 +1,6 @@
 import { getAuthenticatedUser } from "@/lib/auth-utils";
 import { deckService, DeckWithStats } from "@/lib/services/deckService";
+import { folderService, FolderWithCount } from "@/lib/services/folderService";
 import DeckManager from "../components/DeckManager";
 
 export const dynamic = "force-dynamic";
@@ -10,8 +11,12 @@ export default async function Home() {
   const userRole = user?.role || "STUDENT";
 
   let decks: DeckWithStats[] = [];
+  let folders: FolderWithCount[] = [];
   if (userId) {
-    decks = await deckService.fetchDecksWithStats(userId, userRole, "creator");
+    [decks, folders] = await Promise.all([
+      deckService.fetchDecksWithStats(userId, userRole, "creator"),
+      folderService.fetchFolders(userId, userRole, "creator"),
+    ]);
   }
 
 
@@ -25,7 +30,16 @@ export default async function Home() {
           </div>
         </header>
 
-        <DeckManager initialDecks={decks as Array<{ id: string; title: string; deck_seq: number | null; _count: { cards: number } }>} />
+        <DeckManager
+          initialDecks={decks.map(d => ({
+            id: d.id,
+            title: d.title,
+            deck_seq: d.deck_seq,
+            folder_id: d.folder_id,
+            _count: d._count,
+          }))}
+          initialFolders={folders}
+        />
       </main>
     </div>
   );

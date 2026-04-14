@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { getAuthenticatedUser, getDisplayName } from "@/lib/auth-utils";
 import { deckService, DeckWithStats } from "@/lib/services/deckService";
+import { folderService, FolderWithCount } from "@/lib/services/folderService";
 import StudyDeckCard from "@/app/components/study/StudyDeckCard";
 import StudyDashboardList from "@/app/components/study/StudyDashboardList";
 import XpWidget from "@/app/components/XpWidget";
@@ -16,11 +17,15 @@ export default async function Home() {
   const displayName = getDisplayName(user || undefined);
 
   let decksWithStats: DeckWithStats[] = [];
+  let folders: FolderWithCount[] = [];
   let dbError = false;
 
   try {
     if (userId) {
-      decksWithStats = await deckService.fetchDecksWithStats(userId, userRole);
+      [decksWithStats, folders] = await Promise.all([
+        deckService.fetchDecksWithStats(userId, userRole),
+        folderService.fetchFolders(userId, userRole),
+      ]);
     }
   } catch (error) {
     console.error("Study dashboard data fetch error:", error);
@@ -92,7 +97,7 @@ export default async function Home() {
           )}
 
           <div id="all-decks">
-            <StudyDashboardList decks={decksWithStats} />
+            <StudyDashboardList decks={decksWithStats} folders={folders} />
           </div>
         </section>
       </main>

@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 export interface DeckWithStats {
     id: string;
     user_id: string;
+    folder_id: string | null;
     title: string;
     deck_seq: number | null;
     _count: { cards: number };
@@ -102,6 +103,7 @@ export const deckService = {
             return {
                 id: deck.id,
                 user_id: deck.user_id,
+                folder_id: deck.folder_id,
                 title: deck.title,
                 deck_seq: deck.deck_seq,
                 _count: deck._count,
@@ -115,7 +117,7 @@ export const deckService = {
     /**
      * Creates a new deck with an incremented sequence.
      */
-    async createDeck(userId: string, title: string, role: string) {
+    async createDeck(userId: string, title: string, role: string, folderId?: string | null) {
         // Find max sequence across ALL decks (global counter, not per-user)
         const lastDeck = await prisma.decks.findFirst({
             orderBy: { deck_seq: 'desc' },
@@ -127,6 +129,7 @@ export const deckService = {
             data: {
                 title,
                 user_id: userId,
+                folder_id: folderId ?? null,
                 deck_seq: nextSeq,
                 is_public: role === "ADMIN",
             },

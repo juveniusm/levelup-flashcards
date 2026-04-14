@@ -7,16 +7,25 @@ interface Deck {
     id: string;
     title: string;
     deck_seq: number | null;
+    folder_id?: string | null;
     _count: { cards: number };
+}
+
+interface FolderOption {
+    id: string;
+    title: string;
 }
 
 interface DeckListProps {
     decks: Deck[];
     onDelete: (id: string) => void;
     onUpdate: (id: string, newTitle: string) => void;
+    folders?: FolderOption[];
+    onMove?: (deckId: string, folderId: string | null) => void;
+    compact?: boolean;
 }
 
-export default function DeckList({ decks, onDelete, onUpdate }: DeckListProps) {
+export default function DeckList({ decks, onDelete, onUpdate, folders, onMove, compact }: DeckListProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchType, setSearchType] = useState<'all' | 'title' | 'id'>('all');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -73,11 +82,14 @@ export default function DeckList({ decks, onDelete, onUpdate }: DeckListProps) {
     return (
         <div className="space-y-6">
             {decks.length === 0 ? (
-                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-12 text-center shadow-lg">
-                    <p className="text-neutral-400">You don&apos;t have any decks yet. Create one to get started.</p>
+                <div className={compact ? "text-neutral-500 text-sm text-center py-6" : "bg-neutral-900 border border-neutral-800 rounded-xl p-12 text-center shadow-lg"}>
+                    <p className={compact ? "" : "text-neutral-400"}>
+                        {compact ? "No decks here." : "You don't have any decks yet. Create one to get started."}
+                    </p>
                 </div>
             ) : (
                 <>
+                    {!compact && (
                     <div className="flex flex-col sm:flex-row gap-4 mb-6 relative z-10">
                         {/* Custom Dropdown */}
                         <div className="relative sm:w-48 z-20" ref={dropdownRef}>
@@ -129,8 +141,9 @@ export default function DeckList({ decks, onDelete, onUpdate }: DeckListProps) {
                             />
                         </div>
                     </div>
+                    )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                    <div className={`grid grid-cols-1 ${compact ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"} gap-4 lg:gap-6`}>
                         {paginatedDecks.length === 0 ? (
                             <div className="col-span-full">
                                 <p className="text-neutral-400 text-center py-8">No decks found matching your search.</p>
@@ -140,14 +153,16 @@ export default function DeckList({ decks, onDelete, onUpdate }: DeckListProps) {
                                 <DeckItem
                                     key={deck.id}
                                     deck={deck}
+                                    folders={folders}
                                     onDelete={onDelete}
                                     onUpdate={onUpdate}
+                                    onMove={onMove}
                                 />
                             ))
                         )}
                     </div>
 
-                    {totalPages > 1 && (
+                    {!compact && totalPages > 1 && (
                         <div className="flex justify-center items-center gap-4 pt-4 border-t border-neutral-800 mt-8">
                             <button
                                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}

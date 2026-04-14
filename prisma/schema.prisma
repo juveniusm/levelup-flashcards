@@ -36,6 +36,7 @@ model User {
 
   // Relations
   decks       Decks[]
+  folders     Folder[]
   stats       UserStats?
   sm2_stats   SM2Stats[]
   review_logs ReviewLog[]
@@ -79,13 +80,29 @@ model VerificationToken {
 model Decks {
   id        String  @id @default(uuid())
   user_id   String
+  folder_id String?
   title     String
   deck_seq  Int?
   is_public Boolean @default(false)
 
   // Relations
+  user   User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  folder Folder? @relation(fields: [folder_id], references: [id], onDelete: SetNull)
+  cards  Cards[]
+
+  @@index([user_id])
+  @@index([folder_id])
+}
+
+model Folder {
+  id         String  @id @default(uuid())
+  user_id    String
+  title      String
+  folder_seq Int?
+
+  // Relations
   user  User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  cards Cards[]
+  decks Decks[]
 
   @@index([user_id])
 }
