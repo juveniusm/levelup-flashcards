@@ -161,11 +161,14 @@ export default function StudyDeckPage({
     }
 
     const sortedCards = difficultyOrder.flatMap(tier => shuffleArray(tierGroups[tier]));
-    const finalCards = sortedCards.map(({ _easeFactor, _interval, _isDue, _difficultyLabel, ...card }) => ({
-        ...card,
-        ease_factor: _easeFactor,
-        interval: _interval,
-    }));
+    const finalCards = sortedCards.map((card: any) => {
+        const { _easeFactor, _interval, _isDue, _difficultyLabel, ...rest } = card;
+        return {
+            ...rest,
+            ease_factor: _easeFactor,
+            interval: _interval,
+        };
+    });
 
     if (isEndlessMode) {
         return (
