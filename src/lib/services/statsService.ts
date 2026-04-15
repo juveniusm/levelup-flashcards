@@ -37,6 +37,7 @@ const fetchDetailedRecords = async (userId: string) => {
         prisma.sM2Stats.findMany({
             where: { user_id: userId },
             select: { card_id: true, ease_factor: true, interval: true, next_review: true },
+            take: 10000,
         }),
         prisma.reviewLog.findMany({
             where: {
@@ -44,6 +45,8 @@ const fetchDetailedRecords = async (userId: string) => {
                 reviewed_at: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) }
             },
             select: { reviewed_at: true, mode: true },
+            take: 5000,
+            orderBy: { reviewed_at: 'desc' },
         }),
         prisma.userStats.findUnique({
             where: { user_id: userId },

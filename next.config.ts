@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
   images: {
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -14,6 +16,11 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       }
     ],
+  },
+  experimental: {
+    // Tree-shakes icon imports so `import { X, Play, ... } from "lucide-react"`
+    // only pulls the icons actually used rather than the full barrel file.
+    optimizePackageImports: ["lucide-react"],
   },
 };
 

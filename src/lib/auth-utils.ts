@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
@@ -12,7 +13,7 @@ export interface AuthenticatedUser {
  * Retrieves the currently authenticated user from the session.
  * Returns null if the user is not authenticated.
  */
-export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+export const getAuthenticatedUser = cache(async (): Promise<AuthenticatedUser | null> => {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -31,7 +32,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
         name: user.name || undefined,
         role: (user.role as "ADMIN" | "STUDENT") || "STUDENT",
     };
-}
+});
 
 /**
  * Derives a friendly display name for a user.

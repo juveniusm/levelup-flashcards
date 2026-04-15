@@ -15,7 +15,13 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const timezone = searchParams.get("timezone") || "UTC";
 
-        const stats = await statsService.calculateUserStats(user.id, timezone);
+        const getCachedStats = unstable_cache(
+            async (uid: string, tz: string) => statsService.calculateUserStats(uid, tz),
+            [`stats-${user.id}`],
+            { revalidate: 60, tags: [`stats-${user.id}`] }
+        );
+
+        const stats = await getCachedStats(user.id, timezone);
 
         return NextResponse.json(stats);
     } catch (error) {

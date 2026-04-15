@@ -22,47 +22,67 @@ export default function FlashcardImageModal({ imageUrl, onClose }: FlashcardImag
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [onClose]);
 
+    const requestRef = useRef<number>();
+
     const handleMouseMove = (e: ReactMouseEvent) => {
         if (!imgContainerRef.current || !imgNaturalSize.width) return;
 
-        const { left, top, width: containerWidth, height: containerHeight } = imgContainerRef.current.getBoundingClientRect();
-        
-        const containerRatio = containerWidth / containerHeight;
-        const imageRatio = imgNaturalSize.width / imgNaturalSize.height;
+        const { clientX, clientY } = e;
 
-        let actualWidth, actualHeight, offsetX = 0, offsetY = 0;
-
-        if (imageRatio > containerRatio) {
-            actualWidth = containerWidth;
-            actualHeight = containerWidth / imageRatio;
-            offsetY = (containerHeight - actualHeight) / 2;
-        } else {
-            actualHeight = containerHeight;
-            actualWidth = containerHeight * imageRatio;
-            offsetX = (containerWidth - actualWidth) / 2;
+        if (requestRef.current) {
+            cancelAnimationFrame(requestRef.current);
         }
 
-        const relativeX = e.clientX - left;
-        const relativeY = e.clientY - top;
+        requestRef.current = requestAnimationFrame(() => {
+            if (!imgContainerRef.current) return;
+            const { left, top, width: containerWidth, height: containerHeight } = imgContainerRef.current.getBoundingClientRect();
+            
+            const containerRatio = containerWidth / containerHeight;
+            const imageRatio = imgNaturalSize.width / imgNaturalSize.height;
 
-        const isWithinBounds = 
-            relativeX >= offsetX && 
-            relativeX <= offsetX + actualWidth &&
-            relativeY >= offsetY && 
-            relativeY <= offsetY + actualHeight;
+            let actualWidth, actualHeight, offsetX = 0, offsetY = 0;
 
-        if (isWithinBounds) {
-            const x = ((relativeX - offsetX) / actualWidth) * 100;
-            const y = ((relativeY - offsetY) / actualHeight) * 100;
+            if (imageRatio > containerRatio) {
+                actualWidth = containerWidth;
+                actualHeight = containerWidth / imageRatio;
+                offsetY = (containerHeight - actualHeight) / 2;
+            } else {
+                actualHeight = containerHeight;
+                actualWidth = containerHeight * imageRatio;
+                offsetX = (containerWidth - actualWidth) / 2;
+            }
 
-            const containerX = (relativeX / containerWidth) * 100;
-            const containerY = (relativeY / containerHeight) * 100;
+            const relativeX = clientX - left;
+            const relativeY = clientY - top;
 
-            setMagnifier({ x: containerX, y: containerY, show: true, imgX: x, imgY: y });
-        } else {
-            setMagnifier(m => ({ ...m, show: false }));
-        }
+            const isWithinBounds = 
+                relativeX >= offsetX && 
+                relativeX <= offsetX + actualWidth &&
+                relativeY >= offsetY && 
+                relativeY <= offsetY + actualHeight;
+
+            if (isWithinBounds) {
+                const x = ((relativeX - offsetX) / actualWidth) * 100;
+                const y = ((relativeY - offsetY) / actualHeight) * 100;
+
+                const containerX = (relativeX / containerWidth) * 100;
+                const containerY = (relativeY / containerHeight) * 100;
+
+                setMagnifier(m => {
+                    if (m.x === containerX && m.y === containerY && m.imgX === x && m.imgY === y) return m;
+                    return { x: containerX, y: containerY, show: true, imgX: x, imgY: y };
+                });
+            } else {
+                setMagnifier(m => m.show ? { ...m, show: false } : m);
+            }
+        });
     };
+
+    useEffect(() => {
+        return () => {
+            if (requestRef.current) cancelAnimationFrame(requestRef.current);
+        };
+    }, []);
 
     return (
         <div 
