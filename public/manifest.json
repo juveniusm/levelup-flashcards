@@ -1,0 +1,17 @@
+{
+    "name": "Level Up Flashcards",
+    "short_name": "Level Up",
+    "description": "Medical flashcards powered by spaced repetition.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#f9c111",
+    "icons": [
+        {
+            "src": "/Logo3.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ]
+}

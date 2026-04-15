@@ -16,8 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LevelUp Flashcards",
-  description: "Advanced spaced repetition flashcards.",
+  title: "Level Up Flashcards",
+  description: "Master anything with spaced repetition",
+  manifest: "/manifest.json",
   icons: {
     icon: "/Logo3.svg",
     apple: "/Logo3.svg",
