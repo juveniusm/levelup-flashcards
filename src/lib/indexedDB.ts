@@ -17,16 +17,28 @@ export interface QueuedReview {
     timestamp: number; // For Last-Write-Wins logic
 }
 
-const db = new Dexie("LevelUpOfflineDatabase") as Dexie & {
+// Lazy-initialize Dexie only on the client side.
+// During SSR, `indexedDB` doesn't exist and `new Dexie()` would crash.
+let _db: (Dexie & {
     offlineDecks: EntityTable<OfflineDeck, "deckId">;
     reviewOutbox: EntityTable<QueuedReview, "id">;
-};
+}) | null = null;
 
-// Declare tables, specifying primary keys and indexed props
-// Note: We don't need to specify every property, just the ones we want to query by.
-db.version(1).stores({
-    offlineDecks: "deckId", 
-    reviewOutbox: "++id, timestamp, deckId, cardId"
-});
+function getDb() {
+    if (_db) return _db;
 
-export { db };
+    _db = new Dexie("LevelUpOfflineDatabase") as Dexie & {
+        offlineDecks: EntityTable<OfflineDeck, "deckId">;
+        reviewOutbox: EntityTable<QueuedReview, "id">;
+    };
+
+    _db.version(1).stores({
+        offlineDecks: "deckId",
+        reviewOutbox: "++id, timestamp, deckId, cardId"
+    });
+
+    return _db;
+}
+
+// Export a proxy that lazily initializes on first access (client-only)
+export const db = typeof window !== "undefined" ? getDb() : (null as any);

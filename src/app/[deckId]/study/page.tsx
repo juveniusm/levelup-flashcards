@@ -41,7 +41,7 @@ export default function StudyDeckPage() {
                 }
                 
                 // Fallback to IndexedDB
-                const localDeck = await db.offlineDecks.get(deckId);
+                const localDeck = await db?.offlineDecks?.get(deckId);
                 if (localDeck) {
                     if (isMounted) setDeck(localDeck);
                 } else {
@@ -49,7 +49,7 @@ export default function StudyDeckPage() {
                 }
             } catch (err) {
                 console.error("Hydration Error:", err);
-                const localDeck = await db.offlineDecks.get(deckId);
+                const localDeck = await db?.offlineDecks?.get(deckId);
                 if (localDeck && isMounted) {
                     setDeck(localDeck);
                 } else if (isMounted) {
