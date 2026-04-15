@@ -34,9 +34,9 @@ const Flashcard = memo(function Flashcard({
     };
 
     return (
-        <div className="perspective-1000 mb-12">
+        <div className="perspective-1000 mb-6 sm:mb-12">
             <div
-                className={`relative w-full h-[28rem] transition-transform preserve-3d shadow-2xl ${!isFlipped ? "duration-0" : "duration-700 rotate-x-180"
+                className={`relative w-full h-[18rem] sm:h-[24rem] md:h-[28rem] transition-transform preserve-3d shadow-2xl ${!isFlipped ? "duration-0" : "duration-700 rotate-x-180"
                     }`}
             >
                 {/* Front */}
