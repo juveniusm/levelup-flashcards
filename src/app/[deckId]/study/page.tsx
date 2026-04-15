@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useMemo, use } from "react";
 import StudyInterface from "../../components/study/StudyInterface";
 import EndlessInterface from "../../components/study/EndlessInterface";
 import FlipInterface from "../../components/study/FlipInterface";
@@ -91,49 +91,77 @@ export default function StudyDeckPage({
         );
     }
 
-    const now = new Date();
+    // Memoize the entire card processing pipeline so that re-renders
+    // (e.g. going back online) don't re-shuffle and jump to a different card.
+    const finalCards = useMemo(() => {
+        if (!deck) return [];
+        const now = new Date();
 
-    const cardsWithPriority = deck.cards.map((card: any) => {
-        const sm2_stats = card.sm2_stats || [];
-        const { easeFactor, interval, isDue } = getCardStats(sm2_stats, now);
-        const isUnseen = sm2_stats.length === 0;
+        const cardsWithPriority = deck.cards.map((card: any) => {
+            const sm2_stats = card.sm2_stats || [];
+            const { easeFactor, interval, isDue } = getCardStats(sm2_stats, now);
+            const isUnseen = sm2_stats.length === 0;
 
-        const sortingEf = isUnseen ? 1.9 : (isDue ? easeFactor - 0.1 : easeFactor);
+            const sortingEf = isUnseen ? 1.9 : (isDue ? easeFactor - 0.1 : easeFactor);
 
-        return {
-            ...card,
-            _easeFactor: easeFactor,
-            _sortingEf: sortingEf,
-            _interval: interval,
-            _isDue: isDue,
-            _difficultyLabel: isDue ? "Due" : (() => {
-                if (isUnseen) return "Unseen";
-                if (easeFactor >= 2.5 && interval >= 21) return "Mastered";
-                if (easeFactor <= 1.5) return "Very Hard";
-                if (easeFactor <= 1.8) return "Hard";
-                if (easeFactor <= 2.2) return "Medium";
-                return "Easy";
-            })()
-        };
-    });
+            return {
+                ...card,
+                _easeFactor: easeFactor,
+                _sortingEf: sortingEf,
+                _interval: interval,
+                _isDue: isDue,
+                _difficultyLabel: isDue ? "Due" : (() => {
+                    if (isUnseen) return "Unseen";
+                    if (easeFactor >= 2.5 && interval >= 21) return "Mastered";
+                    if (easeFactor <= 1.5) return "Very Hard";
+                    if (easeFactor <= 1.8) return "Hard";
+                    if (easeFactor <= 2.2) return "Medium";
+                    return "Easy";
+                })()
+            };
+        });
 
-    let filteredCards = cardsWithPriority;
+        let filteredCards = cardsWithPriority;
 
-    if (isReviewMode) filteredCards = cardsWithPriority.filter((c: any) => c._isDue);
-    else if (isFocusMode) filteredCards = cardsWithPriority.filter((c: any) => c._easeFactor <= 1.8 && c._easeFactor > 0);
-    else if (isCustomMode) {
-        const selectedDifficulties = difficulties?.split(',') || [];
-        if (selectedDifficulties.length > 0) {
-            filteredCards = cardsWithPriority.filter((c: any) => selectedDifficulties.includes(c._difficultyLabel));
+        if (isReviewMode) filteredCards = cardsWithPriority.filter((c: any) => c._isDue);
+        else if (isFocusMode) filteredCards = cardsWithPriority.filter((c: any) => c._easeFactor <= 1.8 && c._easeFactor > 0);
+        else if (isCustomMode) {
+            const selectedDifficulties = difficulties?.split(',') || [];
+            if (selectedDifficulties.length > 0) {
+                filteredCards = cardsWithPriority.filter((c: any) => selectedDifficulties.includes(c._difficultyLabel));
+            }
         }
-    }
 
-    if (isCustomMode && limit) {
-        const numLimit = parseInt(limit);
-        if (!isNaN(numLimit)) filteredCards = shuffleArray(filteredCards).slice(0, numLimit);
-    }
+        if (isCustomMode && limit) {
+            const numLimit = parseInt(limit);
+            if (!isNaN(numLimit)) filteredCards = shuffleArray(filteredCards).slice(0, numLimit);
+        }
 
-    if (filteredCards.length === 0) {
+        const difficultyOrder = ["Very Hard", "Hard", "Unseen", "Medium", "Easy", "Mastered"];
+        const tierGroups: Record<string, any[]> = {};
+        for (const tier of difficultyOrder) tierGroups[tier] = [];
+        for (const card of filteredCards) {
+            const tier = card._difficultyLabel !== "Due" ? card._difficultyLabel : (() => {
+                if (card._easeFactor <= 1.5) return "Very Hard";
+                if (card._easeFactor <= 1.8) return "Hard";
+                if (card._easeFactor <= 2.2) return "Medium";
+                return "Easy";
+            })();
+            tierGroups[tier].push(card);
+        }
+
+        const sortedCards = difficultyOrder.flatMap(tier => shuffleArray(tierGroups[tier]));
+        return sortedCards.map((card: any) => {
+            const { _easeFactor, _interval, _isDue, _difficultyLabel, ...rest } = card;
+            return {
+                ...rest,
+                ease_factor: _easeFactor,
+                interval: _interval,
+            };
+        });
+    }, [deck]); // Only recompute when the deck data itself changes
+
+    if (finalCards.length === 0 && !isLoading) {
         return (
             <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4 text-center">
                 <h2 className="text-4xl font-black text-[#f9c111] mb-4">No cards found!</h2>
@@ -146,29 +174,6 @@ export default function StudyDeckPage({
             </div>
         );
     }
-
-    const difficultyOrder = ["Very Hard", "Hard", "Unseen", "Medium", "Easy", "Mastered"];
-    const tierGroups: Record<string, typeof filteredCards> = {};
-    for (const tier of difficultyOrder) tierGroups[tier] = [];
-    for (const card of filteredCards) {
-        const tier = card._difficultyLabel !== "Due" ? card._difficultyLabel : (() => {
-            if (card._easeFactor <= 1.5) return "Very Hard";
-            if (card._easeFactor <= 1.8) return "Hard";
-            if (card._easeFactor <= 2.2) return "Medium";
-            return "Easy";
-        })();
-        tierGroups[tier].push(card);
-    }
-
-    const sortedCards = difficultyOrder.flatMap(tier => shuffleArray(tierGroups[tier]));
-    const finalCards = sortedCards.map((card: any) => {
-        const { _easeFactor, _interval, _isDue, _difficultyLabel, ...rest } = card;
-        return {
-            ...rest,
-            ease_factor: _easeFactor,
-            interval: _interval,
-        };
-    });
 
     if (isEndlessMode) {
         return (
