@@ -22,7 +22,7 @@ export default function FlashcardImageModal({ imageUrl, onClose }: FlashcardImag
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [onClose]);
 
-    const requestRef = useRef<number>();
+    const requestRef = useRef<number>(0);
 
     const handleMouseMove = (e: ReactMouseEvent) => {
         if (!imgContainerRef.current || !imgNaturalSize.width) return;
