@@ -5,6 +5,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { Card } from "@/types/card";
 import { useCardImageDrop } from "@/hooks/useCardImageDrop";
 import CardSideEditor from "./CardSideEditor";
@@ -46,6 +47,8 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const {
         frontImageFile, backImageFile,
@@ -131,6 +134,28 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
         name: "acceptedAnswers",
     });
 
+    // ── Delete (edit mode only) ───────────────────────────────────────
+    const handleDelete = async () => {
+        if (!existingCard) return;
+        setIsDeleting(true);
+        setError(null);
+        try {
+            const res = await fetch(`/api/decks/${deckId}/cards/${existingCard.id}`, {
+                method: "DELETE",
+            });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body.error ?? "Failed to delete card");
+            }
+            router.push(`/creator/${deckId}`);
+            router.refresh();
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to delete card.");
+            setIsDeleting(false);
+            setShowDeleteConfirm(false);
+        }
+    };
+
     // ── Derived ───────────────────────────────────────────────────────
     const showFrontExisting = isEdit && !clearFrontImage && !frontImageFile && existingCard?.front_image_url;
     const showBackExisting = isEdit && !clearBackImage && !backImageFile && existingCard?.back_image_url;
@@ -205,7 +230,7 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                         <button
                             type="button"
                             onClick={() => router.push(`/creator/${deckId}`)}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || isDeleting}
                             className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50"
                         >
                             Cancel
@@ -213,7 +238,7 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                     )}
                     <button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isDeleting}
                         className={`${isEdit ? "flex-1 bg-[#f9c111] hover:bg-[#e0ad0e] text-black" : "w-full bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700"} font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50`}
                     >
                         {isSubmitting
@@ -221,6 +246,48 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                             : (isEdit ? "Save Changes" : "+ Add Card")}
                     </button>
                 </div>
+
+                {isEdit && (
+                    <div className="pt-4 mt-2 border-t border-neutral-800">
+                        {!showDeleteConfirm ? (
+                            <button
+                                type="button"
+                                onClick={() => setShowDeleteConfirm(true)}
+                                disabled={isSubmitting || isDeleting}
+                                className="flex items-center gap-2 text-sm text-neutral-500 hover:text-red-500 font-medium transition-colors disabled:opacity-50"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete this card
+                            </button>
+                        ) : (
+                            <div className="bg-red-950/30 border border-red-900/50 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 animate-in fade-in slide-in-from-bottom-1 duration-150">
+                                <div className="flex-1">
+                                    <p className="text-sm font-semibold text-red-200">Delete this card permanently?</p>
+                                    <p className="text-xs text-red-300/70 mt-0.5">This cannot be undone. The card and its review history will be removed.</p>
+                                </div>
+                                <div className="flex gap-2 flex-shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDeleteConfirm(false)}
+                                        disabled={isDeleting}
+                                        className="px-4 py-2 text-sm text-neutral-300 hover:text-white bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors disabled:opacity-50 font-medium"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleDelete}
+                                        disabled={isDeleting}
+                                        className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-500 rounded-lg transition-colors disabled:opacity-50 font-bold flex items-center gap-1.5"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        {isDeleting ? "Deleting..." : "Delete Card"}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </form>
         </div>
     );
