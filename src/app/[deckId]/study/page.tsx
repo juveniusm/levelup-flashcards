@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, use } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import StudyInterface from "../../components/study/StudyInterface";
 import EndlessInterface from "../../components/study/EndlessInterface";
 import FlipInterface from "../../components/study/FlipInterface";
@@ -8,18 +9,13 @@ import Link from "next/link";
 import { shuffleArray, getCardStats } from "@/utils/study/studyUtils";
 import { db } from "@/lib/indexedDB";
 
-export default function StudyDeckPage({
-    params,
-    searchParams,
-}: {
-    params: Promise<{ deckId: string }>;
-    searchParams: Promise<{ mode?: string; limit?: string; difficulties?: string }>;
-}) {
-    const { deckId } = use(params);
-    const resolvedSearchParams = use(searchParams);
-    const mode = resolvedSearchParams.mode;
-    const limit = resolvedSearchParams.limit;
-    const difficulties = resolvedSearchParams.difficulties;
+export default function StudyDeckPage() {
+    const params = useParams();
+    const searchParams = useSearchParams();
+    const deckId = params.deckId as string;
+    const mode = searchParams.get("mode") ?? undefined;
+    const limit = searchParams.get("limit") ?? undefined;
+    const difficulties = searchParams.get("difficulties") ?? undefined;
 
     const isReviewMode = mode === "review";
     const isEndlessMode = mode === "endless";
