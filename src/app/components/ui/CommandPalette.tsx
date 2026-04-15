@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Search, X, Loader2, BookOpen, Trash2, Edit3, ChevronRight } from "lucide-react";
 import { Card } from "@/utils/study/studyUtils";
-import { useRouter } from "next/navigation";
 
 export default function CommandPalette() {
     const [isOpen, setIsOpen] = useState(false);
@@ -13,8 +12,7 @@ export default function CommandPalette() {
     const [cursor, setCursor] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
-    
-    const router = useRouter();
+
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -105,11 +103,19 @@ export default function CommandPalette() {
     };
 
     const handleAction = (type: "edit" | "view", card: Card) => {
-        setIsOpen(false);
         const deckId = card.deck_id;
         if (type === "edit" || type === "view") {
-            router.push(`/creator/${deckId}/cards/${card.id}/edit`);
+            // Open in a new tab so the user's current session (e.g. an
+            // active study run) keeps running in the original tab.
+            // Must be called synchronously from a user gesture or popup
+            // blockers will eat it.
+            window.open(
+                `/creator/${deckId}/cards/${card.id}/edit`,
+                "_blank",
+                "noopener,noreferrer"
+            );
         }
+        setIsOpen(false);
     };
 
     if (!isOpen) return null;
