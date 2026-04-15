@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Search, X, Loader2, BookOpen, Trash2, Edit3, ChevronRight } from "lucide-react";
+import { Search, X, Loader2, BookOpen, Edit3, ChevronRight } from "lucide-react";
 import { Card } from "@/utils/study/studyUtils";
 
 export default function CommandPalette() {

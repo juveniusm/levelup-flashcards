@@ -14,9 +14,12 @@ export async function POST(
 
     try {
         const cards = await request.json();
-        console.log(`[API] Bulk POST to deckId: ${deckId}. Card count: ${cards?.length}`);
-        if (Array.isArray(cards) && cards.length > 0) {
-            console.log(`[API] First card sample:`, JSON.stringify(cards[0]));
+
+        if (process.env.NODE_ENV !== "production") {
+            console.log(`[API] Bulk POST to deckId: ${deckId}. Card count: ${cards?.length}`);
+            if (Array.isArray(cards) && cards.length > 0) {
+                console.log(`[API] First card sample:`, JSON.stringify(cards[0]));
+            }
         }
 
         if (!Array.isArray(cards) || cards.length === 0) {
