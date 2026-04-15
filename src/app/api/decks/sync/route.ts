@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { calculateSM2 } from "@/utils/cognitive/sm2";
+import { userService } from "@/lib/services/userService";
 
 interface QueuedReview {
     deckId: string;
@@ -27,10 +28,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
         }
 
-        const todayDateStr = new Intl.DateTimeFormat("en-CA", {
-            timeZone: timezone || "UTC"
-        }).format(new Date());
-
+        const userTz = timezone || "UTC";
         let totalXpEarned = 0;
 
         // Ensure chronological order
@@ -38,112 +36,70 @@ export async function POST(request: Request) {
 
         // We run these sequentially to ensure Last-Write-Wins logic resolves perfectly against fresh Postgres state
         for (const review of sortedReviews) {
-            const { cardId, qualityGrade, isReviewMode, timestamp } = review;
+            const { deckId, cardId, qualityGrade, isReviewMode, timestamp } = review;
             const reviewTime = new Date(timestamp);
 
-            const isCorrect = qualityGrade >= 3;
-            // Simplified XP: +10 correct, +3 incorrect
-            const xpEarned = isCorrect ? 10 : 3;
-
-            // Log the study event history regardless of LWW
-            await prisma.study_history.create({
+            // Log the review event regardless of LWW (for analytics)
+            await prisma.reviewLog.create({
                 data: {
                     user_id: userId,
                     card_id: cardId,
-                    quality: qualityGrade,
+                    deck_id: deckId,
+                    quality_grade: qualityGrade,
+                    mode: isReviewMode ? "review" : "study",
                     reviewed_at: reviewTime,
                 }
             });
 
-            if (!isReviewMode) {
-                // If not reviewing, no SM2 update needed, but XP is earned
-                await prisma.daily_study_stats.upsert({
-                    where: { user_id_date: { user_id: userId, date: todayDateStr } },
-                    update: { xp_earned: { increment: xpEarned } },
-                    create: { user_id: userId, date: todayDateStr, xp_earned: xpEarned }
-                });
-                await prisma.user.update({
-                    where: { id: userId },
-                    data: { total_xp: { increment: xpEarned } }
-                });
-                totalXpEarned += xpEarned;
-                continue;
-            }
-
             // SM2 Update Logic (LWW Gatekeeper)
-            const currentStats = await prisma.sM2Stats.findUnique({
-                where: { user_id_card_id: { user_id: userId, card_id: cardId } }
+            const existing = await prisma.sM2Stats.findUnique({
+                where: { card_id_user_id: { card_id: cardId, user_id: userId } }
             });
 
-            const currentLastReviewedAt = currentStats?.last_reviewed_at;
-            
             // The LWW Gatekeeper!
-            // If the database has a record newer than the offline sync payload, DROP the interval update!
-            if (currentLastReviewedAt && currentLastReviewedAt > reviewTime) {
-                console.log(`LWW: Ignored stale review for card ${cardId}`);
+            // Check if the existing SM2 record was updated AFTER this offline review was created.
+            // If so, the offline review is stale — skip the SM2/interval update but keep the ReviewLog above.
+            if (existing?.next_review && existing.next_review > reviewTime) {
+                // A more recent review has already been processed online.
+                // We logged it above for history, but we do NOT touch SM2 multipliers.
+                console.log(`LWW: Ignored stale SM2 update for card ${cardId}`);
                 continue;
             }
 
-            const currentEase = currentStats?.ease_factor ?? 2.5;
-            const currentInterval = currentStats?.interval ?? 0;
-            const currentReps = currentStats?.repetitions ?? 0;
+            const prevEase = existing?.ease_factor ?? 2.5;
+            const prevReps = existing?.repetitions ?? 0;
 
-            const { easeFactor, interval, repetitions } = calculateSM2(
-                qualityGrade,
-                currentReps,
-                currentEase,
-                currentInterval
-            );
+            const result = calculateSM2(qualityGrade, prevReps, prevEase, userTz);
+            const isDue = existing && existing.next_review <= new Date();
+            const isCorrectEarly = qualityGrade >= 4;
 
-            const nextReview = new Date(reviewTime);
-            nextReview.setDate(nextReview.getDate() + interval);
+            const updateData = (isReviewMode || isDue || isCorrectEarly)
+                ? {
+                    ease_factor: result.ease_factor,
+                    interval: result.interval,
+                    repetitions: result.repetitions,
+                    next_review: result.next_review,
+                }
+                : {
+                    ease_factor: result.ease_factor,
+                };
 
             await prisma.sM2Stats.upsert({
-                where: { user_id_card_id: { user_id: userId, card_id: cardId } },
-                update: {
-                    ease_factor: easeFactor,
-                    interval,
-                    repetitions,
-                    next_review: nextReview,
-                    last_reviewed_at: reviewTime,
-                },
+                where: { card_id_user_id: { card_id: cardId, user_id: userId } },
+                update: updateData,
                 create: {
-                    user_id: userId,
                     card_id: cardId,
-                    ease_factor: easeFactor,
-                    interval,
-                    repetitions,
-                    next_review: nextReview,
-                    last_reviewed_at: reviewTime,
-                }
-            });
-
-            // Update daily stats and total XP
-            let dailyUpdateData: any = { xp_earned: { increment: xpEarned } };
-            if (isCorrect) {
-                dailyUpdateData.correct_reviews = { increment: 1 };
-            } else {
-                dailyUpdateData.incorrect_reviews = { increment: 1 };
-            }
-
-            await prisma.daily_study_stats.upsert({
-                where: { user_id_date: { user_id: userId, date: todayDateStr } },
-                update: dailyUpdateData,
-                create: {
                     user_id: userId,
-                    date: todayDateStr,
-                    xp_earned: xpEarned,
-                    correct_reviews: isCorrect ? 1 : 0,
-                    incorrect_reviews: isCorrect ? 0 : 1,
-                }
+                    ease_factor: result.ease_factor,
+                    interval: result.interval,
+                    repetitions: result.repetitions,
+                    next_review: result.next_review,
+                },
             });
 
-            await prisma.user.update({
-                where: { id: userId },
-                data: { total_xp: { increment: xpEarned } }
-            });
-
-            totalXpEarned += xpEarned;
+            // Award XP and Update Streak (Centralized logic, same as the live review route)
+            const stats = await userService.updateUserStats(userId, qualityGrade, userTz);
+            totalXpEarned += stats.xpEarned;
         }
 
         return NextResponse.json({ success: true, totalXpEarned });
