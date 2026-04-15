@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "./components/Sidebar";
@@ -22,6 +22,15 @@ export const metadata: Metadata = {
     icon: "/favicon2.png",
     apple: "/favicon2.png",
   },
+};
+
+// Without this, mobile browsers render at a ~980px virtual viewport so the
+// UI looks zoomed in on phones and needs pinch-to-unzoom on every page.
+// We intentionally do NOT set maximumScale/userScalable — that would block
+// pinch-zoom for users who rely on it for accessibility.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
