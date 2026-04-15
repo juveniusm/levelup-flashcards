@@ -81,7 +81,7 @@ export function useSyncEngine() {
 
             if (res.ok) {
                 // Bulk delete the synced keys
-                const keys = queued.map(q => q.id).filter((id): id is number => id !== undefined);
+                const keys = queued.map((q: any) => q.id).filter((id: any): id is number => id !== undefined);
                 await db.reviewOutbox.bulkDelete(keys);
             } else if (res.status === 401) {
                 console.warn("Auth expired during sync outbox.");
