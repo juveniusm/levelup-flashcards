@@ -64,31 +64,8 @@ export default function StudyDeckPage() {
         return () => { isMounted = false; };
     }, [deckId]);
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
-                <div className="animate-pulse flex flex-col items-center">
-                    <div className="w-64 h-8 bg-neutral-800 rounded-lg mb-8"></div>
-                    <div className="w-full max-w-sm h-72 bg-neutral-800 rounded-3xl"></div>
-                </div>
-            </div>
-        );
-    }
-
-    if (error || !deck) {
-        return (
-            <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4 text-center">
-                <h2 className="text-3xl font-bold text-red-500 mb-4">Are you offline?</h2>
-                <p className="text-neutral-400 mb-8">{error || "Deck not found."}</p>
-                <Link href="/study" className="bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3 px-8 rounded-xl">
-                    Go Back
-                </Link>
-            </div>
-        );
-    }
-
-    // Memoize the entire card processing pipeline so that re-renders
-    // (e.g. going back online) don't re-shuffle and jump to a different card.
+    // useMemo MUST be called before any early returns (Rules of Hooks).
+    // It safely returns [] when deck is null.
     const finalCards = useMemo(() => {
         if (!deck) return [];
         const now = new Date();
@@ -155,9 +132,33 @@ export default function StudyDeckPage() {
                 interval: _interval,
             };
         });
-    }, [deck]); // Only recompute when the deck data itself changes
+    }, [deck]);
 
-    if (finalCards.length === 0 && !isLoading) {
+    // Early returns AFTER all hooks have been called
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
+                <div className="animate-pulse flex flex-col items-center">
+                    <div className="w-64 h-8 bg-neutral-800 rounded-lg mb-8"></div>
+                    <div className="w-full max-w-sm h-72 bg-neutral-800 rounded-3xl"></div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !deck) {
+        return (
+            <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4 text-center">
+                <h2 className="text-3xl font-bold text-red-500 mb-4">Are you offline?</h2>
+                <p className="text-neutral-400 mb-8">{error || "Deck not found."}</p>
+                <Link href="/study" className="bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3 px-8 rounded-xl">
+                    Go Back
+                </Link>
+            </div>
+        );
+    }
+
+    if (finalCards.length === 0) {
         return (
             <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4 text-center">
                 <h2 className="text-4xl font-black text-[#f9c111] mb-4">No cards found!</h2>
