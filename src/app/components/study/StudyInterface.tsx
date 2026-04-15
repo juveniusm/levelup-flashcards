@@ -205,9 +205,9 @@ export default function StudyInterface({
             />
 
             {/* Progress Bar */}
-            <div className="w-full bg-neutral-900 rounded-full h-2 mb-12 overflow-hidden border border-neutral-800">
+            <div className="w-full bg-neutral-900 rounded-full h-1 sm:h-2 mb-4 sm:mb-12 overflow-hidden border border-neutral-800">
                 <div
-                    className="bg-[#f9c111] h-2 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(249,193,17,0.5)]"
+                    className="bg-[#f9c111] h-1 sm:h-2 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(249,193,17,0.5)]"
                     style={{ width: `${((currentIndex) / cards.length) * 100}%` }}
                 ></div>
             </div>

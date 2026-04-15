@@ -71,13 +71,13 @@ const Flashcard = memo(function Flashcard({
                         </div>
                     )}
 
-                    <h2 className="text-2xl sm:text-3xl font-semibold text-white leading-tight">
+                    <h2 className="text-lg sm:text-3xl font-semibold text-white leading-tight">
                         {card.front}
                     </h2>
                 </div>
 
                 {/* Back */}
-                <div className="absolute inset-0 backface-hidden rotate-x-180 bg-neutral-900 border-2 border-neutral-800 rounded-3xl p-4 sm:p-8 flex flex-col justify-center items-center text-center overflow-y-auto">
+                <div className="absolute inset-0 backface-hidden rotate-x-180 bg-neutral-900 border-2 border-neutral-800 rounded-3xl p-4 sm:p-8 flex flex-col justify-center items-center text-center overflow-y-auto w-full">
                     <span className="absolute top-6 left-6 text-neutral-500 text-xs font-bold uppercase tracking-widest">
                         Target Answer
                     </span>
@@ -99,7 +99,7 @@ const Flashcard = memo(function Flashcard({
                         </div>
                     )}
 
-                    <h2 className="text-2xl sm:text-3xl font-semibold text-[#f9c111] leading-tight mb-8">
+                    <h2 className="text-lg sm:text-3xl font-semibold text-[#f9c111] leading-tight mb-8">
                         {card.back}
                     </h2>
 
