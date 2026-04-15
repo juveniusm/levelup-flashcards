@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { calculateSM2 } from "@/utils/study/sm2";
+import { calculateSM2 } from "@/utils/cognitive/sm2";
 
 interface QueuedReview {
     deckId: string;
