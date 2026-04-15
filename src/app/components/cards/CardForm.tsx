@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -135,7 +135,23 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
     });
 
     // ── Delete (edit mode only) ───────────────────────────────────────
-    const handleDelete = async () => {
+    // Auto-clear the "confirm" state after 4s so a stray first click
+    // doesn't leave the red button hot indefinitely.
+    useEffect(() => {
+        if (!showDeleteConfirm) return;
+        const timer = setTimeout(() => setShowDeleteConfirm(false), 4000);
+        return () => clearTimeout(timer);
+    }, [showDeleteConfirm]);
+
+    const handleDeleteClick = () => {
+        if (!showDeleteConfirm) {
+            setShowDeleteConfirm(true);
+            return;
+        }
+        executeDelete();
+    };
+
+    const executeDelete = async () => {
         if (!existingCard) return;
         setIsDeleting(true);
         setError(null);
@@ -236,6 +252,25 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                             Cancel
                         </button>
                     )}
+                    {isEdit && (
+                        <button
+                            type="button"
+                            onClick={handleDeleteClick}
+                            disabled={isSubmitting || isDeleting}
+                            className={`flex-1 font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50 text-white flex items-center justify-center gap-2 ${
+                                showDeleteConfirm
+                                    ? "bg-red-700 hover:bg-red-600 animate-pulse"
+                                    : "bg-red-600 hover:bg-red-500"
+                            }`}
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            {isDeleting
+                                ? "Deleting..."
+                                : showDeleteConfirm
+                                    ? "Click to confirm"
+                                    : "Delete"}
+                        </button>
+                    )}
                     <button
                         type="submit"
                         disabled={isSubmitting || isDeleting}
@@ -246,48 +281,6 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                             : (isEdit ? "Save Changes" : "+ Add Card")}
                     </button>
                 </div>
-
-                {isEdit && (
-                    <div className="pt-4 mt-2 border-t border-neutral-800">
-                        {!showDeleteConfirm ? (
-                            <button
-                                type="button"
-                                onClick={() => setShowDeleteConfirm(true)}
-                                disabled={isSubmitting || isDeleting}
-                                className="flex items-center gap-2 text-sm text-neutral-500 hover:text-red-500 font-medium transition-colors disabled:opacity-50"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                                Delete this card
-                            </button>
-                        ) : (
-                            <div className="bg-red-950/30 border border-red-900/50 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 animate-in fade-in slide-in-from-bottom-1 duration-150">
-                                <div className="flex-1">
-                                    <p className="text-sm font-semibold text-red-200">Delete this card permanently?</p>
-                                    <p className="text-xs text-red-300/70 mt-0.5">This cannot be undone. The card and its review history will be removed.</p>
-                                </div>
-                                <div className="flex gap-2 flex-shrink-0">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowDeleteConfirm(false)}
-                                        disabled={isDeleting}
-                                        className="px-4 py-2 text-sm text-neutral-300 hover:text-white bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors disabled:opacity-50 font-medium"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={handleDelete}
-                                        disabled={isDeleting}
-                                        className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-500 rounded-lg transition-colors disabled:opacity-50 font-bold flex items-center gap-1.5"
-                                    >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                        {isDeleting ? "Deleting..." : "Delete Card"}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
             </form>
         </div>
     );
