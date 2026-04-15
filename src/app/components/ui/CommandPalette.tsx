@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Search, X, Loader2, BookOpen, Edit3, ChevronRight } from "lucide-react";
+import { Search, X, Loader2, BookOpen, Edit3, Trash2, ChevronRight } from "lucide-react";
 import { Card } from "@/utils/study/studyUtils";
 
 export default function CommandPalette() {
@@ -12,6 +12,8 @@ export default function CommandPalette() {
     const [cursor, setCursor] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -118,6 +120,41 @@ export default function CommandPalette() {
         setIsOpen(false);
     };
 
+    // Auto-clear the delete-confirm state after 3s so a stray first
+    // click doesn't leave a trash button primed to delete.
+    useEffect(() => {
+        if (!confirmingDeleteId) return;
+        const timer = setTimeout(() => setConfirmingDeleteId(null), 3000);
+        return () => clearTimeout(timer);
+    }, [confirmingDeleteId]);
+
+    const handleDeleteClick = async (card: Card) => {
+        if (confirmingDeleteId !== card.id) {
+            setConfirmingDeleteId(card.id);
+            return;
+        }
+        // Second click — actually delete
+        setConfirmingDeleteId(null);
+        setDeletingId(card.id);
+        try {
+            const res = await fetch(`/api/decks/${card.deck_id}/cards/${card.id}`, {
+                method: "DELETE",
+            });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body.error ?? "Failed to delete card");
+            }
+            // Remove from results without closing the palette, so the
+            // user can keep searching / deleting.
+            setResults(prev => prev.filter(c => c.id !== card.id));
+        } catch (err) {
+            console.error("Delete failed:", err);
+            alert(err instanceof Error ? err.message : "Failed to delete card.");
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -187,12 +224,34 @@ export default function CommandPalette() {
                                         <h4 className="text-white font-medium truncate mb-1">{card.front}</h4>
                                         <p className="text-neutral-500 text-sm truncate">{card.back}</p>
                                     </div>
-                                    <div className={`flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity ${selectedIndex === idx ? "opacity-100" : ""}`}>
-                                        <button 
+                                    <div className={`flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity ${selectedIndex === idx || confirmingDeleteId === card.id ? "opacity-100" : ""}`}>
+                                        <button
                                             className="p-2 text-neutral-400 hover:text-[#f9c111] hover:bg-[#f9c111]/10 rounded-lg"
                                             title="Edit Card"
                                         >
                                             <Edit3 size={16} />
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteClick(card); }}
+                                            disabled={deletingId === card.id}
+                                            className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${
+                                                confirmingDeleteId === card.id
+                                                    ? "text-white bg-red-600 hover:bg-red-500 animate-pulse"
+                                                    : "text-neutral-400 hover:text-red-500 hover:bg-red-500/10"
+                                            }`}
+                                            title={
+                                                deletingId === card.id
+                                                    ? "Deleting..."
+                                                    : confirmingDeleteId === card.id
+                                                        ? "Click again to confirm"
+                                                        : "Delete Card"
+                                            }
+                                        >
+                                            {deletingId === card.id ? (
+                                                <Loader2 size={16} className="animate-spin" />
+                                            ) : (
+                                                <Trash2 size={16} />
+                                            )}
                                         </button>
                                     </div>
                                 </div>
