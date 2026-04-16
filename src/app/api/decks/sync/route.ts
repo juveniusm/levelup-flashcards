@@ -104,8 +104,12 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true, totalXpEarned });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Sync API error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ 
+            error: "Internal Server Error", 
+            details: error?.message || String(error),
+            stack: error?.stack?.split('\n').slice(0, 5)
+        }, { status: 500 });
     }
 }
