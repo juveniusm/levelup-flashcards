@@ -57,11 +57,17 @@ export async function POST(request: Request) {
             });
 
             // The LWW Gatekeeper!
-            // Check if the existing SM2 record was updated AFTER this offline review was created.
-            // If so, the offline review is stale — skip the SM2/interval update but keep the ReviewLog above.
-            if (existing?.next_review && existing.next_review > reviewTime) {
+            // Check if a more recent ReviewLog exists for this card
+            const newerLog = await prisma.reviewLog.findFirst({
+                where: {
+                    user_id: userId,
+                    card_id: cardId,
+                    reviewed_at: { gt: reviewTime }
+                }
+            });
+
+            if (newerLog) {
                 // A more recent review has already been processed online.
-                // We logged it above for history, but we do NOT touch SM2 multipliers.
                 console.log(`LWW: Ignored stale SM2 update for card ${cardId}`);
                 continue;
             }
@@ -70,19 +76,13 @@ export async function POST(request: Request) {
             const prevReps = existing?.repetitions ?? 0;
 
             const result = calculateSM2(qualityGrade, prevReps, prevEase, userTz);
-            const isDue = existing && existing.next_review <= new Date();
-            const isCorrectEarly = qualityGrade >= 4;
 
-            const updateData = (isReviewMode || isDue || isCorrectEarly)
-                ? {
-                    ease_factor: result.ease_factor,
-                    interval: result.interval,
-                    repetitions: result.repetitions,
-                    next_review: result.next_review,
-                }
-                : {
-                    ease_factor: result.ease_factor,
-                };
+            const updateData = {
+                ease_factor: result.ease_factor,
+                interval: result.interval,
+                repetitions: result.repetitions,
+                next_review: result.next_review,
+            };
 
             await prisma.sM2Stats.upsert({
                 where: { card_id_user_id: { card_id: cardId, user_id: userId } },
