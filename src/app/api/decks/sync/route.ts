@@ -37,7 +37,18 @@ export async function POST(request: Request) {
         // We run these sequentially to ensure Last-Write-Wins logic resolves perfectly against fresh Postgres state
         for (const review of sortedReviews) {
             const { deckId, cardId, qualityGrade, isReviewMode, timestamp } = review;
+
+            // Skip malformed/corrupt review entries (e.g. stale Dexie outbox entries)
+            if (!cardId || !deckId || qualityGrade === undefined || qualityGrade === null || !timestamp) {
+                console.warn("Sync: Skipping malformed review entry:", JSON.stringify(review));
+                continue;
+            }
+
             const reviewTime = new Date(timestamp);
+            if (isNaN(reviewTime.getTime())) {
+                console.warn("Sync: Skipping review with invalid timestamp:", timestamp);
+                continue;
+            }
 
             // Log the review event regardless of LWW (for analytics)
             await prisma.reviewLog.create({

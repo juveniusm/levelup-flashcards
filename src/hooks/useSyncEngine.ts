@@ -70,22 +70,37 @@ export function useSyncEngine() {
                 return;
             }
 
+            // Filter out corrupt entries missing required fields
+            const validReviews = queued.filter((r: any) => r.cardId && r.deckId && r.timestamp && r.qualityGrade !== undefined);
+            const corruptReviews = queued.filter((r: any) => !r.cardId || !r.deckId || !r.timestamp || r.qualityGrade === undefined);
+
+            // Purge corrupt entries from Dexie immediately
+            if (corruptReviews.length > 0) {
+                const corruptKeys = corruptReviews.map((q: any) => q.id).filter((id: any): id is number => id !== undefined);
+                await db.reviewOutbox.bulkDelete(corruptKeys);
+                console.warn(`Purged ${corruptKeys.length} corrupt outbox entries`);
+            }
+
+            if (validReviews.length === 0) {
+                setIsSyncing(false);
+                return;
+            }
+
             const res = await fetch('/api/decks/sync', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    reviews: queued,
+                    reviews: validReviews,
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 }),
             });
 
             if (res.ok) {
                 // Bulk delete the synced keys
-                const keys = queued.map((q: any) => q.id).filter((id: any): id is number => id !== undefined);
+                const keys = validReviews.map((q: any) => q.id).filter((id: any): id is number => id !== undefined);
                 await db.reviewOutbox.bulkDelete(keys);
             } else if (res.status === 401) {
                 console.warn("Auth expired during sync outbox.");
-                // Graceful lockout logic handle at UI layer
             }
         } catch (err) {
             console.error("Failed to sync outbox", err);
