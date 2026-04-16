@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Play, Zap, Settings2, BarChart3, ArrowRight, X, Sparkles, Infinity, Target, Brain, Layers } from "lucide-react";
+import { Play, Zap, Settings2, BarChart3, ArrowRight, X, Sparkles, Infinity, Target, Brain, Layers, Loader2 } from "lucide-react";
 import StudyConfigPanel from "./StudyConfigPanel";
 
 interface StudyDeckCardProps {
@@ -21,6 +21,32 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
     const [showSelector, setShowSelector] = useState(false);
     const [selectorView, setSelectorView] = useState<"modes" | "custom">("modes");
     const router = useRouter();
+
+    // Live stats — fetched fresh from the server every time Custom mode is opened
+    const [liveStats, setLiveStats] = useState<{ totalCards: number; difficultyCounts: Record<string, number> } | null>(null);
+    const [isLoadingStats, setIsLoadingStats] = useState(false);
+
+    const fetchFreshStats = useCallback(async () => {
+        setIsLoadingStats(true);
+        try {
+            const res = await fetch(`/api/decks/${deck.id}/stats`, { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                setLiveStats(data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch live stats:", err);
+        } finally {
+            setIsLoadingStats(false);
+        }
+    }, [deck.id]);
+
+    // Fetch fresh stats whenever Custom config panel is shown
+    useEffect(() => {
+        if (selectorView === "custom" && showSelector) {
+            fetchFreshStats();
+        }
+    }, [selectorView, showSelector, fetchFreshStats]);
 
     const handleSelect = (mode: string, params?: Record<string, string>) => {
         let url = `/${deck.id}/study?mode=${mode}`;
@@ -196,16 +222,23 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                             </>
                         ) : (
                             <div>
-                                <StudyConfigPanel
-                                    totalCards={deck._count.cards}
-                                    difficultyCounts={deck.difficultyCounts}
-                                    onCancel={() => setSelectorView("modes")}
-                                    onStart={(config) => handleSelect("custom", {
-                                        limit: config.limit.toString(),
-                                        difficulties: config.difficulties.join(','),
-                                        ...(config.noLives ? { noLives: "1" } : {}),
-                                    })}
-                                />
+                                {isLoadingStats ? (
+                                    <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                        <Loader2 className="w-6 h-6 text-[#f9c111] animate-spin" />
+                                        <span className="text-neutral-500 text-xs font-bold uppercase tracking-wider">Loading stats...</span>
+                                    </div>
+                                ) : (
+                                    <StudyConfigPanel
+                                        totalCards={liveStats?.totalCards ?? deck._count.cards}
+                                        difficultyCounts={liveStats?.difficultyCounts ?? deck.difficultyCounts}
+                                        onCancel={() => setSelectorView("modes")}
+                                        onStart={(config) => handleSelect("custom", {
+                                            limit: config.limit.toString(),
+                                            difficulties: config.difficulties.join(','),
+                                            ...(config.noLives ? { noLives: "1" } : {}),
+                                        })}
+                                    />
+                                )}
                             </div>
                         )}
                     </div>

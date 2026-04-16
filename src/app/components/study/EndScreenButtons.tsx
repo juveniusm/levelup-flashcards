@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 interface EndScreenButtonsProps {
     primaryLabel: string;
     onPrimaryClick: () => void;
@@ -19,12 +17,12 @@ export default function EndScreenButtons({
             >
                 {primaryLabel}
             </button>
-            <Link
+            <a
                 href="/study"
                 className="bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-4 px-12 rounded-xl transition-all hover:-translate-y-1 border border-neutral-700 text-lg"
             >
                 Back to Decks
-            </Link>
+            </a>
         </div>
     );
 }
