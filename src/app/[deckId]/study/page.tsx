@@ -35,7 +35,8 @@ export default function StudyDeckPage() {
                 // 1. Serve cached deck immediately if available (stale-while-revalidate)
                 const localDeck = await db?.offlineDecks?.get(deckId);
                 if (localDeck && isMounted) {
-                    setDeck(localDeck);
+                    // Normalize: IndexedDB stores "deckId" but the rest of the app expects "id"
+                    setDeck({ ...localDeck, id: localDeck.deckId });
                     setIsLoading(false);
                 }
 
@@ -55,11 +56,8 @@ export default function StudyDeckPage() {
                             });
                         } catch { /* quota exceeded — non-fatal */ }
 
-                        // Only set deck from network if we had no cache.
-                        // Never swap cards mid-session — it causes crashes
-                        // when currentIndex exceeds the new array length.
-                        // Stale cache is cleared on session end instead.
-                        if (!localDeck && isMounted) {
+                        // Always prefer network data (fresh SM2 stats + correct `id` field)
+                        if (isMounted) {
                             setDeck(data.deck);
                         }
                         return;
