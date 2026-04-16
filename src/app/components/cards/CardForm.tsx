@@ -10,6 +10,7 @@ import { Card } from "@/types/card";
 import { useCardImageDrop } from "@/hooks/useCardImageDrop";
 import CardSideEditor from "./CardSideEditor";
 import AlternativeAnswersEditor from "./AlternativeAnswersEditor";
+import { db } from "@/lib/indexedDB";
 
 // ─── Schema ──────────────────────────────────────────────────────────
 export const cardSchema = z.object({
@@ -113,6 +114,8 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                 throw new Error(body.error ?? (isEdit ? "Failed to update card" : "Failed to add card"));
             }
 
+            try { await db?.offlineDecks?.delete(deckId); } catch { /* ignore */ }
+
             if (isEdit) {
                 router.push(`/creator/${deckId}`);
                 router.refresh();
@@ -163,6 +166,7 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                 const body = await res.json().catch(() => ({}));
                 throw new Error(body.error ?? "Failed to delete card");
             }
+            try { await db?.offlineDecks?.delete(deckId); } catch { /* ignore */ }
             router.push(`/creator/${deckId}`);
             router.refresh();
         } catch (err: unknown) {

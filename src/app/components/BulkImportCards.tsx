@@ -126,6 +126,11 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
                 fileInputRef.current.value = "";
             }
 
+            try {
+                const { db } = await import("@/lib/indexedDB");
+                await db?.offlineDecks?.delete(deckId);
+            } catch { /* ignore */ }
+
             router.refresh();
             console.groupEnd();
         } catch (err: unknown) {

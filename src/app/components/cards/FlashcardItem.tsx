@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 
+import { db } from "@/lib/indexedDB";
+
 interface FlashcardItemProps {
     deckId: string;
     deckSeq?: number | null;
@@ -36,6 +38,7 @@ export default function FlashcardItem({ deckId, deckSeq, card }: FlashcardItemPr
             if (!res.ok) {
                 throw new Error("Failed to delete flashcard");
             }
+            try { await db?.offlineDecks?.delete(deckId); } catch { /* ignore */ }
             router.refresh();
         } catch (error) {
             console.error(error);

@@ -41,7 +41,7 @@ export default function StudyDeckPage() {
 
                 // 2. Revalidate from the network in the background
                 if (navigator.onLine) {
-                    const res = await fetch(`/api/decks/${deckId}/studyData`);
+                    const res = await fetch(`/api/decks/${deckId}/studyData`, { cache: 'no-store' });
                     if (res.ok) {
                         const data = await res.json();
 
