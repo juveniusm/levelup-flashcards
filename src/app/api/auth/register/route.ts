@@ -37,6 +37,11 @@ export async function POST(req: Request) {
         // If the user exists but is NOT verified, we can overwrite their unverified account
         // to effectively "resend" the verification email and update their info.
         if (existingUser) {
+            // Never allow re-registration to overwrite an ADMIN account
+            if (existingUser.email === email && existingUser.role === "ADMIN") {
+                return NextResponse.json({ error: "User with this email already exists." }, { status: 409 });
+            }
+
             if (existingUser.email === email && !existingUser.emailVerified) {
                 // We will gracefully proceed and overwrite the user below.
                 // First, clean up any old verification tokens for this email.
