@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { Search, X, Loader2, BookOpen, Edit3, Trash2, ChevronRight } from "lucide-react";
 import { Card } from "@/utils/study/studyUtils";
 
 export default function CommandPalette() {
+    const { data: session } = useSession();
+    const isAdmin = session?.user && (session.user as { role?: string }).role === "ADMIN";
+
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<Card[]>([]);
@@ -18,8 +22,10 @@ export default function CommandPalette() {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Toggle logic (Ctrl+K and Custom Event)
+    // Toggle logic (Ctrl+K and Custom Event) — admin only
     useEffect(() => {
+        if (!isAdmin) return;
+
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key === "k") {
                 e.preventDefault();
@@ -35,7 +41,7 @@ export default function CommandPalette() {
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("open-command-palette", handleOpenEvent);
         };
-    }, []);
+    }, [isAdmin]);
 
     // Focus input on open
     useEffect(() => {
@@ -155,7 +161,7 @@ export default function CommandPalette() {
         }
     };
 
-    if (!isOpen) return null;
+    if (!isAdmin || !isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-[15vh] p-4 sm:p-6 md:p-8">

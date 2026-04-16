@@ -10,6 +10,12 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        // Card search is an admin-only feature
+        const role = (session.user as { role?: string }).role;
+        if (role !== "ADMIN") {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || "";
         const cursor = searchParams.get("cursor");

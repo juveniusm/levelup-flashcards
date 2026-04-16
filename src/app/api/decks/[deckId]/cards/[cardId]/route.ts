@@ -10,6 +10,11 @@ export async function PUT(
     const auth = await requireDeckAccess(resolvedParams.deckId);
     if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+    // Editing cards is restricted to admins only
+    if (auth.role !== "ADMIN") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     try {
         const { front, back, acceptedAnswers, front_image_url, back_image_url } = await request.json();
 
@@ -45,6 +50,11 @@ export async function DELETE(
     const resolvedParams = await params;
     const auth = await requireDeckAccess(resolvedParams.deckId);
     if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+    // Deleting cards is restricted to admins only
+    if (auth.role !== "ADMIN") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     try {
         // Delete SM2Stats first to avoid FK constraint
