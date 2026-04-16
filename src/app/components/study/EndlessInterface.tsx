@@ -9,6 +9,7 @@ import SessionEndScreen from "./SessionEndScreen";
 import StudyInputArea from "./StudyInputArea";
 import StudyHUD from "./StudyHUD";
 import { useStudyReview } from "@/hooks/useStudyReview";
+import { db } from "@/lib/indexedDB";
 
 export default function EndlessInterface({
     cards,
@@ -49,8 +50,9 @@ export default function EndlessInterface({
         queue, score, correctAnswers, incorrectAnswers, totalCardsSeen, elapsedSeconds,
     });
 
-    const clearSessionAndReload = () => {
+    const clearSessionAndReload = async () => {
         sessionStorage.removeItem(storageKey);
+        try { await db?.offlineDecks?.delete(deckId); } catch { /* non-fatal */ }
         window.location.reload();
     };
 

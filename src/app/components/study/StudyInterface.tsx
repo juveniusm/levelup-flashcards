@@ -10,6 +10,7 @@ import StudyInputArea from "./StudyInputArea";
 import StudyHUD from "./StudyHUD";
 import { useStudyReview } from "@/hooks/useStudyReview";
 import ClassicModeEndScreen from "./ClassicModeEndScreen";
+import { db } from "@/lib/indexedDB";
 
 export default function StudyInterface({
     cards,
@@ -114,8 +115,12 @@ export default function StudyInterface({
         }
     }, [state, storageKey]);
 
-    const clearSessionAndReload = () => {
+    const clearSessionAndReload = async () => {
         sessionStorage.removeItem(storageKey);
+        // Clear stale IndexedDB cache so the reload fetches fresh SM2
+        // stats from the server (e.g. cards are no longer "due" after
+        // a completed review session).
+        try { await db?.offlineDecks?.delete(deckId); } catch { /* non-fatal */ }
         window.location.reload();
     };
 
