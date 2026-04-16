@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 export interface UserRow {
     id: string;
@@ -19,6 +20,7 @@ interface UserListItemProps {
 }
 
 export default function UserListItem({ user, isSuperAdmin, onUpdate, setMessage }: UserListItemProps) {
+    const { data: session, update: updateSession } = useSession();
     const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -49,6 +51,8 @@ export default function UserListItem({ user, isSuperAdmin, onUpdate, setMessage 
             });
             const data = await res.json();
             if (res.ok) {
+                // If the admin edited their own profile, refresh the session
+                if (user.id === session?.user?.id) await updateSession();
                 setMessage({ type: "success", text: "User updated." });
                 setMode("view");
                 onUpdate();

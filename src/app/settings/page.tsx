@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
 export default function SettingsPage() {
-    const { data: session } = useSession();
+    const { data: session, update } = useSession();
     const isAdmin = session?.user && (session.user as { role?: string }).role === "ADMIN";
 
     const [firstName, setFirstName] = useState("");
@@ -78,6 +78,7 @@ export default function SettingsPage() {
             const data = await res.json();
 
             if (res.ok) {
+                await update(); // Refresh session so sidebar shows new name instantly
                 setMessage({ type: "success", text: "Profile updated successfully." });
                 setCurrentPassword("");
                 setNewPassword("");

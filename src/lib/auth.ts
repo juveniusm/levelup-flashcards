@@ -110,18 +110,15 @@ export const authOptions: NextAuthOptions = {
             }
             return true;
         },
-        async jwt({ token, user }) {
+        async jwt({ token, user, trigger }) {
             if (user) {
                 token.role = (user as { role: string }).role || "STUDENT";
                 token.id = user.id;
-                token.lastRefreshed = Date.now();
             }
 
-            // Refresh name/role from DB every 5 minutes so profile
-            // changes show up without requiring re-login.
-            const REFRESH_INTERVAL = 5 * 60 * 1000;
-            const lastRefreshed = (token.lastRefreshed as number) || 0;
-            if (token.id && Date.now() - lastRefreshed > REFRESH_INTERVAL) {
+            // When the client calls update(), re-read profile from DB
+            // so name/role changes take effect immediately.
+            if (trigger === "update" && token.id) {
                 try {
                     const dbUser = await prisma.user.findUnique({
                         where: { id: token.id as string },
@@ -131,8 +128,7 @@ export const authOptions: NextAuthOptions = {
                         token.name = dbUser.name;
                         token.role = dbUser.role || "STUDENT";
                     }
-                } catch { /* DB unreachable — keep stale token */ }
-                token.lastRefreshed = Date.now();
+                } catch { /* DB unreachable — keep current token */ }
             }
 
             return token;
