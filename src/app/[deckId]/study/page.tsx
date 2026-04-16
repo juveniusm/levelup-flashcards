@@ -38,7 +38,7 @@ export default function StudyDeckPage() {
                     setIsLoading(false);
                 }
 
-                // 2. Revalidate from the network in the background
+                // 2. Revalidate from the network (always prefer fresh SM2 stats)
                 if (navigator.onLine) {
                     const res = await fetch(`/api/decks/${deckId}/studyData`);
                     if (res.ok) {
@@ -54,9 +54,10 @@ export default function StudyDeckPage() {
                             });
                         } catch { /* quota exceeded — non-fatal */ }
 
-                        // Only set deck from network if we had no cache
-                        // (avoid swapping cards mid-load)
-                        if (!localDeck && isMounted) {
+                        // Always use network data — it has current SM2 stats
+                        // so "review due" mode correctly shows 0 cards after
+                        // a completed review session.
+                        if (isMounted) {
                             setDeck(data.deck);
                         }
                         return;
