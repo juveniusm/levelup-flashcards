@@ -107,6 +107,17 @@ export const authOptions: NextAuthOptions = {
                     const adminLoginIntent = cookieStore.get("admin_login_intent")?.value === "true";
                     if (adminLoginIntent) return false;
                 }
+
+                // Populate firstName/lastName from Google profile if missing
+                if (dbUser && !dbUser.firstName && user.name) {
+                    const parts = user.name.trim().split(/\s+/);
+                    const firstName = parts[0] || "";
+                    const lastName = parts.slice(1).join(" ") || "";
+                    await prisma.user.update({
+                        where: { id: dbUser.id },
+                        data: { firstName, lastName },
+                    });
+                }
             }
             return true;
         },
