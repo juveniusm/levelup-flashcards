@@ -31,29 +31,51 @@ export default function StudyDeckPage() {
         let isMounted = true;
         const fetchDeck = async () => {
             try {
+                // 1. Serve cached deck immediately if available (stale-while-revalidate)
+                const localDeck = await db?.offlineDecks?.get(deckId);
+                if (localDeck && isMounted) {
+                    setDeck(localDeck);
+                    setIsLoading(false);
+                }
+
+                // 2. Revalidate from the network in the background
                 if (navigator.onLine) {
                     const res = await fetch(`/api/decks/${deckId}/studyData`);
                     if (res.ok) {
                         const data = await res.json();
-                        if (isMounted) setDeck(data.deck);
+
+                        // Update IndexedDB cache for next session
+                        try {
+                            await db?.offlineDecks?.put({
+                                deckId: data.deck.id,
+                                title: data.deck.title,
+                                cards: data.deck.cards,
+                                lastDownloadedAt: Date.now(),
+                            });
+                        } catch { /* quota exceeded — non-fatal */ }
+
+                        // Only set deck from network if we had no cache
+                        // (avoid swapping cards mid-load)
+                        if (!localDeck && isMounted) {
+                            setDeck(data.deck);
+                        }
                         return;
                     }
                 }
-                
-                // Fallback to IndexedDB
-                const localDeck = await db?.offlineDecks?.get(deckId);
-                if (localDeck) {
-                    if (isMounted) setDeck(localDeck);
-                } else {
-                    if (isMounted) setError("Deck not found locally. Please reconnect to download it.");
+
+                // 3. No cache and no network — show error
+                if (!localDeck && isMounted) {
+                    setError("Deck not found locally. Please reconnect to download it.");
                 }
             } catch (err) {
                 console.error("Hydration Error:", err);
-                const localDeck = await db?.offlineDecks?.get(deckId);
-                if (localDeck && isMounted) {
-                    setDeck(localDeck);
-                } else if (isMounted) {
-                    setError("Failed to load deck.");
+                if (!deck && isMounted) {
+                    const fallback = await db?.offlineDecks?.get(deckId);
+                    if (fallback) {
+                        setDeck(fallback);
+                    } else {
+                        setError("Failed to load deck.");
+                    }
                 }
             } finally {
                 if (isMounted) setIsLoading(false);
