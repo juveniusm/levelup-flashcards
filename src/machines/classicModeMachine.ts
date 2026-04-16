@@ -2,10 +2,13 @@ import { setup, assign } from 'xstate';
 
 import { Card } from '@/types/card';
 
+export const UNLIMITED_LIVES = 99999;
+
 export interface StudyContext {
     cards: Card[];
     currentIndex: number;
     lives: number;
+    initialLives: number;
     score: number;
     correctAnswers: number;
     incorrectAnswers: number;
@@ -41,7 +44,7 @@ export const classicModeMachine = setup({
         }),
         resetGame: assign({
             currentIndex: 0,
-            lives: 5,
+            lives: ({ context }) => context.initialLives,
             score: 0,
             correctAnswers: 0,
             incorrectAnswers: 0,
@@ -60,6 +63,7 @@ export const classicModeMachine = setup({
         cards: [],
         currentIndex: 0,
         lives: 5,
+        initialLives: 5,
         score: 0,
         correctAnswers: 0,
         incorrectAnswers: 0,

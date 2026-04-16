@@ -5,7 +5,7 @@ import { DIFFICULTY_RANGES } from "@/utils/study/studyUtils";
 interface StudyConfigPanelProps {
     totalCards: number;
     difficultyCounts?: Record<string, number>;
-    onStart: (config: { limit: number; difficulties: string[] }) => void;
+    onStart: (config: { limit: number; difficulties: string[]; noLives: boolean }) => void;
     onCancel: () => void;
 }
 
@@ -19,6 +19,7 @@ export default function StudyConfigPanel({ totalCards, difficultyCounts, onStart
     }, [selectedDifficulties, difficultyCounts, totalCards]);
 
     const [limit, setLimit] = useState(Math.min(20, maxAvailable || totalCards));
+    const [noLives, setNoLives] = useState(false);
 
     // Ensure limit doesn't exceed maxAvailable when difficulties change
     useEffect(() => {
@@ -124,10 +125,39 @@ export default function StudyConfigPanel({ totalCards, difficultyCounts, onStart
                         <p className="text-[10px] text-red-500/80 mt-2 italic">Select at least one difficulty category with cards.</p>
                     )}
                 </div>
+
+                {/* Lives Toggle */}
+                <div>
+                    <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-3 block">Lives</label>
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setNoLives(false)}
+                            className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-bold transition-all border ${
+                                !noLives
+                                    ? "bg-[#f9c111]/10 border-[#f9c111] text-[#f9c111]"
+                                    : "bg-neutral-800/50 border-neutral-700 text-neutral-400 hover:border-neutral-500"
+                            }`}
+                        >
+                            5 Lives
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setNoLives(true)}
+                            className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-bold transition-all border ${
+                                noLives
+                                    ? "bg-[#f9c111]/10 border-[#f9c111] text-[#f9c111]"
+                                    : "bg-neutral-800/50 border-neutral-700 text-neutral-400 hover:border-neutral-500"
+                            }`}
+                        >
+                            No Lives
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <button
-                onClick={() => onStart({ limit, difficulties: selectedDifficulties })}
+                onClick={() => onStart({ limit, difficulties: selectedDifficulties, noLives })}
                 disabled={selectedDifficulties.length === 0 || limit === 0}
                 className="mt-6 w-full bg-[#f9c111] hover:bg-yellow-400 text-black font-black py-3 rounded-xl transition-all shadow-[0_4px_12px_rgba(249,193,17,0.2)] hover:shadow-[0_4px_20px_rgba(249,193,17,0.4)] flex items-center justify-center gap-2 group disabled:opacity-50 disabled:hover:scale-100 uppercase tracking-widest text-xs"
             >

@@ -2,6 +2,7 @@
 import { formatTime } from "@/utils/study/studyUtils";
 import { useState, useEffect } from "react";
 import { WifiOff } from "lucide-react";
+import { UNLIMITED_LIVES } from "@/machines/classicModeMachine";
 
 interface StudyHUDProps {
     mode: "classic" | "endless";
@@ -49,13 +50,19 @@ export default function StudyHUD({
             )}
             <div className="flex flex-row justify-between items-center w-full">
                 {mode === "classic" ? (
-                    <div className="flex gap-1 sm:gap-2 text-xl sm:text-2xl">
-                        {Array.from({ length: Math.max(5, lives) }).map((_, i) => (
-                            <span key={i} className={i < lives ? "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "text-neutral-800"}>
-                                &hearts;
-                            </span>
-                        ))}
-                    </div>
+                    lives >= UNLIMITED_LIVES ? (
+                        <div className="text-sm sm:text-lg font-bold font-mono tracking-widest text-neutral-400">
+                            <span className="text-[#f9c111]">&infin;</span> LIVES
+                        </div>
+                    ) : (
+                        <div className="flex gap-1 sm:gap-2 text-xl sm:text-2xl">
+                            {Array.from({ length: Math.max(5, lives) }).map((_, i) => (
+                                <span key={i} className={i < lives ? "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "text-neutral-800"}>
+                                    &hearts;
+                                </span>
+                            ))}
+                        </div>
+                    )
                 ) : (
                     <div className="flex items-center gap-3 sm:gap-6">
                         <div className="text-sm sm:text-lg font-bold font-mono tracking-widest text-neutral-400">

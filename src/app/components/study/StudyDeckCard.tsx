@@ -202,7 +202,8 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                                     onCancel={() => setSelectorView("modes")}
                                     onStart={(config) => handleSelect("custom", {
                                         limit: config.limit.toString(),
-                                        difficulties: config.difficulties.join(',')
+                                        difficulties: config.difficulties.join(','),
+                                        ...(config.noLives ? { noLives: "1" } : {}),
                                     })}
                                 />
                             </div>

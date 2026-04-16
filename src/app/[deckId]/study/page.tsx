@@ -16,6 +16,7 @@ export default function StudyDeckPage() {
     const mode = searchParams.get("mode") ?? undefined;
     const limit = searchParams.get("limit") ?? undefined;
     const difficulties = searchParams.get("difficulties") ?? undefined;
+    const noLives = searchParams.get("noLives") === "1";
 
     const isReviewMode = mode === "review";
     const isEndlessMode = mode === "endless";
@@ -213,7 +214,7 @@ export default function StudyDeckPage() {
 
     return (
         <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
-            <StudyInterface cards={finalCards} deckId={deck.id} mode={mode} isReviewMode={isReviewMode} />
+            <StudyInterface cards={finalCards} deckId={deck.id} mode={mode} isReviewMode={isReviewMode} noLives={noLives} />
         </div>
     );
 }

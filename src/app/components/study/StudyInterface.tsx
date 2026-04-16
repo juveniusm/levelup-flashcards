@@ -1,7 +1,7 @@
 "use client";
 
 import { useMachine } from "@xstate/react";
-import { classicModeMachine } from "@/machines/classicModeMachine";
+import { classicModeMachine, UNLIMITED_LIVES } from "@/machines/classicModeMachine";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Card, gradeAnswer } from "@/utils/study/studyUtils";
 import Flashcard from "./Flashcard";
@@ -16,11 +16,13 @@ export default function StudyInterface({
     deckId,
     mode = "study",
     isReviewMode = false,
+    noLives = false,
 }: {
     cards: Card[];
     deckId: string;
     mode?: string;
     isReviewMode?: boolean;
+    noLives?: boolean;
 }) {
     const storageKey = `study-session-${deckId}-${mode}`;
 
@@ -70,12 +72,14 @@ export default function StudyInterface({
         } catch (err) {
             console.error("Session restore error:", err);
         }
+        const startLives = noLives ? UNLIMITED_LIVES : 5;
         return classicModeMachine.resolveState({
             value: "question",
             context: {
                 cards,
                 currentIndex: 0,
-                lives: 5,
+                lives: startLives,
+                initialLives: startLives,
                 score: 0,
                 correctAnswers: 0,
                 incorrectAnswers: 0,
@@ -97,6 +101,7 @@ export default function StudyInterface({
                 context: {
                     currentIndex: context.currentIndex,
                     lives: context.lives,
+                    initialLives: context.initialLives,
                     score: context.score,
                     correctAnswers: context.correctAnswers,
                     incorrectAnswers: context.incorrectAnswers,
