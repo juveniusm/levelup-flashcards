@@ -188,7 +188,7 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
             <form
                 onSubmit={handleSubmit(onSubmit)}
                 onKeyDown={(e) => {
-                    if (!isEdit && e.ctrlKey && e.key === "Enter") {
+                    if (e.ctrlKey && e.key === "Enter") {
                         e.preventDefault();
                         handleSubmit(onSubmit)();
                     }
