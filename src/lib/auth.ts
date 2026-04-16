@@ -112,16 +112,36 @@ export const authOptions: NextAuthOptions = {
         },
         async jwt({ token, user }) {
             if (user) {
-                // We capture the initial assigned role on login
                 token.role = (user as { role: string }).role || "STUDENT";
                 token.id = user.id;
+                token.lastRefreshed = Date.now();
             }
+
+            // Refresh name/role from DB every 5 minutes so profile
+            // changes show up without requiring re-login.
+            const REFRESH_INTERVAL = 5 * 60 * 1000;
+            const lastRefreshed = (token.lastRefreshed as number) || 0;
+            if (token.id && Date.now() - lastRefreshed > REFRESH_INTERVAL) {
+                try {
+                    const dbUser = await prisma.user.findUnique({
+                        where: { id: token.id as string },
+                        select: { name: true, role: true },
+                    });
+                    if (dbUser) {
+                        token.name = dbUser.name;
+                        token.role = dbUser.role || "STUDENT";
+                    }
+                } catch { /* DB unreachable — keep stale token */ }
+                token.lastRefreshed = Date.now();
+            }
+
             return token;
         },
         async session({ session, token }) {
             if (session.user) {
                 session.user.id = token.id || token.sub || "";
                 session.user.role = token.role || "STUDENT";
+                session.user.name = (token.name as string) || session.user.name;
             }
             return session;
         },
