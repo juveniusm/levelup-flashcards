@@ -42,7 +42,7 @@ const fetchDetailedRecords = async (userId: string) => {
         prisma.reviewLog.findMany({
             where: {
                 user_id: userId,
-                reviewed_at: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) }
+                reviewed_at: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
             },
             select: { reviewed_at: true, mode: true },
             take: 5000,
@@ -131,10 +131,10 @@ const calculateActivity = (recentReviews: { reviewed_at: Date; mode: string }[],
         return daysDiff <= 7;
     }).length;
 
-    const reviewsThisMonth = recentReviews.filter(r => {
-        const rDate = r.reviewed_at;
-        return rDate.getMonth() === now.getMonth() && rDate.getFullYear() === now.getFullYear();
-    }).length;
+    const thisMonthPrefix = getLocalDateStr(now).slice(0, 7); // "YYYY-MM"
+    const reviewsThisMonth = recentReviews.filter(r =>
+        getLocalDateStr(r.reviewed_at).startsWith(thisMonthPrefix)
+    ).length;
 
     return {
         modeBreakdown,

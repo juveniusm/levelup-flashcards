@@ -59,7 +59,6 @@ export const deckService = {
                 COUNT(c.id)::int as total_cards,
                 SUM(CASE WHEN s.next_review <= ${now} THEN 1 ELSE 0 END)::int as due_count,
                 SUM(CASE WHEN s.ease_factor >= 2.5 AND s.interval >= 21 THEN 1 ELSE 0 END)::int as mastered_count,
-                SUM(CASE WHEN s.ease_factor >= 2.5 AND s.interval >= 21 THEN 1 ELSE 0 END)::int as bucket_mastered,
                 SUM(CASE WHEN s.id IS NOT NULL AND NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor <= 1.5 THEN 1 ELSE 0 END)::int as bucket_very_hard,
                 SUM(CASE WHEN s.id IS NOT NULL AND NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor > 1.5 AND s.ease_factor <= 1.8 THEN 1 ELSE 0 END)::int as bucket_hard,
                 SUM(CASE WHEN s.id IS NOT NULL AND NOT (s.ease_factor >= 2.5 AND s.interval >= 21) AND s.ease_factor > 1.8 AND s.ease_factor <= 2.2 THEN 1 ELSE 0 END)::int as bucket_medium,
@@ -82,7 +81,7 @@ export const deckService = {
                     "Hard": row.bucket_hard,
                     "Medium": row.bucket_medium,
                     "Easy": row.bucket_easy,
-                    "Mastered": row.bucket_mastered
+                    "Mastered": row.mastered_count
                 }
             };
             return acc;

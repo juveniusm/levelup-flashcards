@@ -39,7 +39,7 @@ export async function POST(request: Request) {
             const { deckId, cardId, qualityGrade, isReviewMode, timestamp } = review;
 
             // Skip malformed/corrupt review entries (e.g. stale Dexie outbox entries)
-            if (!cardId || !deckId || qualityGrade === undefined || qualityGrade === null || !timestamp) {
+            if (!cardId || !deckId || typeof qualityGrade !== "number" || qualityGrade < 0 || qualityGrade > 5 || !timestamp) {
                 console.warn("Sync: Skipping malformed review entry:", JSON.stringify(review));
                 continue;
             }
@@ -117,10 +117,11 @@ export async function POST(request: Request) {
 
     } catch (error: any) {
         console.error("Sync API error:", error);
-        return NextResponse.json({ 
-            error: "Internal Server Error", 
-            details: error?.message || String(error),
-            stack: error?.stack?.split('\n').slice(0, 5)
-        }, { status: 500 });
+        const body: Record<string, unknown> = { error: "Internal Server Error" };
+        if (process.env.NODE_ENV !== "production") {
+            body.details = error?.message || String(error);
+            body.stack = error?.stack?.split("\n").slice(0, 5);
+        }
+        return NextResponse.json(body, { status: 500 });
     }
 }
