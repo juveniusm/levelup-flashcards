@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || "";
         const cursor = searchParams.get("cursor");
-        const limit = parseInt(searchParams.get("limit") || "20");
+        const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100);
 
         // High-performance Search using Prisma Full-Text Search
         // Note: For partial matches (contains), we fallback to startsWith/endsWith logic 

@@ -33,6 +33,10 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { title, folder_id } = body;
 
+        if (!title || typeof title !== "string" || title.trim() === "") {
+            return NextResponse.json({ error: "Title is required" }, { status: 400 });
+        }
+
         if (folder_id !== undefined && folder_id !== null && typeof folder_id !== "string") {
             return NextResponse.json({ error: "folder_id must be a string or null" }, { status: 400 });
         }

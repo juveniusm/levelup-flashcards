@@ -54,7 +54,10 @@ export async function PATCH(
 
             // Only Super Admin can change roles
             const userEmail = session.user.email;
-            const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || "juveniusm@gmail.com";
+            const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL;
+            if (!SUPER_ADMIN_EMAIL) {
+                return NextResponse.json({ error: "Super admin not configured." }, { status: 500 });
+            }
 
             if (userEmail !== SUPER_ADMIN_EMAIL) {
                 return NextResponse.json({ error: "Only the Super Admin can manage user roles." }, { status: 403 });

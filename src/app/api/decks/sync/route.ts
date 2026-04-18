@@ -24,8 +24,14 @@ export async function POST(request: Request) {
 
         const { reviews, timezone }: { reviews: QueuedReview[]; timezone: string } = await request.json();
 
+        const MAX_SYNC_REVIEWS = 500;
+
         if (!reviews || !Array.isArray(reviews)) {
             return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+        }
+
+        if (reviews.length > MAX_SYNC_REVIEWS) {
+            return NextResponse.json({ error: `Cannot sync more than ${MAX_SYNC_REVIEWS} reviews at once.` }, { status: 400 });
         }
 
         const userTz = timezone || "UTC";
