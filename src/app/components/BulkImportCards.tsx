@@ -79,12 +79,12 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
                         headerRowIndex = rowNumber;
                     }
                 } else if (rowNumber > headerRowIndex) {
-                    const front = String(values[frontColIndex] || "").trim();
-                    const back = String(values[backColIndex] || "").trim();
-                    
+                    const front = (row.getCell(frontColIndex).text || "").trim();
+                    const back = (row.getCell(backColIndex).text || "").trim();
+
                     let acceptedAnswers: string[] = [];
                     if (acceptedAnswersColIndex !== -1) {
-                        const rawAcceptedAnswers = String(values[acceptedAnswersColIndex] || "").trim();
+                        const rawAcceptedAnswers = (row.getCell(acceptedAnswersColIndex).text || "").trim();
                         if (rawAcceptedAnswers) {
                             acceptedAnswers = rawAcceptedAnswers.split(";").map(a => a.trim()).filter(a => a !== "");
                         }
