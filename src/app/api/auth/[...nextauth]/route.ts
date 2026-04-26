@@ -11,9 +11,12 @@ const limiter = rateLimit({
 });
 
 async function rateLimitedHandler(req: Request, ...args: any[]) {
-    const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
-    if (limiter.check(20, ip)) { // Max 20 auth calls per minute per IP
-        return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
+    // Only rate limit POST requests (e.g. login attempts) to prevent blocking session validation polling.
+    if (req.method === "POST") {
+        const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+        if (limiter.check(20, ip)) { // Max 20 auth calls per minute per IP
+            return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
+        }
     }
     // Typecast args to match the original handler signature
     return (handler as Function)(req, ...args);

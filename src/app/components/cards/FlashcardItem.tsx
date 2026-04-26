@@ -68,6 +68,8 @@ export default function FlashcardItem({ deckId, deckSeq, card }: FlashcardItemPr
             <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Link
                     href={`/creator/${deckId}/cards/${card.id}/edit`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-md transition-colors"
                     title="Edit Card"
                 >
