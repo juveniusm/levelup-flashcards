@@ -42,6 +42,33 @@ export default function FlashcardList({ deckId, deckSeq, cards }: FlashcardListP
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Keyboard shortcuts while in select mode:
+    //   Delete / Backspace → trigger bulk delete (if any cards selected)
+    //   Escape             → exit select mode
+    useEffect(() => {
+        if (!selectMode) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore when the user is typing in an input/textarea/contentEditable
+            const target = e.target as HTMLElement | null;
+            if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+                return;
+            }
+
+            if ((e.key === "Delete" || e.key === "Backspace") && selectedIds.size > 0 && !isBulkDeleting) {
+                e.preventDefault();
+                handleBulkDelete();
+            } else if (e.key === "Escape" && !isBulkDeleting) {
+                e.preventDefault();
+                toggleSelectMode();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectMode, selectedIds, isBulkDeleting]);
+
     const searchTypeLabels: Record<'all' | 'prompt' | 'answer' | 'id', string> = {
         all: "Search All Fields",
         prompt: "Prompt Only",
@@ -146,7 +173,7 @@ export default function FlashcardList({ deckId, deckSeq, cards }: FlashcardListP
                                     {selectedIds.size} selected
                                 </span>
                                 <span className="text-neutral-500 text-xs hidden sm:inline">
-                                    Click cards to select
+                                    Click cards to select · <kbd className="font-mono bg-neutral-800 px-1.5 py-0.5 rounded text-[10px] text-neutral-300">Del</kbd> to delete · <kbd className="font-mono bg-neutral-800 px-1.5 py-0.5 rounded text-[10px] text-neutral-300">Esc</kbd> to cancel
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
