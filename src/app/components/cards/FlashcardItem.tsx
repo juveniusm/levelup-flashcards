@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Check } from "lucide-react";
 
 import { db } from "@/lib/indexedDB";
 
@@ -16,9 +16,12 @@ interface FlashcardItemProps {
         back: string;
         card_seq?: number | null;
     };
+    selectMode?: boolean;
+    selected?: boolean;
+    onToggleSelect?: (id: string) => void;
 }
 
-export default function FlashcardItem({ deckId, deckSeq, card }: FlashcardItemProps) {
+export default function FlashcardItem({ deckId, deckSeq, card, selectMode = false, selected = false, onToggleSelect }: FlashcardItemProps) {
     const router = useRouter();
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -48,9 +51,37 @@ export default function FlashcardItem({ deckId, deckSeq, card }: FlashcardItemPr
         }
     };
 
+    const handleCardClick = () => {
+        if (selectMode && onToggleSelect) {
+            onToggleSelect(card.id);
+        }
+    };
+
+    const borderClass = selectMode && selected
+        ? "border-[#f9c111]"
+        : "border-neutral-800 hover:border-neutral-700";
+
     return (
-        <div className="bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-xl p-5 shadow-sm transition-colors relative group">
-            <div className="mb-3 border-b border-neutral-800/50 pb-2">
+        <div
+            onClick={handleCardClick}
+            className={`bg-neutral-900 border ${borderClass} rounded-xl p-5 shadow-sm transition-colors relative group ${selectMode ? 'cursor-pointer select-none' : ''}`}
+        >
+            {/* Selection checkbox (only in select mode) */}
+            {selectMode && (
+                <div className="absolute top-4 left-4 z-10">
+                    <div
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            selected
+                                ? 'bg-[#f9c111] border-[#f9c111]'
+                                : 'bg-neutral-900 border-neutral-600'
+                        }`}
+                    >
+                        {selected && <Check size={14} className="text-black" strokeWidth={3} />}
+                    </div>
+                </div>
+            )}
+
+            <div className={`mb-3 border-b border-neutral-800/50 pb-2 ${selectMode ? 'pl-8' : ''}`}>
                 <span className="text-[10px] text-[#f9c111] font-mono tracking-widest font-bold">ID: {displayId}</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -64,26 +95,28 @@ export default function FlashcardItem({ deckId, deckSeq, card }: FlashcardItemPr
                 </div>
             </div>
 
-            {/* Actions */}
-            <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Link
-                    href={`/creator/${deckId}/cards/${card.id}/edit`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-md transition-colors"
-                    title="Edit Card"
-                >
-                    <Pencil size={18} />
-                </Link>
-                <button
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="p-2 text-neutral-400 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors disabled:opacity-50"
-                    title="Delete Card"
-                >
-                    <Trash2 size={18} />
-                </button>
-            </div>
+            {/* Actions (hidden in select mode) */}
+            {!selectMode && (
+                <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Link
+                        href={`/creator/${deckId}/cards/${card.id}/edit`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-md transition-colors"
+                        title="Edit Card"
+                    >
+                        <Pencil size={18} />
+                    </Link>
+                    <button
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="p-2 text-neutral-400 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors disabled:opacity-50"
+                        title="Delete Card"
+                    >
+                        <Trash2 size={18} />
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
