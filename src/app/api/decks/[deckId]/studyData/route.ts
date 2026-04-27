@@ -11,6 +11,7 @@ export async function GET(
         const { deckId } = await params;
         const session = await getServerSession(authOptions);
         const userId = session?.user?.id;
+        const role = (session?.user as { role?: string } | undefined)?.role;
 
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,6 +22,8 @@ export async function GET(
             select: {
                 id: true,
                 title: true,
+                user_id: true,
+                is_public: true,
                 cards: {
                     select: {
                         id: true,
@@ -45,6 +48,15 @@ export async function GET(
 
         if (!deck) {
             return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+        }
+
+        // Access control: owner, public deck, or admin
+        const isOwner = deck.user_id === userId;
+        const isPublic = deck.is_public === true;
+        const isAdmin = role === "ADMIN";
+
+        if (!isOwner && !isPublic && !isAdmin) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         return NextResponse.json({ deck });

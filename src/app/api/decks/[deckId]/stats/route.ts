@@ -14,9 +14,24 @@ export async function GET(
         const { deckId } = await params;
         const session = await getServerSession(authOptions);
         const userId = session?.user?.id;
+        const role = (session?.user as { role?: string } | undefined)?.role;
 
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Access control: owner, public deck, or admin
+        const access = await prisma.decks.findUnique({
+            where: { id: deckId },
+            select: { user_id: true, is_public: true },
+        });
+
+        if (!access) {
+            return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+        }
+
+        if (access.user_id !== userId && !access.is_public && role !== "ADMIN") {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         const now = new Date();

@@ -30,7 +30,12 @@ const limiter = rateLimit({ interval: 60 * 1000, uniqueTokenPerInterval: 500 });
 
 export async function POST(req: Request) {
     try {
-        const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+        // Prefer x-real-ip (set by Vercel, not client-controllable). Fall back to the
+        // leftmost x-forwarded-for entry. The raw header is a comma-separated chain;
+        // using it whole would let an attacker spoof a different "IP" per request.
+        const ip = req.headers.get("x-real-ip")
+            || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+            || "127.0.0.1";
         if (limiter.check(30, ip)) { // Max 30 upload calls per minute per IP
             return NextResponse.json({ message: "Too Many Requests" }, { status: 429 });
         }

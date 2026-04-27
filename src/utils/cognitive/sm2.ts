@@ -73,6 +73,7 @@ export function calculateSM2(
     // Determine next review date
     let nextReviewDate = new Date();
     nextReviewDate.setDate(nextReviewDate.getDate() + newInterval);
+    const rawNextReviewMs = nextReviewDate.getTime();
 
     // Normalize to 04:00:00 (4 AM) in the user's local timezone if provided
     // This prevents cards studied late at night from being due just a few hours later.
@@ -98,7 +99,18 @@ export function calculateSM2(
 
             // 3. Construct the ISO string for 4 AM in that timezone and parse it
             const isoString = `${dateStr}T04:00:00${tzOffset || 'Z'}`;
-            nextReviewDate = new Date(isoString);
+            const normalized = new Date(isoString);
+
+            // Snapping to 4 AM can move the review significantly earlier than the
+            // raw SM2 target (e.g. an 11 PM review with interval=1 → 4 AM next day,
+            // only ~5 hours later). When normalization moves the review more than
+            // 12 hours earlier than the raw target, bump it to the following morning
+            // so short intervals don't become trivially short.
+            const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+            if (rawNextReviewMs - normalized.getTime() > TWELVE_HOURS_MS) {
+                normalized.setDate(normalized.getDate() + 1);
+            }
+            nextReviewDate = normalized;
         } catch (e) {
             console.error("Failed to normalize date for timezone:", timezone, e);
         }
