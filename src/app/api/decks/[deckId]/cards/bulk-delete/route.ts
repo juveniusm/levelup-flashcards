@@ -32,11 +32,12 @@ export async function POST(
             return NextResponse.json({ error: "All cardIds must be strings" }, { status: 400 });
         }
 
-        // Delete SM2Stats first (parity with the single-card DELETE route)
-        // The deck_id filter on Cards prevents cross-deck deletion if a malicious
-        // payload includes IDs from other decks the user does not own.
+        // Delete SM2Stats first (parity with the single-card DELETE route). BOTH deletes are
+        // scoped to this deck — the SM2Stats delete via the card relation, the Cards delete via
+        // deck_id — so a payload that mixes in card IDs from other decks cannot destroy their
+        // Cards OR their SM2Stats.
         const [, deleted] = await prisma.$transaction([
-            prisma.sM2Stats.deleteMany({ where: { card_id: { in: cardIds } } }),
+            prisma.sM2Stats.deleteMany({ where: { card_id: { in: cardIds }, card: { deck_id: deckId } } }),
             prisma.cards.deleteMany({ where: { id: { in: cardIds }, deck_id: deckId } }),
         ]);
 

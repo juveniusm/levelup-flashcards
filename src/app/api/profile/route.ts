@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth-utils";
 import { userService } from "@/lib/services/userService";
+import { rateLimit } from "@/lib/rate-limit";
+
+const limiter = rateLimit({ interval: 60 * 1000, uniqueTokenPerInterval: 500 });
 
 export async function GET() {
     try {
@@ -29,6 +32,17 @@ export async function PATCH(request: NextRequest) {
         }
 
         const body = await request.json();
+
+        if (body?.newPassword !== undefined) {
+            if (typeof body.newPassword !== "string" || body.newPassword.length < 8) {
+                return NextResponse.json({ error: "New password must be at least 8 characters." }, { status: 400 });
+            }
+            // Throttle password-change attempts (the current-password check is a guessing oracle).
+            if (limiter.check(10, `profile-pw:${user.id}`)) {
+                return NextResponse.json({ error: "Too many attempts. Please try again in a minute." }, { status: 429 });
+            }
+        }
+
         const updated = await userService.updateUserProfile(user.id, user.role, body);
 
         return NextResponse.json({ success: true, updated });

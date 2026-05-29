@@ -84,7 +84,10 @@ export async function PATCH(
         }
 
         // Admin can set a new password without knowing the current one
-        if (newPassword) {
+        if (newPassword !== undefined) {
+            if (typeof newPassword !== "string" || newPassword.length < 8) {
+                return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+            }
             updateData.password = await bcrypt.hash(newPassword, 10);
         }
 

@@ -11,12 +11,13 @@ export default withAuth(
             return NextResponse.redirect(new URL("/study", req.url));
         }
 
-        // If you need to let people access /admin/login, catch it here:
-        if (path === "/admin/login") {
-            return NextResponse.next();
+        const res = NextResponse.next();
+        // The email-verification flow carries a token in the /login query string; prevent it
+        // from leaking via the Referer header to any third-party resource the page loads.
+        if (path === "/login") {
+            res.headers.set("Referrer-Policy", "no-referrer");
         }
-
-        return NextResponse.next();
+        return res;
     },
     {
         callbacks: {
@@ -48,7 +49,9 @@ export const config = {
         "/study/:path*",
         "/stats/:path*",
         "/creator/:path*",
+        "/settings/:path*", // Authenticated settings page
         "/admin/:path*", // Catches all admin routes (we exclude /admin/login in the function above)
         "/login", // Added to allow middleware to redirect authenticated users away from login
+        "/:deckId/study", // Deck-specific study page (/[deckId]/study) — also requires auth
     ],
 };

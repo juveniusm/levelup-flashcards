@@ -72,6 +72,20 @@ export async function POST(req: Request) {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
+        // Validate the ACTUAL image content, not just the client-supplied MIME/extension (both
+        // are attacker-controlled). sharp reads the real format from the bytes; reject anything
+        // that is not a supported raster image. Applies to BOTH the prod and dev paths.
+        const ALLOWED_IMAGE_FORMATS = new Set(["jpeg", "png", "gif", "webp"]);
+        let detectedFormat: string | undefined;
+        try {
+            detectedFormat = (await sharp(buffer).metadata()).format;
+        } catch {
+            return NextResponse.json({ message: "Invalid or corrupt image file." }, { status: 400 });
+        }
+        if (!detectedFormat || !ALLOWED_IMAGE_FORMATS.has(detectedFormat)) {
+            return NextResponse.json({ message: "Unsupported image content." }, { status: 400 });
+        }
+
         // ── Production: Cloudinary ────────────────────────────────────────
         if (useCloudinary) {
             const url: string = await new Promise((resolve, reject) => {

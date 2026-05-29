@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireDeckAccess } from "@/lib/deck-access";
+import { isSafeImageUrl } from "@/lib/url-safety";
 
 export async function PUT(
     request: Request,
@@ -31,8 +32,8 @@ export async function PUT(
                 front: front.trim(),
                 back: back.trim(),
                 acceptedAnswers: Array.isArray(acceptedAnswers) ? acceptedAnswers.filter(a => typeof a === "string" && a.trim() !== "").map(a => a.trim()) : [],
-                front_image_url: front_image_url || null,
-                back_image_url: back_image_url || null,
+                front_image_url: isSafeImageUrl(front_image_url) ? front_image_url : null,
+                back_image_url: isSafeImageUrl(back_image_url) ? back_image_url : null,
             },
         });
 

@@ -23,11 +23,14 @@ export const authOptions: NextAuthOptions = {
             async authorize(credentials) {
                 if (!credentials?.email) return null;
 
+                const identifier = credentials.email.trim();
                 const user = await prisma.user.findFirst({
                     where: {
                         OR: [
-                            { email: credentials.email },
-                            { username: credentials.email }
+                            // Email match is case-insensitive so a differently-cased email still
+                            // resolves to the same account (emails are case-insensitive in practice).
+                            { email: { equals: identifier, mode: "insensitive" } },
+                            { username: identifier }
                         ]
                     }
                 });
