@@ -180,8 +180,8 @@ export default function StudyInterface({
     if (cards.length === 0) {
         return (
             <div className="text-center py-24">
-                <h2 className="text-2xl font-bold text-white mb-4">No Cards</h2>
-                <p className="text-neutral-400">Add cards to this deck before studying.</p>
+                <h2 className="text-2xl font-bold text-foreground mb-4">No Cards</h2>
+                <p className="text-muted-foreground">Add cards to this deck before studying.</p>
             </div>
         );
     }
@@ -215,9 +215,9 @@ export default function StudyInterface({
             />
 
             {/* Progress Bar */}
-            <div className="w-full bg-neutral-900 rounded-full h-1 sm:h-2 mb-4 sm:mb-12 overflow-hidden border border-neutral-800">
+            <div className="w-full bg-muted rounded-full h-1 sm:h-2 mb-4 sm:mb-12 overflow-hidden border border-border">
                 <div
-                    className="bg-[#f9c111] h-1 sm:h-2 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(249,193,17,0.5)]"
+                    className="bg-gold h-1 sm:h-2 rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${((currentIndex) / cards.length) * 100}%` }}
                 ></div>
             </div>

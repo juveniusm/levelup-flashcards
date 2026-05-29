@@ -1,18 +1,32 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "./components/Sidebar";
 import NextAuthSessionProvider from "./components/SessionProvider";
 import CommandPalette from "./components/ui/CommandPalette";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Fraunces is the serif display face (headings); Inter is the body sans; and
+// JetBrains Mono covers code/IDs. Each exposes a CSS variable that globals.css's
+// @theme block points its --font-* tokens at. Fraunces includes the optical-size
+// axis so large headings keep their high-contrast letterforms.
+const fraunces = Fraunces({
   subsets: ["latin"],
+  axes: ["opsz"],
+  style: ["normal", "italic"],
+  variable: "--font-fraunces",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -42,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex h-screen overflow-hidden bg-[#0a0a0a] text-white`}
+        className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} font-sans antialiased flex h-screen overflow-hidden bg-background text-foreground`}
       >
         <NextAuthSessionProvider>
           <CommandPalette />

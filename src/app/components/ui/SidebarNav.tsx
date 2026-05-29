@@ -23,8 +23,8 @@ export default function SidebarNav({ isCollapsed, isMobileMenuOpen, isAdmin, set
                 href="/study"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isStudyPage
-                    ? "bg-[#222] text-[#f9c111] font-semibold shadow-sm"
-                    : "text-gray-400 hover:bg-[#222] hover:text-white"
+                    ? "bg-gold-soft text-foreground font-semibold"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     } ${isCollapsed ? "lg:justify-center" : "justify-start"}`}
                 title={isCollapsed ? "Study" : undefined}
             >
@@ -32,18 +32,18 @@ export default function SidebarNav({ isCollapsed, isMobileMenuOpen, isAdmin, set
                 {(!isCollapsed || isMobileMenuOpen) && (
                     <div className="flex items-center justify-between flex-1">
                         <span>Study</span>
-                        {isStudyPage && <ChevronDown size={14} className="text-neutral-500" />}
+                        {isStudyPage && <ChevronDown size={14} className="text-muted-foreground" />}
                     </div>
                 )}
             </Link>
 
             {/* Study Submenu */}
             {(!isCollapsed || isMobileMenuOpen) && isStudyPage && (
-                <div className="ml-5 pl-4 border-l border-neutral-700/50 flex flex-col gap-1 mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="ml-5 pl-4 border-l border-border flex flex-col gap-1 mt-1 animate-in fade-in slide-in-from-top-2 duration-200">
                     <a
                         href="#due-cards"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center gap-3 p-2.5 rounded-lg text-sm text-neutral-400 hover:text-[#f9c111] hover:bg-[#1a1a1a] transition-all whitespace-nowrap"
+                        className="flex items-center gap-3 p-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all whitespace-nowrap"
                     >
                         <Clock size={16} className="shrink-0" />
                         <span>Due Cards</span>
@@ -51,7 +51,7 @@ export default function SidebarNav({ isCollapsed, isMobileMenuOpen, isAdmin, set
                     <a
                         href="#all-decks"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center gap-3 p-2.5 rounded-lg text-sm text-neutral-400 hover:text-[#f9c111] hover:bg-[#1a1a1a] transition-all whitespace-nowrap"
+                        className="flex items-center gap-3 p-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all whitespace-nowrap"
                     >
                         <Library size={16} className="shrink-0" />
                         <span>All Decks</span>
@@ -65,14 +65,14 @@ export default function SidebarNav({ isCollapsed, isMobileMenuOpen, isAdmin, set
                         setIsMobileMenuOpen(false);
                         window.dispatchEvent(new CustomEvent("open-command-palette"));
                     }}
-                    className={`flex items-center gap-3 p-3 rounded-xl transition-all text-gray-400 hover:bg-[#222] hover:text-white ${isCollapsed ? "lg:justify-center" : "justify-start"}`}
+                    className={`flex items-center gap-3 p-3 rounded-xl transition-all text-muted-foreground hover:bg-muted hover:text-foreground ${isCollapsed ? "lg:justify-center" : "justify-start"}`}
                     title={isCollapsed ? "Search (Ctrl+K)" : undefined}
                 >
                     <Search size={22} className="shrink-0" />
                     {(!isCollapsed || isMobileMenuOpen) && (
                         <div className="flex items-center justify-between flex-1">
                             <span>Search</span>
-                            <span className="text-[10px] bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded border border-neutral-700 font-mono">Ctrl+K</span>
+                            <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border font-mono">Ctrl+K</span>
                         </div>
                     )}
                 </button>
@@ -83,8 +83,8 @@ export default function SidebarNav({ isCollapsed, isMobileMenuOpen, isAdmin, set
                 href="/stats"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isStatsPage
-                    ? "bg-[#222] text-[#f9c111] font-semibold shadow-sm"
-                    : "text-gray-400 hover:bg-[#222] hover:text-white"
+                    ? "bg-gold-soft text-foreground font-semibold"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     } ${isCollapsed ? "lg:justify-center" : "justify-start"}`}
                 title={isCollapsed ? "Stats" : undefined}
             >
@@ -97,8 +97,8 @@ export default function SidebarNav({ isCollapsed, isMobileMenuOpen, isAdmin, set
                     href="/creator"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-3 p-3 rounded-xl transition-all ${pathname === "/creator" || pathname.startsWith("/creator/")
-                        ? "bg-[#222] text-[#f9c111] font-semibold shadow-sm"
-                        : "text-gray-400 hover:bg-[#222] hover:text-white"
+                        ? "bg-gold-soft text-foreground font-semibold"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         } ${isCollapsed ? "lg:justify-center" : "justify-start"}`}
                     title={isCollapsed ? "Creator" : undefined}
                 >
@@ -113,8 +113,8 @@ export default function SidebarNav({ isCollapsed, isMobileMenuOpen, isAdmin, set
                     href="/admin/users"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-3 p-3 rounded-xl transition-all ${pathname === "/admin/users"
-                        ? "bg-[#222] text-[#f9c111] font-semibold shadow-sm"
-                        : "text-gray-400 hover:bg-[#222] hover:text-white"
+                        ? "bg-gold-soft text-foreground font-semibold"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         } ${isCollapsed ? "lg:justify-center" : "justify-start"}`}
                     title={isCollapsed ? "Manage Users" : undefined}
                 >

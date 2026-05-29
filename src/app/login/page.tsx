@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import UniversitySearchableDropdown from "@/app/components/auth/UniversitySearchableDropdown";
 import { useAuthForm } from "@/hooks/useAuthForm";
@@ -30,28 +29,22 @@ function LoginContent() {
     );
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-            {/* Logo on pure black background */}
+        <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
+            {/* Wordmark */}
             <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <div className="w-48 md:w-56 mx-auto">
-                    <Image
-                        src="/logo4.svg"
-                        alt="LevelUp Auth"
-                        width={400}
-                        height={242}
-                        className="w-full h-auto object-contain drop-shadow-lg"
-                        priority
-                    />
-                </div>
+                <h1 className="text-5xl md:text-6xl font-display font-bold tracking-tight">
+                    LevelUp<span className="text-gold">.</span>
+                </h1>
+                <p className="text-muted-foreground mt-2">Master any subject, faster than ever.</p>
             </div>
 
-            {/* Gray box starting from Continue with Google */}
-            <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-8 shadow-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 fill-mode-both">
+            {/* Auth card */}
+            <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 shadow-sm space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 fill-mode-both">
 
                 <button
                     onClick={handleGoogleLogin}
                     disabled={isLoading}
-                    className="w-full bg-white text-black font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-3 hover:bg-neutral-200 transition-colors disabled:opacity-50"
+                    className="w-full bg-background border border-border text-foreground font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-3 hover:bg-muted transition-colors disabled:opacity-50"
                 >
                     <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
                         <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335" />
@@ -64,10 +57,10 @@ function LoginContent() {
 
                 <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-neutral-800"></div>
+                        <div className="w-full border-t border-border"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-neutral-900 text-neutral-500">Or continue with email</span>
+                        <span className="px-2 bg-card text-muted-foreground">Or continue with email</span>
                     </div>
                 </div>
 
@@ -77,40 +70,40 @@ function LoginContent() {
                         <>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-sm font-medium text-neutral-400">First Name</label>
+                                    <label className="text-sm font-medium text-muted-foreground">First Name</label>
                                     <input
                                         type="text"
                                         required
                                         value={firstName}
                                         onChange={(e) => setFirstName(e.target.value)}
                                         disabled={isLoading}
-                                        className="w-full bg-black border border-neutral-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-[#f9c111] transition-colors"
+                                        className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                                         placeholder="John"
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-sm font-medium text-neutral-400">Last Name</label>
+                                    <label className="text-sm font-medium text-muted-foreground">Last Name</label>
                                     <input
                                         type="text"
                                         required
                                         value={lastName}
                                         onChange={(e) => setLastName(e.target.value)}
                                         disabled={isLoading}
-                                        className="w-full bg-black border border-neutral-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-[#f9c111] transition-colors"
+                                        className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                                         placeholder="Doe"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-neutral-400">Username</label>
+                                <label className="text-sm font-medium text-muted-foreground">Username</label>
                                 <input
                                     type="text"
                                     required
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     disabled={isLoading}
-                                    className="w-full bg-black border border-neutral-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-[#f9c111] transition-colors"
+                                    className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                                     placeholder="johndoe123"
                                 />
                             </div>
@@ -124,63 +117,63 @@ function LoginContent() {
                     )}
 
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-neutral-400">{isLogin ? "Username or Email" : "Email Address"}</label>
+                        <label className="text-sm font-medium text-muted-foreground">{isLogin ? "Username or Email" : "Email Address"}</label>
                         <input
                             type="email"
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
-                            className="w-full bg-black border border-neutral-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-[#f9c111] transition-colors"
+                            className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                             placeholder="student@example.com"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-neutral-400">Password</label>
+                        <label className="text-sm font-medium text-muted-foreground">Password</label>
                         <input
                             type="password"
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             disabled={isLoading}
-                            className="w-full bg-black border border-neutral-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-[#f9c111] transition-colors"
+                            className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                             placeholder="••••••••"
                         />
                     </div>
 
                     {errorMsg && (
-                        <p className="text-red-400 text-sm bg-red-900/30 p-3 rounded-lg border border-red-500/50">{errorMsg}</p>
+                        <p className="text-destructive text-sm bg-destructive/10 p-3 rounded-lg border border-destructive/30">{errorMsg}</p>
                     )}
 
                     {successMsg && (
-                        <p className="text-green-400 text-sm bg-green-900/30 p-3 rounded-lg border border-green-500/50">{successMsg}</p>
+                        <p className="text-green-700 text-sm bg-green-50 p-3 rounded-lg border border-green-500/30">{successMsg}</p>
                     )}
 
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-[#f9c111] hover:bg-[#e0ad0e] text-black font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50"
+                        className="w-full bg-gold hover:bg-gold/90 text-foreground font-bold py-3 px-4 rounded-full transition-colors disabled:opacity-50"
                     >
                         {isLogin ? "Sign In" : "Create Account"}
                     </button>
                 </form>
 
                 <div className="space-y-1 pt-2">
-                    <p className="text-center text-sm text-neutral-400">
+                    <p className="text-center text-sm text-muted-foreground">
                         {isLogin ? "Don't have an account? " : "Already have an account? "}
                         <button
                             type="button"
                             onClick={() => setIsLogin(!isLogin)}
-                            className="text-[#f9c111] hover:underline transition-all"
+                            className="font-semibold text-foreground hover:text-gold transition-all"
                         >
                             {isLogin ? "Sign Up" : "Sign In"}
                         </button>
                     </p>
 
                     {isLogin && (
-                        <p className="text-center text-sm text-neutral-500">
-                            <Link href="/admin/login" className="hover:text-white transition-colors">
+                        <p className="text-center text-sm text-muted-foreground">
+                            <Link href="/admin/login" className="hover:text-foreground transition-colors">
                                 Admin Sign In
                             </Link>
                         </p>
@@ -194,7 +187,7 @@ function LoginContent() {
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-black text-white flex items-center justify-center p-4" />}>
+        <Suspense fallback={<div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4" />}>
             <LoginContent />
         </Suspense>
     );

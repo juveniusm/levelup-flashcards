@@ -119,7 +119,7 @@ export default function FlashcardImageModal({ imageUrl, onClose }: FlashcardImag
 
                 {magnifier.show && (
                     <div 
-                        className="absolute pointer-events-none w-48 h-48 border-4 border-[#f9c111]/80 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)] z-[205] overflow-hidden"
+                        className="absolute pointer-events-none w-48 h-48 border-4 border-gold/80 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)] z-[205] overflow-hidden"
                         style={{
                             left: `${magnifier.x}%`,
                             top: `${magnifier.y}%`,

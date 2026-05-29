@@ -40,8 +40,8 @@ const Flashcard = memo(function Flashcard({
                     }`}
             >
                 {/* Front */}
-                <div className="absolute inset-0 backface-hidden bg-neutral-900 border-2 border-neutral-800 rounded-3xl p-4 sm:p-8 flex flex-col justify-center items-center text-center z-10 overflow-y-auto">
-                    <span className="absolute top-6 left-6 text-neutral-500 text-xs font-bold uppercase tracking-widest">
+                <div className="absolute inset-0 backface-hidden bg-card border-2 border-border rounded-3xl p-4 sm:p-8 flex flex-col justify-center items-center text-center z-10 overflow-y-auto">
+                    <span className="absolute top-6 left-6 text-muted-foreground text-xs font-bold uppercase tracking-widest">
                         {label}
                     </span>
 
@@ -71,14 +71,14 @@ const Flashcard = memo(function Flashcard({
                         </div>
                     )}
 
-                    <h2 className="text-lg sm:text-3xl font-semibold text-white leading-tight">
+                    <h2 className="text-lg sm:text-3xl font-display font-semibold text-foreground leading-tight">
                         {card.front}
                     </h2>
                 </div>
 
                 {/* Back */}
-                <div className="absolute inset-0 backface-hidden rotate-x-180 bg-neutral-900 border-2 border-neutral-800 rounded-3xl p-4 sm:p-8 flex flex-col justify-center items-center text-center overflow-y-auto w-full">
-                    <span className="absolute top-6 left-6 text-neutral-500 text-xs font-bold uppercase tracking-widest">
+                <div className="absolute inset-0 backface-hidden rotate-x-180 bg-card border-2 border-border rounded-3xl p-4 sm:p-8 flex flex-col justify-center items-center text-center overflow-y-auto w-full">
+                    <span className="absolute top-6 left-6 text-muted-foreground text-xs font-bold uppercase tracking-widest">
                         Target Answer
                     </span>
 
@@ -99,25 +99,25 @@ const Flashcard = memo(function Flashcard({
                         </div>
                     )}
 
-                    <h2 className="text-lg sm:text-3xl font-semibold text-[#f9c111] leading-tight mb-8">
+                    <h2 className="text-lg sm:text-3xl font-display font-semibold text-foreground leading-tight mb-8">
                         {card.back}
                     </h2>
 
                     {feedbackType === "correct" && (
-                        <div className="text-green-500 text-xl font-bold bg-green-500/10 px-8 py-3 rounded-full border border-green-500/20 animate-in slide-in-from-bottom-4 duration-300 flex flex-col items-center">
+                        <div className="text-green-700 text-xl font-bold bg-green-50 px-8 py-3 rounded-full border border-green-500/30 animate-in slide-in-from-bottom-4 duration-300 flex flex-col items-center">
                             <span>Correct!</span>
                             {matchedAlternative && (
-                                <span className="text-sm font-normal text-green-400 mt-1">
+                                <span className="text-sm font-normal text-green-700/80 mt-1">
                                     (Alternative: {matchedAlternative})
                                 </span>
                             )}
                         </div>
                     )}
                     {feedbackType === "incorrect" && (
-                        <div className="text-red-500 text-xl font-bold bg-red-500/10 px-8 py-3 rounded-full border border-red-500/20 animate-in slide-in-from-bottom-4 duration-300 flex flex-col items-center">
+                        <div className="text-destructive text-xl font-bold bg-destructive/10 px-8 py-3 rounded-full border border-destructive/30 animate-in slide-in-from-bottom-4 duration-300 flex flex-col items-center">
                             <span>Incorrect{feedbackExtra ? ` ${feedbackExtra}` : ""}</span>
                             {userAnswer && (
-                                <span className="text-sm font-normal text-neutral-400 mt-1">
+                                <span className="text-sm font-normal text-muted-foreground mt-1">
                                     You wrote: &quot;{userAnswer}&quot;
                                 </span>
                             )}

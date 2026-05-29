@@ -159,21 +159,21 @@ export default function FlashcardList({ deckId, deckSeq, cards }: FlashcardListP
     return (
         <div className="space-y-6">
             {cards.length === 0 ? (
-                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-12 text-center shadow-lg">
-                    <p className="text-neutral-400">This deck is empty. Add a flashcard to start learning.</p>
+                <div className="bg-card border border-border rounded-2xl p-12 text-center shadow-sm">
+                    <p className="text-muted-foreground">This deck is empty. Add a flashcard to start learning.</p>
                 </div>
             ) : (
                 <>
                     {selectMode ? (
                         // Select-mode toolbar
-                        <div className="flex flex-col sm:flex-row gap-4 mb-6 items-stretch sm:items-center justify-between bg-neutral-900 border border-[#f9c111]/40 rounded-lg px-4 py-3">
+                        <div className="flex flex-col sm:flex-row gap-4 mb-6 items-stretch sm:items-center justify-between bg-card border border-gold/40 rounded-lg px-4 py-3">
                             <div className="flex items-center gap-3">
-                                <CheckSquare className="w-5 h-5 text-[#f9c111]" />
-                                <span className="text-white font-semibold text-sm">
+                                <CheckSquare className="w-5 h-5 text-gold" />
+                                <span className="text-foreground font-semibold text-sm">
                                     {selectedIds.size} selected
                                 </span>
-                                <span className="text-neutral-500 text-xs hidden sm:inline">
-                                    Click cards to select · <kbd className="font-mono bg-neutral-800 px-1.5 py-0.5 rounded text-[10px] text-neutral-300">Del</kbd> to delete · <kbd className="font-mono bg-neutral-800 px-1.5 py-0.5 rounded text-[10px] text-neutral-300">Esc</kbd> to cancel
+                                <span className="text-muted-foreground text-xs hidden sm:inline">
+                                    Click cards to select · <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px] text-muted-foreground">Del</kbd> to delete · <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px] text-muted-foreground">Esc</kbd> to cancel
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -181,7 +181,7 @@ export default function FlashcardList({ deckId, deckSeq, cards }: FlashcardListP
                                     type="button"
                                     onClick={toggleSelectMode}
                                     disabled={isBulkDeleting}
-                                    className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                                    className="px-4 py-2 bg-secondary hover:bg-muted text-foreground border border-border text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
                                 >
                                     <X className="w-4 h-4" />
                                     Cancel
@@ -190,7 +190,7 @@ export default function FlashcardList({ deckId, deckSeq, cards }: FlashcardListP
                                     type="button"
                                     onClick={handleBulkDelete}
                                     disabled={selectedIds.size === 0 || isBulkDeleting}
-                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground text-sm font-bold rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                     {isBulkDeleting ? "Deleting..." : `Delete${selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}`}
@@ -205,14 +205,14 @@ export default function FlashcardList({ deckId, deckSeq, cards }: FlashcardListP
                                 <button
                                     type="button"
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className={`w-full bg-neutral-900 border ${isDropdownOpen ? 'border-[#f9c111]' : 'border-neutral-800'} hover:border-neutral-700 rounded-lg px-4 py-3 text-white text-left focus:outline-none focus:ring-2 focus:ring-[#f9c111]/50 transition-all cursor-pointer text-sm flex justify-between items-center h-full min-h-[46px]`}
+                                    className={`w-full bg-card border ${isDropdownOpen ? 'border-gold' : 'border-border'} hover:border-gold/40 rounded-lg px-4 py-3 text-foreground text-left focus:outline-none focus:ring-2 focus:ring-gold/40 transition-all cursor-pointer text-sm flex justify-between items-center h-full min-h-[46px]`}
                                 >
                                     <span className="truncate pr-2">{searchTypeLabels[searchType]}</span>
-                                    <svg className={`flex-shrink-0 w-4 h-4 text-neutral-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    <svg className={`flex-shrink-0 w-4 h-4 text-muted-foreground transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
 
                                 {isDropdownOpen && (
-                                    <div className="absolute top-full left-0 mt-2 w-full bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl overflow-hidden py-1 z-30 transform origin-top animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="absolute top-full left-0 mt-2 w-full bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1 z-30 transform origin-top animate-in fade-in slide-in-from-top-2 duration-200">
                                         {(Object.keys(searchTypeLabels) as Array<keyof typeof searchTypeLabels>).map((key) => (
                                             <button
                                                 key={key}
@@ -222,9 +222,9 @@ export default function FlashcardList({ deckId, deckSeq, cards }: FlashcardListP
                                                     setCurrentPage(1);
                                                     setIsDropdownOpen(false);
                                                 }}
-                                                className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-neutral-800/80 flex items-center gap-2 ${searchType === key ? 'text-[#f9c111] bg-neutral-800/40 font-medium' : 'text-neutral-300'}`}
+                                                className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-muted flex items-center gap-2 ${searchType === key ? 'text-foreground bg-gold-soft/50 font-medium' : 'text-muted-foreground'}`}
                                             >
-                                                <div className={`w-1.5 h-1.5 rounded-full ${searchType === key ? 'bg-[#f9c111]' : 'bg-transparent'}`} />
+                                                <div className={`w-1.5 h-1.5 rounded-full ${searchType === key ? 'bg-gold' : 'bg-transparent'}`} />
                                                 {searchTypeLabels[key]}
                                             </button>
                                         ))}
@@ -234,7 +234,7 @@ export default function FlashcardList({ deckId, deckSeq, cards }: FlashcardListP
 
                             <div className="relative flex-1">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg className="h-5 w-5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
@@ -246,14 +246,14 @@ export default function FlashcardList({ deckId, deckSeq, cards }: FlashcardListP
                                         setSearchQuery(e.target.value);
                                         setCurrentPage(1); // Reset to first page on new search
                                     }}
-                                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#f9c111] transition-all text-sm"
+                                    className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold transition-all text-sm"
                                 />
                             </div>
 
                             <button
                                 type="button"
                                 onClick={toggleSelectMode}
-                                className="flex-shrink-0 flex items-center justify-center gap-2 px-4 py-3 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-white rounded-lg transition-colors text-sm font-medium min-h-[46px]"
+                                className="flex-shrink-0 flex items-center justify-center gap-2 px-4 py-3 bg-card hover:bg-muted border border-border hover:border-gold/40 text-foreground rounded-lg transition-colors text-sm font-medium min-h-[46px]"
                                 title="Select multiple cards"
                             >
                                 <CheckSquare className="w-4 h-4" />
@@ -264,7 +264,7 @@ export default function FlashcardList({ deckId, deckSeq, cards }: FlashcardListP
 
                     <div className="space-y-4">
                         {paginatedCards.length === 0 ? (
-                            <p className="text-neutral-400 text-center py-8">No flashcards found matching your search.</p>
+                            <p className="text-muted-foreground text-center py-8">No flashcards found matching your search.</p>
                         ) : (
                             paginatedCards.map((card) => (
                                 <FlashcardItem
@@ -281,21 +281,21 @@ export default function FlashcardList({ deckId, deckSeq, cards }: FlashcardListP
                     </div>
 
                     {totalPages > 1 && (
-                        <div className="flex justify-center items-center gap-4 pt-4 border-t border-neutral-800">
+                        <div className="flex justify-center items-center gap-4 pt-4 border-t border-border">
                             <button
                                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-white hover:bg-neutral-800 disabled:opacity-50 disabled:hover:bg-neutral-900 transition-colors"
+                                className="px-4 py-2 bg-card border border-border rounded-lg text-foreground hover:bg-muted disabled:opacity-50 disabled:hover:bg-card transition-colors"
                             >
                                 Previous
                             </button>
-                            <span className="text-neutral-400 text-sm">
+                            <span className="text-muted-foreground text-sm">
                                 Page {currentPage} of {totalPages}
                             </span>
                             <button
                                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-white hover:bg-neutral-800 disabled:opacity-50 disabled:hover:bg-neutral-900 transition-colors"
+                                className="px-4 py-2 bg-card border border-border rounded-lg text-foreground hover:bg-muted disabled:opacity-50 disabled:hover:bg-card transition-colors"
                             >
                                 Next
                             </button>

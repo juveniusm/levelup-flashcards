@@ -160,10 +160,10 @@ export default function StudyDeckPage() {
     // Early returns AFTER all hooks have been called
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
+            <div className="min-h-screen bg-background text-foreground flex flex-col justify-center items-center p-4">
                 <div className="animate-pulse flex flex-col items-center">
-                    <div className="w-64 h-8 bg-neutral-800 rounded-lg mb-8"></div>
-                    <div className="w-full max-w-sm h-72 bg-neutral-800 rounded-3xl"></div>
+                    <div className="w-64 h-8 bg-muted rounded-lg mb-8"></div>
+                    <div className="w-full max-w-sm h-72 bg-muted rounded-3xl"></div>
                 </div>
             </div>
         );
@@ -171,10 +171,10 @@ export default function StudyDeckPage() {
 
     if (error || !deck) {
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4 text-center">
-                <h2 className="text-3xl font-bold text-red-500 mb-4">Are you offline?</h2>
-                <p className="text-neutral-400 mb-8">{error || "Deck not found."}</p>
-                <Link href="/study" className="bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3 px-8 rounded-xl">
+            <div className="min-h-screen bg-background text-foreground flex flex-col justify-center items-center p-4 text-center">
+                <h2 className="text-3xl font-bold text-destructive mb-4">Are you offline?</h2>
+                <p className="text-muted-foreground mb-8">{error || "Deck not found."}</p>
+                <Link href="/study" className="bg-secondary hover:bg-muted text-foreground font-bold py-3 px-8 rounded-full border border-border transition-colors">
                     Go Back
                 </Link>
             </div>
@@ -183,12 +183,12 @@ export default function StudyDeckPage() {
 
     if (finalCards.length === 0) {
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4 text-center">
-                <h2 className="text-4xl font-black text-[#f9c111] mb-4">No cards found!</h2>
-                <Link href={`/${deckId}/study?mode=study`} className="bg-[#f9c111] text-black font-bold py-4 px-12 rounded-xl mb-4">
+            <div className="min-h-screen bg-background text-foreground flex flex-col justify-center items-center p-4 text-center">
+                <h2 className="text-4xl font-display font-bold text-foreground mb-4">No cards found.</h2>
+                <Link href={`/${deckId}/study?mode=study`} className="bg-gold hover:bg-gold/90 text-foreground font-bold py-4 px-12 rounded-full mb-4 shadow-sm hover:shadow-md transition-all">
                     Study Mode
                 </Link>
-                <Link href="/study" className="bg-neutral-800 text-white font-bold py-4 px-12 rounded-xl">
+                <Link href="/study" className="bg-secondary hover:bg-muted text-foreground font-bold py-4 px-12 rounded-full border border-border transition-colors">
                     Back to Decks
                 </Link>
             </div>
@@ -197,7 +197,7 @@ export default function StudyDeckPage() {
 
     if (isEndlessMode) {
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
+            <div className="min-h-screen bg-background text-foreground flex flex-col justify-center items-center p-4">
                 <EndlessInterface cards={finalCards} deckId={deck.id} />
             </div>
         );
@@ -205,14 +205,14 @@ export default function StudyDeckPage() {
 
     if (isFlipMode) {
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
+            <div className="min-h-screen bg-background text-foreground flex flex-col justify-center items-center p-4">
                 <FlipInterface cards={finalCards} deckId={deck.id} />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center p-4">
+        <div className="min-h-screen bg-background text-foreground flex flex-col justify-center items-center p-4">
             <StudyInterface cards={finalCards} deckId={deck.id} mode={mode} isReviewMode={isReviewMode} noLives={noLives} />
         </div>
     );

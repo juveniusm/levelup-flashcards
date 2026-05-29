@@ -36,19 +36,19 @@ const StudyInputArea = memo(function StudyInputArea({
                         onChange={(e) => onInputChange(e.target.value)}
                         placeholder="Type your answer..."
                         autoComplete="off"
-                        className="w-full sm:flex-1 bg-neutral-900 border-2 border-neutral-800 rounded-xl px-4 sm:px-6 py-3 sm:py-4 text-lg sm:text-xl text-white focus:outline-none focus:border-[#f9c111] transition-colors shadow-inner"
+                        className="w-full sm:flex-1 bg-card border-2 border-border rounded-xl px-4 sm:px-6 py-3 sm:py-4 text-lg sm:text-xl text-foreground focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                     />
                     <div className="flex gap-3 w-full sm:w-auto">
                         <button
                             type="button"
                             onClick={onPass}
-                            className="flex-1 sm:flex-none bg-neutral-800 hover:bg-neutral-700 text-neutral-400 font-bold px-6 py-3 sm:py-0 rounded-xl transition-all border border-neutral-700 hover:text-white"
+                            className="flex-1 sm:flex-none bg-secondary hover:bg-muted text-muted-foreground font-bold px-6 py-3 sm:py-0 rounded-xl transition-all border border-border hover:text-foreground"
                         >
                             Pass
                         </button>
                         <button
                             type="submit"
-                            className="flex-1 sm:flex-none bg-[#f9c111] hover:bg-yellow-400 text-black font-bold px-8 py-3 sm:py-0 rounded-xl transition-all shadow-[0_4px_14px_0_rgba(249,193,17,0.39)] hover:shadow-[0_6px_20px_rgba(249,193,17,0.23)] hover:-translate-y-0.5"
+                            className="flex-1 sm:flex-none bg-gold hover:bg-gold/90 text-foreground font-bold px-8 py-3 sm:py-0 rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
                         >
                             Submit
                         </button>
@@ -58,7 +58,7 @@ const StudyInputArea = memo(function StudyInputArea({
                 <button
                     onClick={onNext}
                     autoFocus
-                    className="w-full bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-4 rounded-xl transition-colors border-2 border-neutral-700 focus:border-[#f9c111] focus:outline-none"
+                    className="w-full bg-secondary hover:bg-muted text-foreground font-bold py-4 rounded-xl transition-colors border-2 border-border focus:border-gold focus:outline-none"
                 >
                     {continueButtonText}
                 </button>

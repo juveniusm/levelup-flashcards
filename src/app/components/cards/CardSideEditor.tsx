@@ -48,26 +48,26 @@ export default function CardSideEditor({
 
     return (
         <div
-            className={`transition-colors ${isFront ? "pb-4 border-b border-neutral-800" : "pt-2"} ${isDragging ? "bg-neutral-800/50 rounded-lg p-3" : ""}`}
+            className={`transition-colors ${isFront ? "pb-4 border-b border-border" : "pt-2"} ${isDragging ? "bg-muted rounded-lg p-3" : ""}`}
             onDragOver={(e) => onDragOver(e, side)}
             onDragLeave={(e) => onDragLeave(e, side)}
             onDrop={(e) => onDrop(e, side)}
         >
-            <label className="block text-sm font-semibold text-neutral-300 mb-2">{label}</label>
+            <label className="block text-sm font-semibold text-foreground mb-2">{label}</label>
             <textarea
                 {...register(side)}
                 rows={3}
                 onPaste={(e) => onPaste(e, side)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#f9c111] transition-all resize-none text-base"
+                className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold transition-all resize-none text-base"
                 placeholder={placeholder}
             />
-            {fieldError && <p className="text-red-500 text-xs mt-1">{fieldError.message}</p>}
+            {fieldError && <p className="text-destructive text-xs mt-1">{fieldError.message}</p>}
 
             <div className="mt-4">
-                <label className="block text-sm font-medium text-neutral-400 mb-2">{imgLabel} — Optional</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">{imgLabel} — Optional</label>
 
                 {showExisting && existingUrl && (
-                    <div className="relative mb-3 inline-block group h-24 w-40 overflow-hidden rounded shadow-md border border-neutral-700">
+                    <div className="relative mb-3 inline-block group h-24 w-40 overflow-hidden rounded shadow-sm border border-border">
                         <Image
                             src={existingUrl}
                             alt={`Current ${side}`}
@@ -77,7 +77,7 @@ export default function CardSideEditor({
                         <button
                             type="button"
                             onClick={onClear}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         >×</button>
                     </div>
                 )}
@@ -90,10 +90,10 @@ export default function CardSideEditor({
                         ref={inputRef}
                         onChange={(e) => onImageChange(side, e.target.files?.[0] || null)}
                         disabled={isSubmitting}
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#f9c111] transition-all file:mr-4 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#f9c111] file:text-black hover:file:bg-[#e0ad0e] disabled:opacity-50 text-sm"
+                        className="w-full bg-background border border-border rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold transition-all file:mr-4 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gold file:text-foreground hover:file:bg-gold/90 disabled:opacity-50 text-sm"
                     />
                     {imageFile && (
-                        <span className="text-xs text-[#f9c111] font-semibold truncate max-w-[150px]">{imageFile.name}</span>
+                        <span className="text-xs text-foreground font-semibold truncate max-w-[150px]">{imageFile.name}</span>
                     )}
                 </div>
             </div>

@@ -65,35 +65,35 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
             title: "Study Mode",
             desc: "All cards, hardest first. Best for exam prep.",
             icon: Brain,
-            color: "text-white"
+            color: "text-foreground"
         },
         {
             id: "focus",
             title: "Focus Mode",
             desc: "Study only Hard and Very Hard cards.",
             icon: Target,
-            color: "text-white"
+            color: "text-foreground"
         },
         {
             id: "endless",
             title: "Endless Mode",
             desc: "No lives, infinite loops. Practice until you quit.",
             icon: Infinity,
-            color: "text-white"
+            color: "text-foreground"
         },
         {
             id: "flip",
             title: "Flip Mode",
             desc: "Browse cards without typing. Just flip and go.",
             icon: Layers,
-            color: "text-white"
+            color: "text-foreground"
         },
         {
             id: "custom",
             title: "Custom Mode",
             desc: "Choose specific difficulties and card limits.",
             icon: Settings2,
-            color: "text-[#f9c111]"
+            color: "text-gold"
         }
     ];
 
@@ -107,9 +107,9 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                         setShowSelector(true);
                     }
                 }}
-                className={`group relative bg-neutral-900 border transition-all duration-300 rounded-xl overflow-hidden cursor-pointer hover:shadow-2xl ${isHighlighted
-                    ? "border-[#f9c111]/30 bg-gradient-to-r from-neutral-900 to-[#f9c111]/5 hover:border-[#f9c111]/60"
-                    : "border-neutral-800/80 hover:border-neutral-600 shadow-sm"
+                className={`group relative bg-card border transition-all duration-300 rounded-2xl overflow-hidden cursor-pointer hover:shadow-md ${isHighlighted
+                    ? "border-gold/40 bg-gold-soft/40 hover:border-gold/70"
+                    : "border-border hover:border-gold/40 shadow-sm"
                     }`}
             >
                 {/* Wrap Layout */}
@@ -117,11 +117,11 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                     {/* Title and ID */}
                     <div className="flex-1 min-w-[150px] max-w-full">
                         <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-bold text-lg text-white group-hover:text-[#f9c111] transition-colors leading-tight truncate">
+                            <h3 className="font-display font-semibold text-lg text-foreground transition-colors leading-tight truncate">
                                 {deck.title}
                             </h3>
                             {isHighlighted && (
-                                <div className="flex-shrink-0 bg-[#f9c111] text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter animate-pulse">
+                                <div className="flex-shrink-0 bg-gold text-foreground text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">
                                     Due
                                 </div>
                             )}
@@ -133,28 +133,28 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                         {/* Due Cards */}
                         {deck.dueCount !== undefined && deck.dueCount > 0 && (
                             <div className="flex flex-col items-center sm:items-start">
-                                <span className="text-[#f9c111] uppercase text-[9px] font-bold tracking-widest mb-1">Due</span>
-                                <span className="text-[#f9c111] font-bold text-base">{deck.dueCount}</span>
+                                <span className="text-muted-foreground uppercase text-[9px] font-bold tracking-widest mb-1">Due</span>
+                                <span className="text-foreground font-bold text-base">{deck.dueCount}</span>
                             </div>
                         )}
 
                         {/* Total Cards */}
                         <div className="flex flex-col items-center sm:items-start">
-                            <span className="text-neutral-500 uppercase text-[9px] font-bold tracking-widest mb-1">Total</span>
-                            <span className="text-white font-bold text-base">{deck._count.cards}</span>
+                            <span className="text-muted-foreground uppercase text-[9px] font-bold tracking-widest mb-1">Total</span>
+                            <span className="text-foreground font-bold text-base">{deck._count.cards}</span>
                         </div>
 
                         {/* Mastery Percentage */}
                         <div className="flex flex-col items-center sm:items-start min-w-[80px]">
-                            <span className="text-neutral-500 uppercase text-[9px] font-bold tracking-widest mb-1 text-center sm:text-left">Mastery</span>
+                            <span className="text-muted-foreground uppercase text-[9px] font-bold tracking-widest mb-1 text-center sm:text-left">Mastery</span>
                             <div className="flex items-center gap-2">
-                                <span className={`font-black text-lg ${(deck.mastery ?? 0) > 80 ? "text-green-400" : (deck.mastery ?? 0) > 40 ? "text-yellow-400" : "text-neutral-400"}`}>
+                                <span className={`font-black text-lg ${(deck.mastery ?? 0) > 80 ? "text-green-600" : (deck.mastery ?? 0) > 40 ? "text-yellow-600" : "text-muted-foreground"}`}>
                                     {deck.mastery ?? 0}%
                                 </span>
                                 {/* Small progress bar */}
-                                <div className="hidden xs:block w-12 h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                                    <div 
-                                        className={`h-full transition-all duration-1000 ${(deck.mastery ?? 0) > 80 ? "bg-green-500" : (deck.mastery ?? 0) > 40 ? "bg-yellow-500" : "bg-neutral-600"}`} 
+                                <div className="hidden xs:block w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full transition-all duration-1000 ${(deck.mastery ?? 0) > 80 ? "bg-green-500" : (deck.mastery ?? 0) > 40 ? "bg-gold" : "bg-muted-foreground/40"}`}
                                         style={{ width: `${deck.mastery ?? 0}%` }}
                                     />
                                 </div>
@@ -162,7 +162,7 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                         </div>
 
                         {/* Arrow indicator */}
-                        <div className="hidden sm:flex items-center text-neutral-700 group-hover:text-[#f9c111] transition-colors group-hover:translate-x-1 duration-300">
+                        <div className="hidden sm:flex items-center text-muted-foreground/40 group-hover:text-gold transition-colors group-hover:translate-x-1 duration-300">
                             <ArrowRight size={20} />
                         </div>
                     </div>
@@ -171,19 +171,19 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
 
             {/* Mode Selection Modal */}
             {showSelector && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div 
-                        className="bg-[#111111] border border-neutral-800 rounded-[2rem] w-full max-w-md p-8 shadow-2xl animate-in zoom-in-95 duration-300 relative overflow-hidden"
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-md animate-in fade-in duration-300">
+                    <div
+                        className="bg-card border border-border rounded-[2rem] w-full max-w-md p-8 shadow-2xl animate-in zoom-in-95 duration-300 relative overflow-hidden"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Decorative background glow */}
-                        <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#f9c111]/10 blur-[80px] rounded-full pointer-events-none" />
-                        
+                        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gold/20 blur-[80px] rounded-full pointer-events-none" />
+
                         {selectorView === "modes" ? (
                             <>
                                 <div className="mb-8">
-                                    <h2 className="text-3xl font-black text-white mb-2 tracking-tight">{deck.title}</h2>
-                                    <p className="text-neutral-500 font-medium">Choose your study mode</p>
+                                    <h2 className="text-3xl font-display font-bold text-foreground mb-2 tracking-tight">{deck.title}</h2>
+                                    <p className="text-muted-foreground font-medium">Choose your study mode</p>
                                 </div>
 
                                 <div className="space-y-3 mb-8">
@@ -197,25 +197,25 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                                                     handleSelect(mode.id);
                                                 }
                                             }}
-                                            className="w-full flex items-center justify-between p-5 bg-neutral-900/40 border border-neutral-800/60 rounded-2xl hover:border-neutral-700 hover:bg-neutral-800 transition-all group group-active:scale-[0.98]"
+                                            className="w-full flex items-center justify-between p-5 bg-secondary border border-border rounded-2xl hover:border-gold/40 hover:bg-accent transition-all group group-active:scale-[0.98]"
                                         >
                                             <div className="flex items-center gap-4">
-                                                <div className={`p-3 bg-neutral-800 rounded-xl group-hover:bg-neutral-700 transition-colors ${mode.color}`}>
+                                                <div className={`p-3 bg-muted rounded-xl group-hover:bg-gold-soft transition-colors ${mode.color}`}>
                                                     <mode.icon size={20} />
                                                 </div>
                                                 <div className="text-left">
-                                                    <div className="text-white font-bold mb-0.5">{mode.title}</div>
-                                                    <div className="text-neutral-500 text-xs font-medium">{mode.desc}</div>
+                                                    <div className="text-foreground font-bold mb-0.5">{mode.title}</div>
+                                                    <div className="text-muted-foreground text-xs font-medium">{mode.desc}</div>
                                                 </div>
                                             </div>
-                                            <ArrowRight size={18} className="text-neutral-600 group-hover:text-[#f9c111] group-hover:translate-x-1 transition-all" />
+                                            <ArrowRight size={18} className="text-muted-foreground group-hover:text-gold group-hover:translate-x-1 transition-all" />
                                         </button>
                                     ))}
                                 </div>
 
                                 <button
                                     onClick={() => setShowSelector(false)}
-                                    className="w-full text-neutral-500 hover:text-white font-bold transition-colors py-2 uppercase tracking-widest text-xs"
+                                    className="w-full text-muted-foreground hover:text-foreground font-bold transition-colors py-2 uppercase tracking-widest text-xs"
                                 >
                                     Cancel
                                 </button>
@@ -224,8 +224,8 @@ export default function StudyDeckCard({ deck, variant = "standard" }: StudyDeckC
                             <div>
                                 {isLoadingStats ? (
                                     <div className="flex flex-col items-center justify-center py-12 gap-3">
-                                        <Loader2 className="w-6 h-6 text-[#f9c111] animate-spin" />
-                                        <span className="text-neutral-500 text-xs font-bold uppercase tracking-wider">Loading stats...</span>
+                                        <Loader2 className="w-6 h-6 text-gold animate-spin" />
+                                        <span className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Loading stats...</span>
                                     </div>
                                 ) : (
                                     <StudyConfigPanel

@@ -87,7 +87,7 @@ export default function FolderItem({
     };
 
     return (
-        <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 gap-2 group">
                 <button
@@ -96,9 +96,9 @@ export default function FolderItem({
                     className="flex items-center gap-3 flex-1 min-w-0 text-left"
                 >
                     <ChevronDown
-                        className={`w-4 h-4 text-neutral-500 flex-shrink-0 transition-transform ${isExpanded ? "" : "-rotate-90"}`}
+                        className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${isExpanded ? "" : "-rotate-90"}`}
                     />
-                    <FolderIcon className="w-5 h-5 text-[#f9c111] flex-shrink-0" />
+                    <FolderIcon className="w-5 h-5 text-gold flex-shrink-0" />
                     {isEditing ? (
                         <input
                             type="text"
@@ -108,12 +108,12 @@ export default function FolderItem({
                             onClick={(e) => e.stopPropagation()}
                             autoFocus
                             disabled={isSaving}
-                            className="flex-1 bg-black border border-[#f9c111] rounded-md px-2 py-1 text-white font-semibold focus:outline-none disabled:opacity-50"
+                            className="flex-1 bg-background border border-gold rounded-md px-2 py-1 text-foreground font-semibold focus:outline-none disabled:opacity-50"
                         />
                     ) : (
-                        <h3 className="font-semibold text-white truncate">{folder.title}</h3>
+                        <h3 className="font-semibold text-foreground truncate">{folder.title}</h3>
                     )}
-                    <span className="text-xs text-neutral-500 flex-shrink-0">
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
                         {deckCount} {deckCount === 1 ? "deck" : "decks"}
                     </span>
                 </button>
@@ -125,7 +125,7 @@ export default function FolderItem({
                                 type="button"
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className="p-1.5 text-green-500 hover:text-green-400 hover:bg-neutral-800 rounded-md transition-colors disabled:opacity-50"
+                                className="p-1.5 text-green-600 hover:text-green-700 hover:bg-muted rounded-md transition-colors disabled:opacity-50"
                                 title="Save"
                             >
                                 <Check className="w-4 h-4" />
@@ -137,18 +137,18 @@ export default function FolderItem({
                                     setEditTitle(folder.title);
                                 }}
                                 disabled={isSaving}
-                                className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-md transition-colors"
+                                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                                 title="Cancel"
                             >
                                 <X className="w-4 h-4" />
                             </button>
                         </>
                     ) : showConfirmDelete ? (
-                        <div className="flex bg-neutral-800 rounded-md border border-red-900/50 overflow-hidden shadow-lg animate-in slide-in-from-right-2 fade-in duration-200">
+                        <div className="flex bg-secondary rounded-md border border-destructive/40 overflow-hidden shadow-lg animate-in slide-in-from-right-2 fade-in duration-200">
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmDelete(false)}
-                                className="px-3 py-1 text-xs text-neutral-300 hover:text-white hover:bg-neutral-700 transition font-medium"
+                                className="px-3 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition font-medium"
                             >
                                 Cancel
                             </button>
@@ -156,7 +156,7 @@ export default function FolderItem({
                                 type="button"
                                 onClick={handleDelete}
                                 disabled={isDeleting}
-                                className="px-3 py-1 text-xs text-white bg-red-600 hover:bg-red-500 font-bold transition disabled:opacity-50"
+                                className="px-3 py-1 text-xs text-destructive-foreground bg-destructive hover:bg-destructive/90 font-bold transition disabled:opacity-50"
                             >
                                 {isDeleting ? "..." : "Delete"}
                             </button>
@@ -166,7 +166,7 @@ export default function FolderItem({
                             <button
                                 type="button"
                                 onClick={() => setIsEditing(true)}
-                                className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-md transition-colors"
+                                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                                 title="Rename folder"
                             >
                                 <Pencil className="w-4 h-4" />
@@ -174,7 +174,7 @@ export default function FolderItem({
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmDelete(true)}
-                                className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-neutral-800 rounded-md transition-colors"
+                                className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-muted rounded-md transition-colors"
                                 title="Delete folder"
                             >
                                 <Trash2 className="w-4 h-4" />
@@ -186,7 +186,7 @@ export default function FolderItem({
 
             {/* Content */}
             {isExpanded && (
-                <div className="border-t border-neutral-800 p-4 bg-black/20">
+                <div className="border-t border-border p-4 bg-secondary/40">
                     {children}
                 </div>
             )}

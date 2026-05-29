@@ -184,8 +184,8 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
 
     // ── Render ────────────────────────────────────────────────────────
     return (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 sm:p-8 shadow-xl">
-            <h3 className="text-xl font-bold text-white mb-6 border-b border-neutral-800 pb-2">
+        <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm">
+            <h3 className="text-xl font-bold text-foreground mb-6 border-b border-border pb-2">
                 {isEdit ? "Edit Flashcard" : "Add New Card"}
             </h3>
 
@@ -243,7 +243,7 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                     register={register}
                 />
 
-                {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
+                {error && <p className="text-destructive text-sm font-medium">{error}</p>}
 
                 <div className={`flex gap-4 ${isEdit ? "pt-4" : ""}`}>
                     {isEdit && (
@@ -251,7 +251,7 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                             type="button"
                             onClick={() => router.push(`/creator/${deckId}`)}
                             disabled={isSubmitting || isDeleting}
-                            className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50"
+                            className="flex-1 bg-secondary hover:bg-muted text-foreground border border-border font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50"
                         >
                             Cancel
                         </button>
@@ -261,10 +261,10 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                             type="button"
                             onClick={handleDeleteClick}
                             disabled={isSubmitting || isDeleting}
-                            className={`flex-1 font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50 text-white flex items-center justify-center gap-2 ${
+                            className={`flex-1 font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50 text-destructive-foreground flex items-center justify-center gap-2 ${
                                 showDeleteConfirm
-                                    ? "bg-red-700 hover:bg-red-600 animate-pulse"
-                                    : "bg-red-600 hover:bg-red-500"
+                                    ? "bg-destructive hover:bg-destructive/90 animate-pulse"
+                                    : "bg-destructive hover:bg-destructive/90"
                             }`}
                         >
                             <Trash2 className="w-4 h-4" />
@@ -278,7 +278,7 @@ export default function CardForm({ deckId, mode, existingCard }: CardFormProps) 
                     <button
                         type="submit"
                         disabled={isSubmitting || isDeleting}
-                        className={`${isEdit ? "flex-1 bg-[#f9c111] hover:bg-[#e0ad0e] text-black" : "w-full bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700"} font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50`}
+                        className={`${isEdit ? "flex-1" : "w-full"} bg-gold hover:bg-gold/90 text-foreground font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50`}
                     >
                         {isSubmitting
                             ? (isEdit ? "Saving..." : "Adding...")

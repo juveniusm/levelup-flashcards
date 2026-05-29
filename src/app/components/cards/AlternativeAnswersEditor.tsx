@@ -18,15 +18,15 @@ export default function AlternativeAnswersEditor({
     register,
 }: AlternativeAnswersEditorProps) {
     return (
-        <div className="space-y-3 pt-4 border-t border-neutral-800">
+        <div className="space-y-3 pt-4 border-t border-border">
             <div className="flex justify-between items-center">
-                <label className="block text-sm font-semibold text-neutral-300">
+                <label className="block text-sm font-semibold text-foreground">
                     Accepted Alternative Answers
                 </label>
                 <button
                     type="button"
                     onClick={() => append({ value: "" })}
-                    className="text-sm flex items-center gap-1 text-[#f9c111] hover:text-[#e0ad0e] font-medium transition-colors"
+                    className="text-sm flex items-center gap-1 text-foreground hover:text-gold font-medium transition-colors"
                 >
                     <Plus className="w-4 h-4" /> Add Alternative
                 </button>
@@ -36,12 +36,12 @@ export default function AlternativeAnswersEditor({
                     <input
                         {...register(`acceptedAnswers.${index}.value`)}
                         placeholder="Alternative explicitly accepted answer"
-                        className="w-full bg-neutral-800/50 border border-neutral-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f9c111]/50 text-sm"
+                        className="w-full bg-secondary border border-border text-foreground p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold/40 text-sm"
                     />
                     <button
                         type="button"
                         onClick={() => remove(index)}
-                        className="p-3 text-neutral-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                         aria-label="Remove alternative answer"
                     >
                         <X className="w-4 h-4" />

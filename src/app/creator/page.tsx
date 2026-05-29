@@ -21,12 +21,12 @@ export default async function Home() {
 
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 md:p-8">
       <main className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-1000 pt-12 lg:pt-0">
-        <header className="flex justify-between items-end border-b border-neutral-800 pb-6">
+        <header className="flex justify-between items-end border-b border-border pb-6">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight">LevelUp <span className="text-[#f9c111]">Creator</span></h1>
-            <p className="text-neutral-400 mt-2 text-lg">Manage your decks and flashcards.</p>
+            <h1 className="text-4xl font-display font-bold tracking-tight">Creator<span className="text-gold">.</span></h1>
+            <p className="text-muted-foreground mt-2 text-lg">Manage your decks and flashcards.</p>
           </div>
         </header>
 

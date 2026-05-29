@@ -128,7 +128,7 @@ export default function DeckManager({ initialDecks, initialFolders }: DeckManage
             </div>
 
             <div className="lg:col-span-2 space-y-6">
-                <h2 className="text-2xl font-bold border-b border-neutral-800 pb-2">Your Library</h2>
+                <h2 className="text-2xl font-bold border-b border-border pb-2">Your Library</h2>
 
                 {/* Folders */}
                 {folders.length > 0 && (
@@ -146,7 +146,7 @@ export default function DeckManager({ initialDecks, initialFolders }: DeckManage
                                     deckCount={folderDecks.length}
                                 >
                                     {folderDecks.length === 0 ? (
-                                        <p className="text-neutral-500 text-sm text-center py-6">
+                                        <p className="text-muted-foreground text-sm text-center py-6">
                                             No decks in this folder yet. Move a deck here from below.
                                         </p>
                                     ) : (
@@ -167,7 +167,7 @@ export default function DeckManager({ initialDecks, initialFolders }: DeckManage
 
                 {/* Uncategorized decks */}
                 <div className="pt-2">
-                    <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-4">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
                         {folders.length > 0 ? "Uncategorized" : "All Decks"}
                     </h3>
                     <DeckList

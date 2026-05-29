@@ -60,31 +60,31 @@ export default function UniversitySearchableDropdown({
     return (
         <div className="relative w-full" ref={containerRef}>
             <div className="space-y-1">
-                <label className="text-sm font-medium text-neutral-400">University</label>
+                <label className="text-sm font-medium text-muted-foreground">University</label>
                 <div
                     onClick={toggleDropdown}
-                    className={`w-full bg-black border ${isOpen ? 'border-[#f9c111]' : 'border-neutral-800'} text-white rounded-xl px-4 py-3 flex justify-between items-center cursor-pointer transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-neutral-700'}`}
+                    className={`w-full bg-background border ${isOpen ? 'border-gold' : 'border-border'} text-foreground rounded-xl px-4 py-3 flex justify-between items-center cursor-pointer transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-gold/40'}`}
                 >
-                    <span className={`block truncate ${!value ? 'text-neutral-500' : 'text-white'}`}>
+                    <span className={`block truncate ${!value ? 'text-muted-foreground' : 'text-foreground'}`}>
                         {value || "Select University"}
                     </span>
-                    <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </div>
             </div>
 
             {isOpen && (
-                <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-card border border-border rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* Search Area */}
-                    <div className="p-3 border-b border-neutral-800 bg-neutral-900/50 sticky top-0">
+                    <div className="p-3 border-b border-border bg-card sticky top-0">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <input
                                 ref={inputRef}
                                 type="text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Search university..."
-                                className="w-full bg-black border border-neutral-800 text-white rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-[#f9c111] transition-colors"
+                                className="w-full bg-background border border-border text-foreground rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                             />
                         </div>
                     </div>
@@ -98,7 +98,7 @@ export default function UniversitySearchableDropdown({
                                         key={uni}
                                         type="button"
                                         onClick={() => handleSelect(uni)}
-                                        className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-neutral-800 transition-colors ${value === uni ? 'text-[#f9c111] bg-neutral-800/40' : 'text-neutral-300'}`}
+                                        className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-muted transition-colors ${value === uni ? 'text-foreground bg-gold-soft/50' : 'text-muted-foreground'}`}
                                     >
                                         <span className="truncate pr-4">{uni}</span>
                                         {value === uni && <Check className="w-4 h-4 shrink-0" />}
@@ -109,7 +109,7 @@ export default function UniversitySearchableDropdown({
                                     <button
                                         type="button"
                                         onClick={() => handleSelect("Others")}
-                                        className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-neutral-800 transition-colors border-t border-neutral-800/50 ${value === "Others" ? 'text-[#f9c111] bg-neutral-800/40' : 'text-neutral-400 italic'}`}
+                                        className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-muted transition-colors border-t border-border ${value === "Others" ? 'text-foreground bg-gold-soft/50' : 'text-muted-foreground italic'}`}
                                     >
                                         <span>Others</span>
                                         {value === "Others" && <Check className="w-4 h-4 shrink-0" />}
@@ -121,7 +121,7 @@ export default function UniversitySearchableDropdown({
                                 <button
                                     type="button"
                                     onClick={() => handleSelect("Others")}
-                                    className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-neutral-800 transition-colors ${value === "Others" ? 'text-[#f9c111] bg-neutral-800/40' : 'text-neutral-400 italic'}`}
+                                    className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-muted transition-colors ${value === "Others" ? 'text-foreground bg-gold-soft/50' : 'text-muted-foreground italic'}`}
                                 >
                                     <span>Others</span>
                                     {value === "Others" && <Check className="w-4 h-4 shrink-0" />}
@@ -129,7 +129,7 @@ export default function UniversitySearchableDropdown({
                             )
                         )}
                         {!searchTerm && filteredUniversities.length === 0 && (
-                            <div className="px-4 py-6 text-center text-neutral-500 text-sm">
+                            <div className="px-4 py-6 text-center text-muted-foreground text-sm">
                                 No universities found.
                             </div>
                         )}

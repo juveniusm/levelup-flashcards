@@ -154,8 +154,8 @@ export default function EndlessInterface({
     if (cards.length === 0) {
         return (
             <div className="text-center py-24">
-                <h2 className="text-2xl font-bold text-white mb-4">No Cards</h2>
-                <p className="text-neutral-400">Add cards to this deck before studying.</p>
+                <h2 className="text-2xl font-bold text-foreground mb-4">No Cards</h2>
+                <p className="text-muted-foreground">Add cards to this deck before studying.</p>
             </div>
         );
     }
@@ -165,10 +165,10 @@ export default function EndlessInterface({
         return (
             <SessionEndScreen
                 title="Session Over"
-                titleColorClass="text-[#f9c111]"
+                titleColorClass="text-foreground"
                 subtitle={
                     <>
-                        You studied for <span className="text-white font-bold">{formatTime(elapsedSeconds)}</span>
+                        You studied for <span className="text-foreground font-bold">{formatTime(elapsedSeconds)}</span>
                     </>
                 }
                 primaryButtonLabel="Play Again"

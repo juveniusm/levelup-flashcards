@@ -58,13 +58,13 @@ export default function FlashcardItem({ deckId, deckSeq, card, selectMode = fals
     };
 
     const borderClass = selectMode && selected
-        ? "border-[#f9c111]"
-        : "border-neutral-800 hover:border-neutral-700";
+        ? "border-gold"
+        : "border-border hover:border-gold/40";
 
     return (
         <div
             onClick={handleCardClick}
-            className={`bg-neutral-900 border ${borderClass} rounded-xl p-5 shadow-sm transition-colors relative group ${selectMode ? 'cursor-pointer select-none' : ''}`}
+            className={`bg-card border ${borderClass} rounded-2xl p-5 shadow-sm transition-colors relative group ${selectMode ? 'cursor-pointer select-none' : ''}`}
         >
             {/* Selection checkbox (only in select mode) */}
             {selectMode && (
@@ -72,26 +72,26 @@ export default function FlashcardItem({ deckId, deckSeq, card, selectMode = fals
                     <div
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                             selected
-                                ? 'bg-[#f9c111] border-[#f9c111]'
-                                : 'bg-neutral-900 border-neutral-600'
+                                ? 'bg-gold border-gold'
+                                : 'bg-card border-border'
                         }`}
                     >
-                        {selected && <Check size={14} className="text-black" strokeWidth={3} />}
+                        {selected && <Check size={14} className="text-foreground" strokeWidth={3} />}
                     </div>
                 </div>
             )}
 
-            <div className={`mb-3 border-b border-neutral-800/50 pb-2 ${selectMode ? 'pl-8' : ''}`}>
-                <span className="text-[10px] text-[#f9c111] font-mono tracking-widest font-bold">ID: {displayId}</span>
+            <div className={`mb-3 border-b border-border pb-2 ${selectMode ? 'pl-8' : ''}`}>
+                <span className="text-[10px] text-muted-foreground font-mono tracking-widest font-bold">ID: {displayId}</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <span className="text-xs text-neutral-500 font-semibold uppercase tracking-wider mb-1 block">Prompt</span>
-                    <p className="text-neutral-200">{card.front}</p>
+                    <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 block">Prompt</span>
+                    <p className="text-foreground">{card.front}</p>
                 </div>
                 <div>
-                    <span className="text-xs text-[#f9c111] font-semibold uppercase tracking-wider mb-1 block">Target Answer</span>
-                    <p className="text-white font-medium">{card.back}</p>
+                    <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 block">Target Answer</span>
+                    <p className="text-foreground font-medium">{card.back}</p>
                 </div>
             </div>
 
@@ -102,7 +102,7 @@ export default function FlashcardItem({ deckId, deckSeq, card, selectMode = fals
                         href={`/creator/${deckId}/cards/${card.id}/edit`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-md transition-colors"
+                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                         title="Edit Card"
                     >
                         <Pencil size={18} />
@@ -110,7 +110,7 @@ export default function FlashcardItem({ deckId, deckSeq, card, selectMode = fals
                     <button
                         onClick={handleDelete}
                         disabled={isDeleting}
-                        className="p-2 text-neutral-400 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors disabled:opacity-50"
+                        className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors disabled:opacity-50"
                         title="Delete Card"
                     >
                         <Trash2 size={18} />

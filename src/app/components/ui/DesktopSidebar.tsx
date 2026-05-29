@@ -21,14 +21,14 @@ export default function DesktopSidebar({
         <aside
             onMouseEnter={() => isGameSession && setIsHoverCollapsed(false)}
             onMouseLeave={() => isGameSession && setIsHoverCollapsed(true)}
-            className={`hidden lg:flex bg-[#111111] border-r border-[#333] transition-all duration-300 ease-in-out flex-col sticky top-0 h-screen flex-shrink-0 ${isCollapsed ? "lg:w-20" : "lg:w-64"
+            className={`hidden lg:flex bg-background border-r border-border transition-all duration-300 ease-in-out flex-col sticky top-0 h-screen flex-shrink-0 ${isCollapsed ? "lg:w-20" : "lg:w-64"
                 }`}
         >
-            <div className={`p-6 border-b border-[#333] flex items-center shrink-0 h-[73px] ${isCollapsed ? "justify-center" : "justify-between"}`}>
+            <div className={`p-6 border-b border-border flex items-center shrink-0 h-[73px] ${isCollapsed ? "justify-center" : "justify-between"}`}>
                 {isCollapsed ? (
-                    <span className="text-xl font-black text-[#f9c111]">M</span>
+                    <span className="text-2xl font-display font-bold text-foreground">L</span>
                 ) : (
-                    <span className="text-xl font-black text-[#f9c111]">MENU</span>
+                    <span className="text-2xl font-display font-bold text-foreground">LevelUp<span className="text-gold">.</span></span>
                 )}
             </div>
             {navContent}

@@ -27,19 +27,19 @@ export default function ClassicModeEndScreen({
     switch (gameStatus) {
         case "game_over":
             title = "Game Over";
-            titleColorClass = "text-red-500";
+            titleColorClass = "text-destructive";
             subtitle = "You ran out of lives!";
             primaryButtonLabel = "Try Again";
             break;
         case "session_over":
             title = "Session Over";
-            titleColorClass = "text-[#f9c111]";
+            titleColorClass = "text-foreground";
             subtitle = "You ended the session early.";
             primaryButtonLabel = "Try Again";
             break;
         case "completed":
             title = "Deck Complete!";
-            titleColorClass = "text-[#f9c111]";
+            titleColorClass = "text-foreground";
             primaryButtonLabel = "Study Again";
             break;
     }

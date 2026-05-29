@@ -108,20 +108,20 @@ export default function StudyDashboardList({ decks, folders = [] }: StudyDashboa
 
     return (
         <div className="w-full">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-neutral-800 pb-4 gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-border pb-4 gap-4">
                 <h2 className="text-2xl font-bold">All Study Decks</h2>
 
                 {decks.length > 0 && (
                     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                         {/* Search Input */}
                         <div className="relative group w-full sm:w-64">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 w-4 h-4 group-focus-within:text-[#f9c111] transition-colors" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 group-focus-within:text-gold transition-colors" />
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search decks..."
-                                className="w-full bg-neutral-900 border border-neutral-800 focus:border-[#f9c111] rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none transition-colors shadow-inner"
+                                className="w-full bg-card border border-border focus:border-gold focus:ring-2 focus:ring-gold/30 rounded-lg pl-10 pr-4 py-2 text-sm text-foreground focus:outline-none transition-colors"
                             />
                         </div>
 
@@ -130,17 +130,17 @@ export default function StudyDashboardList({ decks, folders = [] }: StudyDashboa
                             <button
                                 type="button"
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className={`w-full bg-neutral-900 border ${isDropdownOpen ? 'border-[#f9c111]' : 'border-neutral-800'} hover:border-neutral-700 rounded-lg px-4 py-2 text-white text-left focus:outline-none transition-all cursor-pointer text-sm flex justify-between items-center h-[42px]`}
+                                className={`w-full bg-card border ${isDropdownOpen ? 'border-gold' : 'border-border'} hover:border-gold/40 rounded-lg px-4 py-2 text-foreground text-left focus:outline-none transition-all cursor-pointer text-sm flex justify-between items-center h-[42px]`}
                             >
                                 <div className="flex items-center gap-2">
-                                    <ArrowUpDown className={`w-4 h-4 ${isDropdownOpen ? 'text-[#f9c111]' : 'text-neutral-500'}`} />
+                                    <ArrowUpDown className={`w-4 h-4 ${isDropdownOpen ? 'text-gold' : 'text-muted-foreground'}`} />
                                     <span className="truncate">{SORT_LABELS[sortBy]}</span>
                                 </div>
-                                <ChevronDown className={`w-3.5 h-3.5 text-neutral-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                                <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             {isDropdownOpen && (
-                                <div className="absolute top-full right-0 mt-2 w-full sm:w-56 bg-neutral-900 border border-neutral-800 rounded-lg shadow-2xl overflow-hidden py-1 z-30 transform origin-top animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="absolute top-full right-0 mt-2 w-full sm:w-56 bg-card border border-border rounded-lg shadow-2xl overflow-hidden py-1 z-30 transform origin-top animate-in fade-in slide-in-from-top-2 duration-200">
                                     {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
                                         <button
                                             key={key}
@@ -149,9 +149,9 @@ export default function StudyDashboardList({ decks, folders = [] }: StudyDashboa
                                                 setSortBy(key);
                                                 setIsDropdownOpen(false);
                                             }}
-                                            className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-neutral-800/80 flex items-center gap-2 ${sortBy === key ? 'text-[#f9c111] bg-neutral-800/40 font-medium' : 'text-neutral-300'}`}
+                                            className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-muted flex items-center gap-2 ${sortBy === key ? 'text-foreground bg-gold-soft/50 font-medium' : 'text-muted-foreground'}`}
                                         >
-                                            <div className={`w-1.5 h-1.5 rounded-full ${sortBy === key ? 'bg-[#f9c111]' : 'bg-transparent'}`} />
+                                            <div className={`w-1.5 h-1.5 rounded-full ${sortBy === key ? 'bg-gold' : 'bg-transparent'}`} />
                                             {SORT_LABELS[key]}
                                         </button>
                                     ))}
@@ -163,14 +163,14 @@ export default function StudyDashboardList({ decks, folders = [] }: StudyDashboa
             </div>
 
             {decks.length === 0 ? (
-                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-12 text-center shadow-lg">
-                    <p className="text-neutral-400">You don&apos;t have any decks yet. Create one to get started.</p>
+                <div className="bg-card border border-border rounded-2xl p-12 text-center shadow-sm">
+                    <p className="text-muted-foreground">You don&apos;t have any decks yet. Create one to get started.</p>
                 </div>
             ) : filteredAndSortedDecks.length === 0 ? (
-                <div className="bg-neutral-900/50 border border-neutral-800 border-dashed rounded-xl p-12 text-center">
-                    <Search className="w-8 h-8 text-neutral-600 mx-auto mb-3" />
-                    <p className="text-neutral-400 font-medium text-lg">No decks found for &quot;{searchQuery}&quot;</p>
-                    <p className="text-neutral-500 text-sm mt-1">Try a different search term.</p>
+                <div className="bg-card border border-border border-dashed rounded-2xl p-12 text-center">
+                    <Search className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-foreground font-medium text-lg">No decks found for &quot;{searchQuery}&quot;</p>
+                    <p className="text-muted-foreground text-sm mt-1">Try a different search term.</p>
                 </div>
             ) : showGroups ? (
                 <div className="space-y-4">
@@ -179,23 +179,23 @@ export default function StudyDashboardList({ decks, folders = [] }: StudyDashboa
                         if (folderDecks.length === 0) return null;
                         const isOpen = expanded[folder.id] ?? true;
                         return (
-                            <div key={folder.id} className="bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden">
+                            <div key={folder.id} className="bg-card border border-border rounded-2xl overflow-hidden">
                                 <button
                                     type="button"
                                     onClick={() => toggleFolder(folder.id)}
-                                    className="w-full flex items-center justify-between px-4 py-3 gap-3 hover:bg-neutral-900/80 transition-colors"
+                                    className="w-full flex items-center justify-between px-4 py-3 gap-3 hover:bg-muted transition-colors"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <ChevronDown className={`w-4 h-4 text-neutral-500 flex-shrink-0 transition-transform ${isOpen ? "" : "-rotate-90"}`} />
-                                        <FolderIcon className="w-5 h-5 text-[#f9c111] flex-shrink-0" />
-                                        <h3 className="font-semibold text-white truncate">{folder.title}</h3>
+                                        <ChevronDown className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? "" : "-rotate-90"}`} />
+                                        <FolderIcon className="w-5 h-5 text-gold flex-shrink-0" />
+                                        <h3 className="font-semibold text-foreground truncate">{folder.title}</h3>
                                     </div>
-                                    <span className="text-xs text-neutral-500 flex-shrink-0">
+                                    <span className="text-xs text-muted-foreground flex-shrink-0">
                                         {folderDecks.length} {folderDecks.length === 1 ? "deck" : "decks"}
                                     </span>
                                 </button>
                                 {isOpen && (
-                                    <div className="border-t border-neutral-800 p-3 flex flex-col gap-3 bg-black/20">
+                                    <div className="border-t border-border p-3 flex flex-col gap-3 bg-secondary/40">
                                         {folderDecks.map((deck) => (
                                             <StudyDeckCard key={deck.id} deck={deck as never} />
                                         ))}
@@ -208,7 +208,7 @@ export default function StudyDashboardList({ decks, folders = [] }: StudyDashboa
                     {uncategorizedDecks.length > 0 && (
                         <div className="pt-2">
                             {folders.length > 0 && (
-                                <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3">
+                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                                     Uncategorized
                                 </h3>
                             )}

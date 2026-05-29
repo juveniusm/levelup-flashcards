@@ -82,8 +82,8 @@ export default function DeckList({ decks, onDelete, onUpdate, folders, onMove, c
     return (
         <div className="space-y-6">
             {decks.length === 0 ? (
-                <div className={compact ? "text-neutral-500 text-sm text-center py-6" : "bg-neutral-900 border border-neutral-800 rounded-xl p-12 text-center shadow-lg"}>
-                    <p className={compact ? "" : "text-neutral-400"}>
+                <div className={compact ? "text-muted-foreground text-sm text-center py-6" : "bg-card border border-border rounded-2xl p-12 text-center shadow-sm"}>
+                    <p className={compact ? "" : "text-muted-foreground"}>
                         {compact ? "No decks here." : "You don't have any decks yet. Create one to get started."}
                     </p>
                 </div>
@@ -96,14 +96,14 @@ export default function DeckList({ decks, onDelete, onUpdate, folders, onMove, c
                             <button
                                 type="button"
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className={`w-full bg-neutral-900 border ${isDropdownOpen ? 'border-[#f9c111]' : 'border-neutral-800'} hover:border-neutral-700 rounded-lg px-4 py-3 text-white text-left focus:outline-none focus:ring-2 focus:ring-[#f9c111]/50 transition-all cursor-pointer text-sm flex justify-between items-center h-full min-h-[46px]`}
+                                className={`w-full bg-card border ${isDropdownOpen ? 'border-gold' : 'border-border'} hover:border-gold/40 rounded-lg px-4 py-3 text-foreground text-left focus:outline-none focus:ring-2 focus:ring-gold/40 transition-all cursor-pointer text-sm flex justify-between items-center h-full min-h-[46px]`}
                             >
                                 <span className="truncate pr-2">{searchTypeLabels[searchType]}</span>
-                                <svg className={`flex-shrink-0 w-4 h-4 text-neutral-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                <svg className={`flex-shrink-0 w-4 h-4 text-muted-foreground transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
 
                             {isDropdownOpen && (
-                                <div className="absolute top-full left-0 mt-2 w-full bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl overflow-hidden py-1 z-30 transform origin-top animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="absolute top-full left-0 mt-2 w-full bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1 z-30 transform origin-top animate-in fade-in slide-in-from-top-2 duration-200">
                                     {(Object.keys(searchTypeLabels) as Array<keyof typeof searchTypeLabels>).map((key) => (
                                         <button
                                             key={key}
@@ -113,9 +113,9 @@ export default function DeckList({ decks, onDelete, onUpdate, folders, onMove, c
                                                 setCurrentPage(1);
                                                 setIsDropdownOpen(false);
                                             }}
-                                            className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-neutral-800/80 flex items-center gap-2 ${searchType === key ? 'text-[#f9c111] bg-neutral-800/40 font-medium' : 'text-neutral-300'}`}
+                                            className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-muted flex items-center gap-2 ${searchType === key ? 'text-foreground bg-gold-soft/50 font-medium' : 'text-muted-foreground'}`}
                                         >
-                                            <div className={`w-1.5 h-1.5 rounded-full ${searchType === key ? 'bg-[#f9c111]' : 'bg-transparent'}`} />
+                                            <div className={`w-1.5 h-1.5 rounded-full ${searchType === key ? 'bg-gold' : 'bg-transparent'}`} />
                                             {searchTypeLabels[key]}
                                         </button>
                                     ))}
@@ -125,7 +125,7 @@ export default function DeckList({ decks, onDelete, onUpdate, folders, onMove, c
 
                         <div className="relative flex-1">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg className="h-5 w-5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </div>
@@ -137,7 +137,7 @@ export default function DeckList({ decks, onDelete, onUpdate, folders, onMove, c
                                     setSearchQuery(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#f9c111] transition-all text-sm"
+                                className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold transition-all text-sm"
                             />
                         </div>
                     </div>
@@ -146,7 +146,7 @@ export default function DeckList({ decks, onDelete, onUpdate, folders, onMove, c
                     <div className={`grid grid-cols-1 ${compact ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"} gap-4 lg:gap-6`}>
                         {paginatedDecks.length === 0 ? (
                             <div className="col-span-full">
-                                <p className="text-neutral-400 text-center py-8">No decks found matching your search.</p>
+                                <p className="text-muted-foreground text-center py-8">No decks found matching your search.</p>
                             </div>
                         ) : (
                             paginatedDecks.map((deck) => (
@@ -163,21 +163,21 @@ export default function DeckList({ decks, onDelete, onUpdate, folders, onMove, c
                     </div>
 
                     {!compact && totalPages > 1 && (
-                        <div className="flex justify-center items-center gap-4 pt-4 border-t border-neutral-800 mt-8">
+                        <div className="flex justify-center items-center gap-4 pt-4 border-t border-border mt-8">
                             <button
                                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-white hover:bg-neutral-800 disabled:opacity-50 disabled:hover:bg-neutral-900 transition-colors"
+                                className="px-4 py-2 bg-card border border-border rounded-lg text-foreground hover:bg-muted disabled:opacity-50 disabled:hover:bg-card transition-colors"
                             >
                                 Previous
                             </button>
-                            <span className="text-neutral-400 text-sm">
+                            <span className="text-muted-foreground text-sm">
                                 Page {currentPage} of {totalPages}
                             </span>
                             <button
                                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-white hover:bg-neutral-800 disabled:opacity-50 disabled:hover:bg-neutral-900 transition-colors"
+                                className="px-4 py-2 bg-card border border-border rounded-lg text-foreground hover:bg-muted disabled:opacity-50 disabled:hover:bg-card transition-colors"
                             >
                                 Next
                             </button>

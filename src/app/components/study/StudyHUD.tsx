@@ -40,9 +40,9 @@ export default function StudyHUD({
     }, []);
 
     return (
-        <div className="flex flex-col w-full mb-3 sm:mb-8 border-b border-neutral-800 pb-2 sm:pb-4">
+        <div className="flex flex-col w-full mb-3 sm:mb-8 border-b border-border pb-2 sm:pb-4">
             {isOffline && (
-                <div className="flex items-center justify-center gap-2 w-full bg-red-500/20 text-red-400 text-xs sm:text-sm py-1 px-4 mb-3 rounded-full mx-auto">
+                <div className="flex items-center justify-center gap-2 w-full bg-destructive/15 text-destructive text-xs sm:text-sm py-1 px-4 mb-3 rounded-full mx-auto">
                     <WifiOff size={14} />
                     <span className="font-bold tracking-widest">OFFLINE MODE (SAVING LOCALLY)</span>
                 </div>
@@ -50,13 +50,13 @@ export default function StudyHUD({
             <div className="flex flex-row justify-between items-center w-full">
                 {mode === "classic" ? (
                     lives > 1000 ? (
-                        <div className="text-sm sm:text-lg font-bold font-mono tracking-widest text-neutral-400">
+                        <div className="text-sm sm:text-lg font-bold font-mono tracking-widest text-muted-foreground">
                             NO LIVES
                         </div>
                     ) : (
                         <div className="flex gap-1 sm:gap-2 text-xl sm:text-2xl">
                             {Array.from({ length: Math.max(5, lives) }).map((_, i) => (
-                                <span key={i} className={i < lives ? "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" : "text-neutral-800"}>
+                                <span key={i} className={i < lives ? "text-destructive" : "text-muted"}>
                                     &hearts;
                                 </span>
                             ))}
@@ -64,22 +64,22 @@ export default function StudyHUD({
                     )
                 ) : (
                     <div className="flex items-center gap-3 sm:gap-6">
-                        <div className="text-sm sm:text-lg font-bold font-mono tracking-widest text-neutral-400">
-                            <span className="text-white">{formatTime(elapsedSeconds)}</span>
+                        <div className="text-sm sm:text-lg font-bold font-mono tracking-widest text-muted-foreground">
+                            <span className="text-foreground">{formatTime(elapsedSeconds)}</span>
                         </div>
-                        <div className="text-sm sm:text-lg font-bold font-mono tracking-widest text-neutral-400">
-                            CARDS <span className="text-[#f9c111]">{totalCardsSeen}</span>
+                        <div className="text-sm sm:text-lg font-bold font-mono tracking-widest text-muted-foreground">
+                            CARDS <span className="text-foreground">{totalCardsSeen}</span>
                         </div>
                     </div>
                 )}
 
                 <div className="flex items-center gap-3 sm:gap-6">
-                    <div className="text-sm sm:text-xl font-bold font-mono tracking-widest text-white">
-                        SCORE <span className="text-[#f9c111]">{score.toString().padStart(4, "0")}</span>
+                    <div className="text-sm sm:text-xl font-bold font-mono tracking-widest text-muted-foreground">
+                        SCORE <span className="text-foreground">{score.toString().padStart(4, "0")}</span>
                     </div>
                     <button
                         onClick={onEnd}
-                        className="text-xs sm:text-sm font-bold text-neutral-500 hover:text-red-400 transition-colors uppercase tracking-widest border border-neutral-700 hover:border-red-400/50 px-2 sm:px-4 py-1 sm:py-2 rounded-lg"
+                        className="text-xs sm:text-sm font-bold text-muted-foreground hover:text-destructive transition-colors uppercase tracking-widest border border-border hover:border-destructive/50 px-2 sm:px-4 py-1 sm:py-2 rounded-lg"
                     >
                         End
                     </button>

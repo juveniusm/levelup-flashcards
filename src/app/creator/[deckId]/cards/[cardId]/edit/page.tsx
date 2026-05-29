@@ -21,13 +21,13 @@ export default async function EditCardPage({ params }: { params: Promise<{ deckI
     }
 
     return (
-        <div className="min-h-screen bg-black text-white p-8">
+        <div className="min-h-screen bg-background text-foreground p-8">
             <main className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-700">
-                <header className="border-b border-neutral-800 pb-6">
-                    <Link href={`/creator/${deckId}`} className="text-neutral-500 hover:text-white mb-4 inline-block transition-colors">
+                <header className="border-b border-border pb-6">
+                    <Link href={`/creator/${deckId}`} className="text-muted-foreground hover:text-foreground mb-4 inline-block transition-colors">
                         &larr; Back to {deck.title}
                     </Link>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-[#f9c111]">Edit Flashcard</h1>
+                    <h1 className="text-3xl font-display font-bold tracking-tight text-foreground">Edit Flashcard</h1>
                 </header>
 
                 <EditCardForm deckId={deckId} card={card} />

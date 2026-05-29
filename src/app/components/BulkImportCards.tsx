@@ -145,11 +145,11 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
     };
 
     return (
-        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-xl w-full mt-6">
-            <h3 className="text-lg font-bold text-white mb-4">Bulk Import</h3>
+        <div className="bg-card border border-border p-6 rounded-2xl w-full mt-6">
+            <h3 className="text-lg font-bold text-foreground mb-4">Bulk Import</h3>
 
             <div className="space-y-4">
-                <p className="text-sm text-neutral-400">
+                <p className="text-sm text-muted-foreground">
                     Add multiple cards quickly using an Excel file.
                 </p>
 
@@ -157,7 +157,7 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
                     type="button"
                     onClick={handleDownloadTemplate}
                     disabled={isUploading}
-                    className={`w-full flex items-center justify-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors border border-neutral-700 ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+                    className={`w-full flex items-center justify-center gap-2 bg-secondary hover:bg-muted text-foreground font-semibold py-2 px-4 rounded-lg transition-colors border border-border ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
                 >
                     <Download className="w-4 h-4" />
                     Download Template
@@ -175,7 +175,7 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
                     />
                     <label
                         htmlFor="excel-upload"
-                        className={`w-full flex items-center justify-center gap-2 bg-[#f9c111] hover:bg-yellow-400 text-black font-bold py-2 px-4 rounded-lg transition-colors cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+                        className={`w-full flex items-center justify-center gap-2 bg-gold hover:bg-gold/90 text-foreground font-bold py-2 px-4 rounded-lg transition-colors cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
                     >
                         {isUploading ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -186,8 +186,8 @@ export default function BulkImportCards({ deckId }: { deckId: string }) {
                     </label>
                 </div>
 
-                {error && <p className="text-red-500 text-sm mt-2 font-medium">{error}</p>}
-                {successMessage && <p className="text-green-500 text-sm mt-2 font-medium">{successMessage}</p>}
+                {error && <p className="text-destructive text-sm mt-2 font-medium">{error}</p>}
+                {successMessage && <p className="text-green-600 text-sm mt-2 font-medium">{successMessage}</p>}
             </div>
         </div>
     );

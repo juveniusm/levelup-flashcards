@@ -48,8 +48,8 @@ export default function FlipInterface({
     if (cards.length === 0) {
         return (
             <div className="text-center py-24">
-                <h2 className="text-2xl font-bold text-white mb-4">No Cards</h2>
-                <p className="text-neutral-400">Add cards to this deck before studying.</p>
+                <h2 className="text-2xl font-bold text-foreground mb-4">No Cards</h2>
+                <p className="text-muted-foreground">Add cards to this deck before studying.</p>
             </div>
         );
     }
@@ -57,22 +57,22 @@ export default function FlipInterface({
     return (
         <div className="max-w-3xl mx-auto w-full">
             {/* HUD */}
-            <div className="flex justify-between items-center mb-8 border-b border-neutral-800 pb-4">
-                <div className="text-lg font-bold font-mono tracking-widest text-neutral-400">
-                    CARD <span className="text-[#f9c111]">{currentIndex + 1}</span> / {shuffledCards.length}
+            <div className="flex justify-between items-center mb-8 border-b border-border pb-4">
+                <div className="text-lg font-bold font-mono tracking-widest text-muted-foreground">
+                    CARD <span className="text-foreground">{currentIndex + 1}</span> / {shuffledCards.length}
                 </div>
                 <a
                     href="/study"
-                    className="text-sm font-bold text-neutral-500 hover:text-red-400 transition-colors uppercase tracking-widest border border-neutral-700 hover:border-red-400/50 px-4 py-2 rounded-lg"
+                    className="text-sm font-bold text-muted-foreground hover:text-destructive transition-colors uppercase tracking-widest border border-border hover:border-destructive/50 px-4 py-2 rounded-lg"
                 >
                     End
                 </a>
             </div>
 
             {/* Progress Bar */}
-            <div className="w-full bg-neutral-900 rounded-full h-2 mb-12 overflow-hidden border border-neutral-800">
+            <div className="w-full bg-muted rounded-full h-2 mb-12 overflow-hidden border border-border">
                 <div
-                    className="bg-[#f9c111] h-2 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(249,193,17,0.5)]"
+                    className="bg-gold h-2 rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${((currentIndex + (isFlipped ? 1 : 0)) / shuffledCards.length) * 100}%` }}
                 ></div>
             </div>
@@ -88,7 +88,7 @@ export default function FlipInterface({
             <div className="flex justify-center mt-4">
                 <button
                     onClick={handleAction}
-                    className="bg-[#f9c111] hover:bg-yellow-400 text-black font-bold py-4 px-12 rounded-xl transition-all shadow-[0_0_20px_rgba(249,193,17,0.3)] hover:shadow-[0_0_30px_rgba(249,193,17,0.5)] hover:-translate-y-1 text-lg"
+                    className="bg-gold hover:bg-gold/90 text-foreground font-bold py-4 px-12 rounded-full transition-all shadow-sm hover:shadow-md hover:-translate-y-1 text-lg"
                 >
                     {!isFlipped
                         ? "Reveal Answer"
@@ -99,8 +99,8 @@ export default function FlipInterface({
                 </button>
             </div>
 
-            <p className="text-center text-neutral-600 text-xs mt-3 font-medium tracking-wide">
-                Press <kbd className="bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">Enter</kbd> or <kbd className="bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">Space</kbd> to continue
+            <p className="text-center text-muted-foreground text-xs mt-3 font-medium tracking-wide">
+                Press <kbd className="bg-muted px-1.5 py-0.5 rounded text-muted-foreground">Enter</kbd> or <kbd className="bg-muted px-1.5 py-0.5 rounded text-muted-foreground">Space</kbd> to continue
             </p>
         </div>
     );
