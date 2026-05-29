@@ -3,7 +3,6 @@
 import { signIn } from "next-auth/react";
 import { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 
 function AdminLoginContent() {
@@ -72,33 +71,27 @@ function AdminLoginContent() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-            {/* Logo on pure black background */}
+        <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
+            {/* Wordmark */}
             <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <div className="w-48 md:w-56 mx-auto">
-                    <Image
-                        src="/logo4.svg"
-                        alt="LevelUp Admin Auth"
-                        width={400}
-                        height={242}
-                        className="w-full h-auto object-contain drop-shadow-lg"
-                        priority
-                    />
-                </div>
+                <h1 className="text-5xl md:text-6xl font-display font-bold tracking-tight">
+                    LevelUp<span className="text-gold">.</span>
+                </h1>
+                <p className="text-muted-foreground mt-2">Administrator access</p>
             </div>
 
-            {/* Gray box */}
-            <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-8 shadow-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 fill-mode-both">
+            {/* Auth card */}
+            <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 shadow-sm space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 fill-mode-both">
 
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-white mb-2">Admin Sign In</h2>
-                    <p className="text-neutral-400">Sign in to your admin account</p>
+                    <h2 className="text-2xl font-bold mb-2">Admin Sign In</h2>
+                    <p className="text-muted-foreground">Sign in to your admin account</p>
                 </div>
 
                 <button
                     onClick={handleGoogleLogin}
                     disabled={isLoading}
-                    className="w-full bg-white text-black font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-3 hover:bg-neutral-200 transition-colors disabled:opacity-50"
+                    className="w-full bg-background border border-border text-foreground font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-3 hover:bg-muted transition-colors disabled:opacity-50"
                 >
                     <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
                         <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335" />
@@ -111,55 +104,55 @@ function AdminLoginContent() {
 
                 <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-neutral-800"></div>
+                        <div className="w-full border-t border-border"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-neutral-900 text-neutral-500">Or continue with email</span>
+                        <span className="px-2 bg-card text-muted-foreground">Or continue with email</span>
                     </div>
                 </div>
 
                 <form onSubmit={handleCredentialsSubmit} className="space-y-4">
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-neutral-400">Email Address</label>
+                        <label className="text-sm font-medium text-muted-foreground">Email Address</label>
                         <input
                             type="text"
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
-                            className="w-full bg-black border border-neutral-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-[#f9c111] transition-colors"
+                            className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                             placeholder="admin@example.com"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-neutral-400">Password</label>
+                        <label className="text-sm font-medium text-muted-foreground">Password</label>
                         <input
                             type="password"
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             disabled={isLoading}
-                            className="w-full bg-black border border-neutral-800 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-[#f9c111] transition-colors"
+                            className="w-full bg-background border border-border text-foreground rounded-xl px-4 py-3 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                             placeholder="••••••••"
                         />
                     </div>
 
                     {errorMsg && (
-                        <p className="text-red-400 text-sm">{errorMsg}</p>
+                        <p className="text-destructive text-sm bg-destructive/10 p-3 rounded-lg border border-destructive/30">{errorMsg}</p>
                     )}
 
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-[#f9c111] hover:bg-[#e0ad0e] text-black font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50"
+                        className="w-full bg-gold hover:bg-gold/90 text-foreground font-bold py-3 px-4 rounded-full transition-colors disabled:opacity-50"
                     >
                         Sign In
                     </button>
                 </form>
 
-                <p className="text-center text-sm text-neutral-500 pt-2">
-                    <Link href="/login" className="hover:text-white transition-colors">
+                <p className="text-center text-sm text-muted-foreground pt-2">
+                    <Link href="/login" className="hover:text-foreground transition-colors">
                         ← Back to User Sign In
                     </Link>
                 </p>
@@ -171,8 +164,8 @@ function AdminLoginContent() {
 export default function AdminLoginPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#f9c111]"></div>
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-gold"></div>
             </div>
         }>
             <AdminLoginContent />

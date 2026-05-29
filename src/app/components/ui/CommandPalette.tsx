@@ -166,31 +166,31 @@ export default function CommandPalette() {
     return (
         <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-[15vh] p-4 sm:p-6 md:p-8">
             {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
+            <div
+                className="absolute inset-0 bg-foreground/40 backdrop-blur-md animate-in fade-in duration-300"
                 onClick={() => setIsOpen(false)}
             />
-            
+
             {/* Modal */}
-            <div 
-                className="relative w-full max-w-2xl bg-[#121212] border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-top-4 duration-300"
+            <div
+                className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-md overflow-hidden flex flex-col animate-in slide-in-from-top-4 duration-300"
                 onKeyDown={handleKeyDown}
             >
                 {/* Search Header */}
-                <div className="flex items-center px-4 py-4 border-b border-neutral-800 bg-[#1a1a1a]">
-                    <Search className="text-neutral-500 mr-3" size={20} />
-                    <input 
+                <div className="flex items-center px-4 py-4 border-b border-border bg-muted">
+                    <Search className="text-muted-foreground mr-3" size={20} />
+                    <input
                         ref={inputRef}
                         type="text"
                         placeholder="Search for cards (front or back contents)..."
-                        className="flex-1 bg-transparent border-none text-white focus:outline-none text-lg"
+                        className="flex-1 bg-transparent border-none text-foreground focus:outline-none text-lg"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                     />
-                    {loading && <Loader2 className="animate-spin text-[#f9c111] mr-2" size={18} />}
+                    {loading && <Loader2 className="animate-spin text-gold mr-2" size={18} />}
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-neutral-800 text-neutral-400 px-1.5 py-0.5 rounded border border-neutral-700 font-mono">ESC to close</span>
-                        <button onClick={() => setIsOpen(false)} className="text-neutral-500 hover:text-white ml-2">
+                        <span className="text-[10px] bg-card text-muted-foreground px-1.5 py-0.5 rounded border border-border font-mono">ESC to close</span>
+                        <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground ml-2">
                             <X size={20} />
                         </button>
                     </div>
@@ -210,29 +210,29 @@ export default function CommandPalette() {
                                     onClick={() => handleAction("edit", card)}
                                     onMouseEnter={() => setSelectedIndex(idx)}
                                     className={`group flex items-start p-4 rounded-xl transition-all cursor-pointer border ${
-                                        selectedIndex === idx 
-                                            ? "bg-[#f9c111]/10 border-[#f9c111]/30 ring-1 ring-[#f9c111]/20" 
-                                            : "bg-transparent border-transparent hover:bg-neutral-800/50"
+                                        selectedIndex === idx
+                                            ? "bg-gold-soft border-gold/30 ring-1 ring-gold/20"
+                                            : "bg-transparent border-transparent hover:bg-muted"
                                     }`}
                                 >
                                     <div className={`p-2 rounded-lg mr-4 ${
-                                        selectedIndex === idx ? "bg-[#f9c111] text-black" : "bg-neutral-800 text-neutral-400"
+                                        selectedIndex === idx ? "bg-gold text-foreground" : "bg-muted text-muted-foreground"
                                     }`}>
                                         <BookOpen size={18} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-widest">
+                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
                                                 {(card as any).deck?.title || "Untitled Deck"}
                                             </span>
-                                            <ChevronRight size={10} className="text-neutral-700" />
+                                            <ChevronRight size={10} className="text-muted-foreground/50" />
                                         </div>
-                                        <h4 className="text-white font-medium truncate mb-1">{card.front}</h4>
-                                        <p className="text-neutral-500 text-sm truncate">{card.back}</p>
+                                        <h4 className="text-foreground font-medium truncate mb-1">{card.front}</h4>
+                                        <p className="text-muted-foreground text-sm truncate">{card.back}</p>
                                     </div>
                                     <div className={`flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity ${selectedIndex === idx || confirmingDeleteId === card.id ? "opacity-100" : ""}`}>
                                         <button
-                                            className="p-2 text-neutral-400 hover:text-[#f9c111] hover:bg-[#f9c111]/10 rounded-lg"
+                                            className="p-2 text-muted-foreground hover:text-gold hover:bg-gold/10 rounded-lg"
                                             title="Edit Card"
                                         >
                                             <Edit3 size={16} />
@@ -242,8 +242,8 @@ export default function CommandPalette() {
                                             disabled={deletingId === card.id}
                                             className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${
                                                 confirmingDeleteId === card.id
-                                                    ? "text-white bg-red-600 hover:bg-red-500 animate-pulse"
-                                                    : "text-neutral-400 hover:text-red-500 hover:bg-red-500/10"
+                                                    ? "text-destructive-foreground bg-destructive hover:bg-destructive/90 animate-pulse"
+                                                    : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                             }`}
                                             title={
                                                 deletingId === card.id
@@ -263,7 +263,7 @@ export default function CommandPalette() {
                                 </div>
                             ))}
                             {hasMore && (
-                                <div className="p-4 text-center text-xs text-neutral-600 animate-pulse">
+                                <div className="p-4 text-center text-xs text-muted-foreground animate-pulse">
                                     Scroll for more...
                                 </div>
                             )}
@@ -271,27 +271,27 @@ export default function CommandPalette() {
                     ) : (
                         query && !loading && (
                             <div className="py-12 text-center">
-                                <Search className="mx-auto text-neutral-800 mb-4" size={48} />
-                                <p className="text-neutral-500">No cards found matching &quot;{query}&quot;</p>
+                                <Search className="mx-auto text-muted-foreground/40 mb-4" size={48} />
+                                <p className="text-muted-foreground">No cards found matching &quot;{query}&quot;</p>
                             </div>
                         )
                     )}
 
                     {!query && (
-                        <div className="py-12 text-center text-neutral-600">
+                        <div className="py-12 text-center text-muted-foreground">
                             <p className="text-sm">Type something to search across all your decks.</p>
                         </div>
                     )}
                 </div>
 
                 {/* Footer Advice */}
-                <div className="p-3 bg-neutral-900/50 border-t border-neutral-800 flex justify-between items-center text-[10px] text-neutral-500 font-medium">
+                <div className="p-3 bg-muted/50 border-t border-border flex justify-between items-center text-[10px] text-muted-foreground font-medium">
                     <div className="flex gap-4">
                         <span className="flex items-center gap-1">
-                            <span className="bg-neutral-800 p-0.5 rounded border border-neutral-700 px-1">↑↓</span> Navigate
+                            <span className="bg-card p-0.5 rounded border border-border px-1">↑↓</span> Navigate
                         </span>
                         <span className="flex items-center gap-1">
-                            <span className="bg-neutral-800 p-0.5 rounded border border-neutral-700 px-1">ENTER</span> Select
+                            <span className="bg-card p-0.5 rounded border border-border px-1">ENTER</span> Select
                         </span>
                     </div>
                     {results.length > 0 && <span>{results.length} results found</span>}

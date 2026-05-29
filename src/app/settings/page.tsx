@@ -95,54 +95,54 @@ export default function SettingsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black text-white flex items-center justify-center">
-                <span className="text-neutral-500 text-lg">Loading…</span>
+            <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+                <span className="text-muted-foreground text-lg">Loading…</span>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-black text-white p-8">
+        <div className="min-h-screen bg-background text-foreground p-8">
             <main className="max-w-2xl mx-auto space-y-10 animate-in fade-in duration-700">
-                <header className="border-b border-neutral-800 pb-6">
-                    <h1 className="text-3xl font-black tracking-tight">Settings</h1>
-                    <p className="text-neutral-500 mt-1">Manage your profile and security</p>
+                <header className="border-b border-border pb-6">
+                    <h1 className="text-3xl font-display font-bold tracking-tight">Settings</h1>
+                    <p className="text-muted-foreground mt-1">Manage your profile and security</p>
                 </header>
 
                 <form onSubmit={handleSave} className="space-y-10">
                     {/* Profile Section */}
                     <section className="space-y-5">
-                        <h2 className="text-lg font-bold text-neutral-300 uppercase tracking-widest text-sm">Profile</h2>
+                        <h2 className="text-lg font-bold text-muted-foreground uppercase tracking-widest text-sm">Profile</h2>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label htmlFor="firstName" className="text-sm font-medium text-neutral-400">First Name</label>
+                                <label htmlFor="firstName" className="text-sm font-medium text-muted-foreground">First Name</label>
                                 <input
                                     id="firstName"
                                     type="text"
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value)}
-                                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#f9c111] transition-colors"
+                                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                                     placeholder="First name"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label htmlFor="lastName" className="text-sm font-medium text-neutral-400">Last Name</label>
+                                <label htmlFor="lastName" className="text-sm font-medium text-muted-foreground">Last Name</label>
                                 <input
                                     id="lastName"
                                     type="text"
                                     value={lastName}
                                     onChange={(e) => setLastName(e.target.value)}
-                                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#f9c111] transition-colors"
+                                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                                     placeholder="Last name"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="email" className="text-sm font-medium text-neutral-400">
+                            <label htmlFor="email" className="text-sm font-medium text-muted-foreground">
                                 Email
-                                {!isAdmin && <span className="text-neutral-600 ml-2 text-xs">(Admin only)</span>}
+                                {!isAdmin && <span className="text-muted-foreground/60 ml-2 text-xs">(Admin only)</span>}
                             </label>
                             <input
                                 id="email"
@@ -150,15 +150,15 @@ export default function SettingsPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 disabled={!isAdmin}
-                                className={`w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none transition-colors ${isAdmin ? "focus:border-[#f9c111]" : "opacity-50 cursor-not-allowed"
+                                className={`w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none transition-colors ${isAdmin ? "focus:border-gold focus:ring-2 focus:ring-gold/30" : "opacity-50 cursor-not-allowed"
                                     }`}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="username" className="text-sm font-medium text-neutral-400">
+                            <label htmlFor="username" className="text-sm font-medium text-muted-foreground">
                                 Username
-                                {!isAdmin && <span className="text-neutral-600 ml-2 text-xs">(Admin only)</span>}
+                                {!isAdmin && <span className="text-muted-foreground/60 ml-2 text-xs">(Admin only)</span>}
                             </label>
                             <input
                                 id="username"
@@ -166,7 +166,7 @@ export default function SettingsPage() {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 disabled={!isAdmin}
-                                className={`w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none transition-colors ${isAdmin ? "focus:border-[#f9c111]" : "opacity-50 cursor-not-allowed"
+                                className={`w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none transition-colors ${isAdmin ? "focus:border-gold focus:ring-2 focus:ring-gold/30" : "opacity-50 cursor-not-allowed"
                                     }`}
                             />
                         </div>
@@ -174,40 +174,40 @@ export default function SettingsPage() {
 
                     {/* Password Section */}
                     <section className="space-y-5">
-                        <h2 className="text-lg font-bold text-neutral-300 uppercase tracking-widest text-sm">Change Password</h2>
+                        <h2 className="text-lg font-bold text-muted-foreground uppercase tracking-widest text-sm">Change Password</h2>
 
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <label htmlFor="currentPassword" className="text-sm font-medium text-neutral-400">Current Password</label>
+                                <label htmlFor="currentPassword" className="text-sm font-medium text-muted-foreground">Current Password</label>
                                 <input
                                     id="currentPassword"
                                     type="password"
                                     value={currentPassword}
                                     onChange={(e) => setCurrentPassword(e.target.value)}
-                                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#f9c111] transition-colors"
+                                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                                     placeholder="Enter current password"
                                 />
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label htmlFor="newPassword" className="text-sm font-medium text-neutral-400">New Password</label>
+                                    <label htmlFor="newPassword" className="text-sm font-medium text-muted-foreground">New Password</label>
                                     <input
                                         id="newPassword"
                                         type="password"
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
-                                        className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#f9c111] transition-colors"
+                                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                                         placeholder="New password"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label htmlFor="confirmPassword" className="text-sm font-medium text-neutral-400">Confirm Password</label>
+                                    <label htmlFor="confirmPassword" className="text-sm font-medium text-muted-foreground">Confirm Password</label>
                                     <input
                                         id="confirmPassword"
                                         type="password"
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#f9c111] transition-colors"
+                                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
                                         placeholder="Confirm new password"
                                     />
                                 </div>
@@ -218,8 +218,8 @@ export default function SettingsPage() {
                     {/* Message */}
                     {message && (
                         <div className={`rounded-xl px-4 py-3 text-sm font-medium ${message.type === "success"
-                            ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                            : "bg-red-500/10 text-red-400 border border-red-500/20"
+                            ? "bg-green-50 text-green-700 border border-green-500/30"
+                            : "bg-destructive/10 text-destructive border border-destructive/30"
                             }`}>
                             {message.text}
                         </div>
@@ -229,7 +229,7 @@ export default function SettingsPage() {
                     <button
                         type="submit"
                         disabled={saving}
-                        className="bg-[#f9c111] hover:bg-yellow-400 text-black font-bold py-3 px-8 rounded-xl transition-all shadow-[0_4px_14px_0_rgba(249,193,17,0.39)] hover:shadow-[0_6px_20px_rgba(249,193,17,0.23)] hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-gold hover:bg-gold/90 text-foreground font-bold py-3 px-8 rounded-full transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {saving ? "Saving…" : "Save Changes"}
                     </button>
