@@ -42,8 +42,8 @@ A security audit + fixes (S1–S18) are **done and deployed**. The current task 
 - Study UI/state: `src/app/components/study/*`, `src/machines/classicModeMachine.ts` (xstate),
   `src/hooks/*`. Offline/PWA: `dexie`, `@serwist/next` (`src/app/sw.ts`).
 
-## Don'ts (deliberate decisions — confirm before changing)
-S6 (auth enumeration), S10 (unverified-account overwrite), S14 (shared-admin folder visibility),
-and the card create-vs-edit permission policy are **intentional / product decisions** — leave them
-unless the user explicitly says otherwise. See `../REFACTOR_HANDOFF.md` for the full list and the
-already-verified non-issues.
+## Don'ts (deliberate decisions — confirmed; leave as-is)
+S6 (auth enumeration), S10 (unverified-account overwrite), and S14 (shared-admin folder visibility
+in `folderService.fetchFolders`) are **intentional** and confirmed — leave them. Card mutations are
+**admin-only by design** (create / bulk-import / edit / delete / bulk-delete) — do not revert that.
+See `../REFACTOR_HANDOFF.md` for the full list and the already-verified non-issues.

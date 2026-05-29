@@ -12,6 +12,11 @@ export async function POST(
     const auth = await requireDeckAccess(deckId);
     if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+    // Card mutations are admin-only (matches single-card create/edit/delete and bulk-delete).
+    if (auth.role !== "ADMIN") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     try {
         const cards = await request.json();
 
