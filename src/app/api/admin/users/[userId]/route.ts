@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/authz";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 
@@ -11,14 +10,9 @@ export async function PATCH(
     { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const role = (session.user as { role?: string }).role;
-        if (role !== "ADMIN") {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        const admin = await requireAdmin();
+        if ("error" in admin) {
+            return NextResponse.json({ error: admin.error }, { status: admin.status });
         }
 
         const { userId } = await params;
@@ -65,7 +59,7 @@ export async function PATCH(
             }
 
             // Only Super Admin can change roles
-            const userEmail = session.user.email;
+            const userEmail = admin.email;
             const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL;
             if (!SUPER_ADMIN_EMAIL) {
                 return NextResponse.json({ error: "Super admin not configured." }, { status: 500 });
@@ -76,7 +70,7 @@ export async function PATCH(
             }
 
             // Prevent self-demotion
-            const adminId = (session.user as { id: string }).id;
+            const adminId = admin.id;
             if (userId === adminId && newRole !== "ADMIN") {
                 return NextResponse.json({ error: "You cannot revoke your own admin privileges." }, { status: 400 });
             }
@@ -120,20 +114,15 @@ export async function DELETE(
     { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const role = (session.user as { role?: string }).role;
-        if (role !== "ADMIN") {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        const admin = await requireAdmin();
+        if ("error" in admin) {
+            return NextResponse.json({ error: admin.error }, { status: admin.status });
         }
 
         const { userId } = await params;
 
         // Prevent self-deletion
-        const adminId = (session.user as { id: string }).id;
+        const adminId = admin.id;
         if (userId === adminId) {
             return NextResponse.json({ error: "You cannot delete your own account." }, { status: 400 });
         }

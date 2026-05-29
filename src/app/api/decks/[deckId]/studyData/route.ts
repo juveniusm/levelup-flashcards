@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { requireDeckReadAccess } from "@/lib/deck-access";
 
 export async function GET(
     request: Request,
@@ -9,13 +8,11 @@ export async function GET(
 ) {
     try {
         const { deckId } = await params;
-        const session = await getServerSession(authOptions);
-        const userId = session?.user?.id;
-        const role = (session?.user as { role?: string } | undefined)?.role;
-
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const access = await requireDeckReadAccess(deckId);
+        if ("error" in access) {
+            return NextResponse.json({ error: access.error }, { status: access.status });
         }
+        const { userId } = access;
 
         const deck = await prisma.decks.findUnique({
             where: { id: deckId },
@@ -48,15 +45,6 @@ export async function GET(
 
         if (!deck) {
             return NextResponse.json({ error: "Deck not found" }, { status: 404 });
-        }
-
-        // Access control: owner, public deck, or admin
-        const isOwner = deck.user_id === userId;
-        const isPublic = deck.is_public === true;
-        const isAdmin = role === "ADMIN";
-
-        if (!isOwner && !isPublic && !isAdmin) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         return NextResponse.json({ deck });

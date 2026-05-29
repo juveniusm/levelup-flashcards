@@ -1,22 +1,15 @@
 import { NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth-utils";
+import { requireOwnerOrAdmin } from "@/lib/authz";
 import { folderService } from "@/lib/services/folderService";
 
 /**
  * Verifies that the current user owns the folder (or is an ADMIN).
  */
-async function requireFolderAccess(folderId: string) {
-    const user = await getAuthenticatedUser();
-    if (!user) return { error: "Unauthorized", status: 401 as const };
-
-    const folder = await folderService.getFolderOwner(folderId);
-    if (!folder) return { error: "Folder not found", status: 404 as const };
-
-    if (folder.user_id !== user.id && user.role !== "ADMIN") {
-        return { error: "Forbidden", status: 403 as const };
-    }
-
-    return { userId: user.id, role: user.role };
+function requireFolderAccess(folderId: string) {
+    return requireOwnerOrAdmin(
+        () => folderService.getFolderOwner(folderId),
+        { notFound: "Folder not found" }
+    );
 }
 
 export async function PUT(

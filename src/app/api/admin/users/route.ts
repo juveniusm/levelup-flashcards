@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/authz";
 import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -8,14 +7,9 @@ export const dynamic = "force-dynamic";
 /** GET — list all users (admin only) */
 export async function GET(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const role = (session.user as { role?: string }).role;
-        if (role !== "ADMIN") {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        const admin = await requireAdmin();
+        if ("error" in admin) {
+            return NextResponse.json({ error: admin.error }, { status: admin.status });
         }
 
         const { searchParams } = new URL(request.url);

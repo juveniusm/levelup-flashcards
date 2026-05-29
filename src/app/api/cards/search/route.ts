@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/authz";
 
 export async function GET(req: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
         // Card search is an admin-only feature
-        const role = (session.user as { role?: string }).role;
-        if (role !== "ADMIN") {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        const admin = await requireAdmin();
+        if ("error" in admin) {
+            return NextResponse.json({ error: admin.error }, { status: admin.status });
         }
 
         const { searchParams } = new URL(req.url);
@@ -32,7 +26,7 @@ export async function GET(req: NextRequest) {
             cursor: cursor ? { id: cursor } : undefined,
             where: {
                 deck: {
-                    user_id: session.user.id // Only search user's OWN cards
+                    user_id: admin.id // Only search user's OWN cards
                 },
                 OR: query ? [
                     {

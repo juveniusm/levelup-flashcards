@@ -1,32 +1,24 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-
-type AccessError = { error: string; status: number };
-type AccessSuccess = { userId: string; role: string };
+import { requireOwnerOrAdmin, type AccessGrant, type AuthFailure } from "@/lib/authz";
 
 /**
- * Verifies that the current session user has permission to manage a deck.
+ * Verifies the current user may MANAGE a deck (owner or ADMIN; ignores is_public).
  * Returns { userId, role } on success, or { error, status } on failure.
- * Owners and ADMINs are allowed; everyone else is Forbidden.
  */
-export async function requireDeckAccess(deckId: string): Promise<AccessError | AccessSuccess> {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) return { error: "Unauthorized", status: 401 };
+export function requireDeckAccess(deckId: string): Promise<AccessGrant | AuthFailure> {
+    return requireOwnerOrAdmin(
+        () => prisma.decks.findUnique({ where: { id: deckId }, select: { user_id: true } }),
+        { notFound: "Deck not found" }
+    );
+}
 
-    const userId = (session.user as { id: string }).id;
-    const role = (session.user as { role?: string }).role ?? "STUDENT";
-
-    const deck = await prisma.decks.findUnique({
-        where: { id: deckId },
-        select: { user_id: true },
-    });
-
-    if (!deck) return { error: "Deck not found", status: 404 };
-
-    if (deck.user_id !== userId && role !== "ADMIN") {
-        return { error: "Forbidden", status: 403 };
-    }
-
-    return { userId, role };
+/**
+ * Verifies the current user may READ a deck (owner, public, or ADMIN).
+ * Returns { userId, role } on success, or { error, status } on failure.
+ */
+export function requireDeckReadAccess(deckId: string): Promise<AccessGrant | AuthFailure> {
+    return requireOwnerOrAdmin(
+        () => prisma.decks.findUnique({ where: { id: deckId }, select: { user_id: true, is_public: true } }),
+        { notFound: "Deck not found", allowPublic: true }
+    );
 }

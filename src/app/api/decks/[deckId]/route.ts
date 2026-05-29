@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireDeckAccess } from "@/lib/deck-access";
+import { requireOwnerOrAdmin } from "@/lib/authz";
 
 export async function GET(
     _request: Request,
@@ -87,15 +88,12 @@ export async function PATCH(
 
         // If moving into a folder, verify the folder belongs to the same user
         if (folderId !== null) {
-            const folder = await prisma.folder.findUnique({
-                where: { id: folderId },
-                select: { user_id: true },
-            });
-            if (!folder) {
-                return NextResponse.json({ error: "Folder not found" }, { status: 404 });
-            }
-            if (folder.user_id !== auth.userId && auth.role !== "ADMIN") {
-                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+            const folderAccess = await requireOwnerOrAdmin(
+                () => prisma.folder.findUnique({ where: { id: folderId }, select: { user_id: true } }),
+                { notFound: "Folder not found" }
+            );
+            if ("error" in folderAccess) {
+                return NextResponse.json({ error: folderAccess.error }, { status: folderAccess.status });
             }
         }
 
