@@ -39,11 +39,23 @@ export async function PATCH(
             role?: string;
             password?: string;
             name?: string;
+            emailVerified?: Date | null;
         } = {};
 
         if (firstName !== undefined) updateData.firstName = firstName;
         if (lastName !== undefined) updateData.lastName = lastName;
-        if (email !== undefined) updateData.email = email;
+        if (email !== undefined) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (typeof email !== "string" || !emailRegex.test(email)) {
+                return NextResponse.json({ error: "Invalid email format." }, { status: 400 });
+            }
+            updateData.email = email;
+            if (email !== user.email) {
+                // Pointing the account at a new address invalidates any prior verification;
+                // the new address has not been proven to belong to the user.
+                updateData.emailVerified = null;
+            }
+        }
         if (username !== undefined) updateData.username = username;
 
         if (newRole !== undefined) {

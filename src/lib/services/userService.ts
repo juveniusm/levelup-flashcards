@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { calculateXpForReview } from "@/utils/xp/xpUtils";
+import { normalizeTimezone } from "@/lib/timezone";
 
 export interface UserProfileUpdateData {
     firstName?: string;
@@ -87,14 +88,26 @@ export const userService = {
         return await prisma.user.update({
             where: { id: userId },
             data: updateData,
+            // Never return sensitive columns (password hash, emailVerified, image, etc.) to the
+            // client. The route serializes this object verbatim in its response.
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                username: true,
+                role: true,
+            },
         });
     },
 
     /**
      * Centralized logic for awarding XP and updating streaks.
      */
-    async updateUserStats(userId: string, qualityGrade: number, userTz: string) {
-        const xpEarned = calculateXpForReview(qualityGrade);
+    async updateUserStats(userId: string, qualityGrade: number, userTz: string, awardXp: boolean = true) {
+        // awardXp lets callers suppress the XP grant (e.g. when this card already earned XP
+        // today) while still updating the streak. Streak credit is for studying at all today.
+        const xpEarned = awardXp ? calculateXpForReview(qualityGrade) : 0;
 
         // Get user's last review for streak logic
         const lastReview = await prisma.reviewLog.findFirst({
@@ -102,8 +115,9 @@ export const userService = {
             orderBy: { reviewed_at: 'desc' },
         });
 
+        const tz = normalizeTimezone(userTz);
         const now = new Date();
-        const dateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: userTz, year: 'numeric', month: '2-digit', day: '2-digit' });
+        const dateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
         const todayStr = dateFormatter.format(now);
 
         let streakIncrement = 0;
@@ -146,5 +160,30 @@ export const userService = {
             totalXp: userStats.total_xp,
             currentStreak: userStats.current_streak
         };
+    },
+
+    /**
+     * Returns true if the user already has a ReviewLog for this card on the same local
+     * calendar day as referenceDate. Used to award XP at most once per card per day so
+     * repeated submissions for the same card cannot farm XP. Must be called BEFORE the
+     * current review's log is written so the current review is not counted.
+     */
+    async hasReviewedCardOnDay(userId: string, cardId: string, referenceDate: Date, userTz: string): Promise<boolean> {
+        const tz = normalizeTimezone(userTz);
+        const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
+        const dayStr = fmt.format(referenceDate);
+        // A ±48h window around the reference instant comfortably covers the local day for any
+        // timezone offset; we then compare exact local-day strings (DST-safe via Intl).
+        const windowStart = new Date(referenceDate.getTime() - 48 * 60 * 60 * 1000);
+        const windowEnd = new Date(referenceDate.getTime() + 48 * 60 * 60 * 1000);
+        const logs = await prisma.reviewLog.findMany({
+            where: {
+                user_id: userId,
+                card_id: cardId,
+                reviewed_at: { gte: windowStart, lte: windowEnd },
+            },
+            select: { reviewed_at: true },
+        });
+        return logs.some((l) => fmt.format(l.reviewed_at) === dayStr);
     }
 };

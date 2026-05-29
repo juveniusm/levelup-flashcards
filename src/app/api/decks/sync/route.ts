@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { calculateSM2 } from "@/utils/cognitive/sm2";
 import { userService } from "@/lib/services/userService";
+import { normalizeTimezone } from "@/lib/timezone";
 
 interface QueuedReview {
     deckId: string;
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: `Cannot sync more than ${MAX_SYNC_REVIEWS} reviews at once.` }, { status: 400 });
         }
 
-        const userTz = timezone || "UTC";
+        const userTz = normalizeTimezone(timezone);
         let totalXpEarned = 0;
 
         // Ensure chronological order
@@ -50,18 +51,51 @@ export async function POST(request: Request) {
                 continue;
             }
 
-            const reviewTime = new Date(timestamp);
+            let reviewTime = new Date(timestamp);
             if (isNaN(reviewTime.getTime())) {
                 console.warn("Sync: Skipping review with invalid timestamp:", timestamp);
                 continue;
             }
+            // Never trust a future timestamp (would forge streaks); clamp to now (5-min skew).
+            const nowMs = Date.now();
+            if (reviewTime.getTime() > nowMs + 5 * 60 * 1000) {
+                reviewTime = new Date(nowMs);
+            }
 
-            // Log the review event regardless of LWW (for analytics)
+            // Authorization: only accept reviews for a card the user owns or that belongs to a
+            // public deck, and only when the card actually belongs to the claimed deck. Mirrors
+            // the live review route; without this, a client could write logs/stats/XP for
+            // arbitrary or other users' cards.
+            const card = await prisma.cards.findUnique({
+                where: { id: cardId },
+                select: { deck_id: true, deck: { select: { user_id: true, is_public: true } } },
+            });
+            if (!card || !card.deck || card.deck_id !== deckId) {
+                console.warn("Sync: Skipping review for unknown card or deck mismatch:", cardId, deckId);
+                continue;
+            }
+            if (card.deck.user_id !== userId && card.deck.is_public !== true) {
+                console.warn("Sync: Skipping review for inaccessible card:", cardId);
+                continue;
+            }
+
+            // Anti-farm XP dedupe: award XP at most once per card per local day. Checked before
+            // this review's log is written; earlier same-day entries in this batch are already
+            // persisted and will be counted. Fail open (award XP) on any error.
+            let awardXp = true;
+            try {
+                awardXp = !(await userService.hasReviewedCardOnDay(userId, cardId, reviewTime, userTz));
+            } catch (e) {
+                console.warn("Sync: XP dedupe check failed; awarding XP:", e);
+            }
+
+            // Log the review event regardless of LWW (for analytics). deck_id is taken from the
+            // server-verified card, never the client-supplied value.
             await prisma.reviewLog.create({
                 data: {
                     user_id: userId,
                     card_id: cardId,
-                    deck_id: deckId,
+                    deck_id: card.deck_id,
                     quality_grade: qualityGrade,
                     mode: isReviewMode ? "review" : "study",
                     reviewed_at: reviewTime,
@@ -115,7 +149,7 @@ export async function POST(request: Request) {
             });
 
             // Award XP and Update Streak (Centralized logic, same as the live review route)
-            const stats = await userService.updateUserStats(userId, qualityGrade, userTz);
+            const stats = await userService.updateUserStats(userId, qualityGrade, userTz, awardXp);
             totalXpEarned += stats.xpEarned;
         }
 

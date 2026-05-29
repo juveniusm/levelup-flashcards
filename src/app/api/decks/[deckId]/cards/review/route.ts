@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from "@/lib/auth-utils";
 import { userService } from "@/lib/services/userService";
 import prisma from "@/lib/prisma";
 import { calculateSM2 } from "@/utils/cognitive/sm2";
+import { normalizeTimezone } from "@/lib/timezone";
 
 export async function POST(request: NextRequest) {
     try {
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
         }
 
         const { cardId, qualityGrade, isReviewMode, timezone } = await request.json();
-        const userTz = timezone || 'UTC';
+        const userTz = normalizeTimezone(timezone);
 
         if (typeof cardId !== "string" || typeof qualityGrade !== "number" || qualityGrade < 0 || qualityGrade > 5) {
             return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
@@ -85,6 +86,16 @@ export async function POST(request: NextRequest) {
             create: createData,
         });
 
+        // Anti-farm: award XP for a given card at most once per local day. Checked BEFORE this
+        // review's ReviewLog is written, so the current review is not counted. Fail open (award
+        // XP) on any error so a transient issue never blocks study or zeroes out legitimate XP.
+        let awardXp = true;
+        try {
+            awardXp = !(await userService.hasReviewedCardOnDay(user.id, cardId, new Date(), userTz));
+        } catch (e) {
+            console.warn("Review: XP dedupe check failed; awarding XP:", e);
+        }
+
         // Log review event
         await prisma.reviewLog.create({
             data: {
@@ -97,7 +108,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Award XP and Update Streak (Centralized logic)
-        const stats = await userService.updateUserStats(user.id, qualityGrade, userTz);
+        const stats = await userService.updateUserStats(user.id, qualityGrade, userTz, awardXp);
 
         return NextResponse.json({
             success: true,
