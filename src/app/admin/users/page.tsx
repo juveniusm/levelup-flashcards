@@ -22,7 +22,7 @@ const searchFieldLabels: Record<SearchField, string> = {
 export default function AdminUsersPage() {
     const { data: session } = useSession();
     const router = useRouter();
-    const isAdmin = session?.user && (session.user as { role?: string }).role === "ADMIN";
+    const isAdmin = session?.user?.role === "ADMIN";
     const isSuperAdmin = session?.user?.email === "juveniusm@gmail.com";
 
     const [users, setUsers] = useState<UserRow[]>([]);

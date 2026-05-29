@@ -26,7 +26,7 @@ export default function SidebarFooter({ session, isCollapsed, isMobileMenuOpen, 
                     {(!isCollapsed || isMobileMenuOpen) && (
                         <div className="flex flex-col overflow-hidden">
                             <span className="text-sm font-medium text-foreground truncate">{session.user?.name || "User"}</span>
-                            <span className="text-xs text-muted-foreground truncate">{(session.user as any)?.role}</span>
+                            <span className="text-xs text-muted-foreground truncate">{session.user?.role}</span>
                         </div>
                     )}
                 </div>

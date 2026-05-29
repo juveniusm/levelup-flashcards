@@ -68,7 +68,7 @@ export const authOptions: NextAuthOptions = {
                         return verifiedUser;
                     });
 
-                    return { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role };
+                    return { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role as "ADMIN" | "STUDENT" };
                 }
 
                 // Standard Password Login Flow
@@ -86,7 +86,7 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("unverified");
                 }
 
-                return { id: user.id, name: user.name, email: user.email, role: user.role };
+                return { id: user.id, name: user.name, email: user.email, role: user.role as "ADMIN" | "STUDENT" };
             },
         }),
     ],
@@ -125,7 +125,7 @@ export const authOptions: NextAuthOptions = {
         },
         async jwt({ token, user, trigger }) {
             if (user) {
-                token.role = (user as { role: string }).role || "STUDENT";
+                token.role = user.role || "STUDENT";
                 token.id = user.id;
             }
 
@@ -139,7 +139,9 @@ export const authOptions: NextAuthOptions = {
                     });
                     if (dbUser) {
                         token.name = dbUser.name;
-                        token.role = dbUser.role || "STUDENT";
+                        // Prisma types `role` as a plain string column; coerce to the
+                        // known role union for the (now-narrowed) JWT.role field.
+                        token.role = (dbUser.role as "ADMIN" | "STUDENT") || "STUDENT";
                     }
                 } catch { /* DB unreachable — keep current token */ }
             }

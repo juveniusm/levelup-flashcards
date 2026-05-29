@@ -16,7 +16,7 @@ export default function Sidebar() {
 
     if (pathname === "/login" || pathname === "/admin/login" || pathname === "/") return null;
 
-    const isAdmin = session?.user && (session.user as any).role === "ADMIN";
+    const isAdmin = session?.user?.role === "ADMIN";
 
     // The desktop sidebar rests as a collapsed icon rail and expands on hover.
     const isCollapsed = isHoverCollapsed;

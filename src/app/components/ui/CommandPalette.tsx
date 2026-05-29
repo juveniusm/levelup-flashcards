@@ -7,7 +7,7 @@ import { Card } from "@/utils/study/studyUtils";
 
 export default function CommandPalette() {
     const { data: session } = useSession();
-    const isAdmin = session?.user && (session.user as { role?: string }).role === "ADMIN";
+    const isAdmin = session?.user?.role === "ADMIN";
 
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState("");

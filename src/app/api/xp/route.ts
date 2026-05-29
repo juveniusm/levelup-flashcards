@@ -13,7 +13,7 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const userId = (session.user as { id: string }).id;
+        const userId = session.user.id;
 
         if (!userId) {
             // Fallback Level 1 if ID somehow missing

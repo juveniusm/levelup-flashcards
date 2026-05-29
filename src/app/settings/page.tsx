@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 
 export default function SettingsPage() {
     const { data: session, update } = useSession();
-    const isAdmin = session?.user && (session.user as { role?: string }).role === "ADMIN";
+    const isAdmin = session?.user?.role === "ADMIN";
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
