@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { calculateSM2 } from "@/utils/cognitive/sm2";
-import { userService } from "@/lib/services/userService";
 import { normalizeTimezone } from "@/lib/timezone";
+import { reviewService } from "@/lib/services/reviewService";
 
 interface QueuedReview {
     deckId: string;
@@ -79,78 +78,28 @@ export async function POST(request: Request) {
                 continue;
             }
 
-            // Anti-farm XP dedupe: award XP at most once per card per local day. Checked before
-            // this review's log is written; earlier same-day entries in this batch are already
-            // persisted and will be counted. Fail open (award XP) on any error.
-            let awardXp = true;
-            try {
-                awardXp = !(await userService.hasReviewedCardOnDay(userId, cardId, reviewTime, userTz));
-            } catch (e) {
-                console.warn("Sync: XP dedupe check failed; awarding XP:", e);
-            }
-
-            // Log the review event regardless of LWW (for analytics). deck_id is taken from the
-            // server-verified card, never the client-supplied value.
-            await prisma.reviewLog.create({
-                data: {
-                    user_id: userId,
-                    card_id: cardId,
-                    deck_id: card.deck_id,
-                    quality_grade: qualityGrade,
-                    mode: isReviewMode ? "review" : "study",
-                    reviewed_at: reviewTime,
-                }
-            });
-
-            // SM2 Update Logic (LWW Gatekeeper)
-            const existing = await prisma.sM2Stats.findUnique({
-                where: { card_id_user_id: { card_id: cardId, user_id: userId } }
-            });
-
-            // The LWW Gatekeeper!
-            // Check if a more recent ReviewLog exists for this card
-            const newerLog = await prisma.reviewLog.findFirst({
-                where: {
-                    user_id: userId,
-                    card_id: cardId,
-                    reviewed_at: { gt: reviewTime }
-                }
-            });
-
-            if (newerLog) {
-                // A more recent review has already been processed online.
-                console.log(`LWW: Ignored stale SM2 update for card ${cardId}`);
-                continue;
-            }
-
-            const prevEase = existing?.ease_factor ?? 2.5;
-            const prevReps = existing?.repetitions ?? 0;
-
-            const result = calculateSM2(qualityGrade, prevReps, prevEase, userTz);
-
-            const updateData = {
-                ease_factor: result.ease_factor,
-                interval: result.interval,
-                repetitions: result.repetitions,
-                next_review: result.next_review,
-            };
-
-            await prisma.sM2Stats.upsert({
-                where: { card_id_user_id: { card_id: cardId, user_id: userId } },
-                update: updateData,
-                create: {
-                    card_id: cardId,
-                    user_id: userId,
-                    ease_factor: result.ease_factor,
-                    interval: result.interval,
-                    repetitions: result.repetitions,
-                    next_review: result.next_review,
+            // Offline sync: persist the client reviewed_at, always advance the schedule, and run
+            // the LWW gatekeeper so a stale offline entry never clobbers fresher online state.
+            const { skipped, stats } = await reviewService.processReview(
+                {
+                    userId,
+                    card,
+                    cardId,
+                    qualityGrade,
+                    isReviewMode,
+                    userTz,
+                    reviewTime,
                 },
-            });
+                {
+                    persistReviewedAt: true,
+                    alwaysAdvanceSchedule: true,
+                    enforceLastWriteWins: true,
+                }
+            );
 
-            // Award XP and Update Streak (Centralized logic, same as the live review route)
-            const stats = await userService.updateUserStats(userId, qualityGrade, userTz, awardXp);
-            totalXpEarned += stats.xpEarned;
+            if (!skipped && stats) {
+                totalXpEarned += stats.xpEarned;
+            }
         }
 
         return NextResponse.json({ success: true, totalXpEarned });
