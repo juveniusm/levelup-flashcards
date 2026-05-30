@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth-utils";
 import { userService } from "@/lib/services/userService";
+import { ServiceError } from "@/lib/errors";
 import { rateLimit } from "@/lib/rate-limit";
 
 const limiter = rateLimit({ interval: 60 * 1000, uniqueTokenPerInterval: 500 });
@@ -48,15 +49,13 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ success: true, updated });
     } catch (error) {
         console.error("Profile PATCH error:", error);
-        let errorMsg = "Internal server error";
-        let status = 500;
-
-        if (error instanceof Error) {
-            errorMsg = error.message;
-            if (errorMsg.includes("Unauthorized") || errorMsg.includes("Only admins")) status = 403;
-            else if (errorMsg.includes("required") || errorMsg.includes("incorrect")) status = 400;
+        // Map the status from the error itself, not from substring-matching the message.
+        if (error instanceof ServiceError) {
+            return NextResponse.json({ error: error.message }, { status: error.status });
         }
-
-        return NextResponse.json({ error: errorMsg }, { status });
+        // Any other thrown Error surfaces its message with a 500 (preserves prior behavior for
+        // e.g. "Cannot change password for OAuth accounts." and "No fields to update.").
+        const errorMsg = error instanceof Error ? error.message : "Internal server error";
+        return NextResponse.json({ error: errorMsg }, { status: 500 });
     }
 }

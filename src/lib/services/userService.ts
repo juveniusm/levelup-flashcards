@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { calculateXpForReview } from "@/utils/xp/xpUtils";
 import { normalizeTimezone } from "@/lib/timezone";
+import { ServiceError } from "@/lib/errors";
 
 export interface UserProfileUpdateData {
     firstName?: string;
@@ -42,7 +43,7 @@ export const userService = {
 
         if (email !== undefined || username !== undefined) {
             if (userRole !== "ADMIN") {
-                throw new Error("Only admins can change email or username.");
+                throw new ServiceError("Only admins can change email or username.", 403);
             }
             if (email !== undefined) updateData.email = email;
             if (username !== undefined) updateData.username = username;
@@ -50,7 +51,7 @@ export const userService = {
 
         if (newPassword) {
             if (!currentPassword) {
-                throw new Error("Current password is required to set a new password.");
+                throw new ServiceError("Current password is required to set a new password.", 400);
             }
 
             const user = await prisma.user.findUnique({
@@ -64,7 +65,7 @@ export const userService = {
 
             const isValid = await bcrypt.compare(currentPassword, user.password);
             if (!isValid) {
-                throw new Error("Current password is incorrect.");
+                throw new ServiceError("Current password is incorrect.", 400);
             }
 
             updateData.password = await bcrypt.hash(newPassword, 10);

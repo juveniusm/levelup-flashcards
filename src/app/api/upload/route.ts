@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/authz";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
@@ -37,36 +36,32 @@ export async function POST(req: Request) {
             || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
             || "127.0.0.1";
         if (limiter.check(30, ip)) { // Max 30 upload calls per minute per IP
-            return NextResponse.json({ message: "Too Many Requests" }, { status: 429 });
-        }
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+            return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
         }
 
-        const role = (session.user as { role?: string }).role;
-        if (role !== "ADMIN") {
-            return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+        const admin = await requireAdmin();
+        if ("error" in admin) {
+            return NextResponse.json({ error: admin.error }, { status: admin.status });
         }
 
         const formData = await req.formData();
         const file = formData.get("file") as File | null;
 
         if (!file) {
-            return NextResponse.json({ message: "No file uploaded" }, { status: 400 });
+            return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
         }
 
         if (file.size > MAX_FILE_SIZE_BYTES) {
-            return NextResponse.json({ message: "File too large. Maximum size is 5 MB." }, { status: 400 });
+            return NextResponse.json({ error: "File too large. Maximum size is 5 MB." }, { status: 400 });
         }
 
         if (!ALLOWED_MIME_TYPES.has(file.type)) {
-            return NextResponse.json({ message: "Invalid file type. Only images are allowed." }, { status: 400 });
+            return NextResponse.json({ error: "Invalid file type. Only images are allowed." }, { status: 400 });
         }
 
         const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
         if (!ALLOWED_EXTENSIONS.has(ext)) {
-            return NextResponse.json({ message: "Invalid file extension." }, { status: 400 });
+            return NextResponse.json({ error: "Invalid file extension." }, { status: 400 });
         }
 
         const bytes = await file.arrayBuffer();
@@ -80,10 +75,10 @@ export async function POST(req: Request) {
         try {
             detectedFormat = (await sharp(buffer).metadata()).format;
         } catch {
-            return NextResponse.json({ message: "Invalid or corrupt image file." }, { status: 400 });
+            return NextResponse.json({ error: "Invalid or corrupt image file." }, { status: 400 });
         }
         if (!detectedFormat || !ALLOWED_IMAGE_FORMATS.has(detectedFormat)) {
-            return NextResponse.json({ message: "Unsupported image content." }, { status: 400 });
+            return NextResponse.json({ error: "Unsupported image content." }, { status: 400 });
         }
 
         // ── Production: Cloudinary ────────────────────────────────────────
@@ -118,6 +113,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ url: `/uploads/${safeFilename}` }, { status: 200 });
     } catch (error) {
         console.error("Upload error:", error);
-        return NextResponse.json({ message: "Upload failed" }, { status: 500 });
+        return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 }
