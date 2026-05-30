@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/email";
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const { email, password, role, firstName, lastName, username, university } = await req.json();
+        const { email, password, firstName, lastName, username, university } = await req.json();
 
         if (!email || !password) {
             return NextResponse.json(
@@ -104,12 +105,15 @@ export async function POST(req: Request) {
         // Always assign STUDENT role via public registration
         const assignedRole = "STUDENT";
 
+        // Coalesce missing name parts so an absent first/last name can't yield "undefined undefined".
+        const name = `${firstName ?? ""} ${lastName ?? ""}`.trim() || email.split("@")[0];
+
         // Upsert the user into the database
         const newUser = await prisma.user.upsert({
             where: { email },
             update: {
                 password: hashedPassword,
-                name: `${firstName} ${lastName}`.trim() || email.split("@")[0],
+                name,
                 firstName,
                 lastName,
                 username,
@@ -119,7 +123,7 @@ export async function POST(req: Request) {
             create: {
                 email,
                 password: hashedPassword,
-                name: `${firstName} ${lastName}`.trim() || email.split("@")[0],
+                name,
                 firstName,
                 lastName,
                 username,
@@ -169,6 +173,11 @@ export async function POST(req: Request) {
         );
     } catch (error: unknown) {
         console.error("Registration error:", error);
+        // A unique-constraint violation here is the username (email is the upsert key); the
+        // pre-check above is best-effort and racy, so map P2002 to 409 instead of a generic 500.
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+            return NextResponse.json({ error: "Username is already taken." }, { status: 409 });
+        }
         return NextResponse.json(
             { error: "An error occurred during registration." },
             { status: 500 }

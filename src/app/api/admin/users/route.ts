@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/authz";
+import { clampInt } from "@/lib/validation";
 import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -13,12 +14,12 @@ export async function GET(request: Request) {
         }
 
         const { searchParams } = new URL(request.url);
-        const skip = parseInt(searchParams.get("skip") || "0", 10);
-        const take = parseInt(searchParams.get("take") || "50", 10);
+        const skip = clampInt(searchParams.get("skip"), { fallback: 0, min: 0 });
+        const take = clampInt(searchParams.get("take"), { fallback: 50, min: 0, max: 100 }); // Max 100 at a time
 
         const users = await prisma.user.findMany({
             skip,
-            take: Math.min(take, 100), // Max 100 at a time
+            take,
             select: {
                 id: true,
                 firstName: true,

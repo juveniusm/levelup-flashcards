@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/authz";
+import { clampInt } from "@/lib/validation";
 
 export async function GET(req: NextRequest) {
     try {
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || "";
         const cursor = searchParams.get("cursor");
-        const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100);
+        const limit = clampInt(searchParams.get("limit"), { fallback: 20, min: 1, max: 100 });
 
         // High-performance Search using Prisma Full-Text Search
         // Note: For partial matches (contains), we fallback to startsWith/endsWith logic 
