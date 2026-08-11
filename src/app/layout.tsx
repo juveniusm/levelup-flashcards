@@ -4,6 +4,7 @@ import "./globals.css";
 import Sidebar from "./components/Sidebar";
 import NextAuthSessionProvider from "./components/SessionProvider";
 import CommandPalette from "./components/ui/CommandPalette";
+import ProfileCompletionPrompt from "./components/ProfileCompletionPrompt";
 
 // Fraunces is the serif display face (headings); Inter is the body sans; and
 // JetBrains Mono covers code/IDs. Each exposes a CSS variable that globals.css's
@@ -60,6 +61,7 @@ export default function RootLayout({
       >
         <NextAuthSessionProvider>
           <CommandPalette />
+          <ProfileCompletionPrompt />
           <Sidebar />
           <main className="flex-1 overflow-y-auto w-full">
             {children}

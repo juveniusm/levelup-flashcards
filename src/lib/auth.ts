@@ -20,6 +20,12 @@ export const authOptions: NextAuthOptions = {
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            // Without this, anyone who signed up with a password hits OAuthAccountNotLinked
+            // forever — next-auth refuses to attach Google to an existing email. The option is
+            // named "dangerous" because it trusts the provider's email; Google verifies its
+            // addresses, and the signIn callback below neutralizes the one real risk (a stale,
+            // never-verified password sitting on the row being linked).
+            allowDangerousEmailAccountLinking: true,
         }),
         CredentialsProvider({
             name: "Email and Password",
@@ -126,14 +132,48 @@ export const authOptions: NextAuthOptions = {
                     if (adminLoginIntent) return "/admin/login?error=AccessDenied";
                 }
 
-                // Backfill firstName/lastName for accounts that predate the `createUser` event
-                // below. First-time Google users don't reach this branch — next-auth runs this
-                // callback before the adapter creates the row, so `dbUser` is still null.
-                if (dbUser && !dbUser.firstName && user.name) {
-                    await prisma.user.update({
-                        where: { id: dbUser.id },
-                        data: splitName(user.name),
-                    });
+                // Everything below only applies to an existing row. A first-time Google user
+                // doesn't reach it: next-auth runs this callback BEFORE the adapter creates the
+                // row, so `dbUser` is still null (the createUser event covers that case).
+                if (dbUser) {
+                    const patch: {
+                        emailVerified?: Date;
+                        password?: null;
+                        firstName?: string;
+                        lastName?: string;
+                    } = {};
+
+                    if (!dbUser.emailVerified) {
+                        // Google just proved this address belongs to whoever is signing in, so
+                        // the account is verified from here on.
+                        patch.emailVerified = new Date();
+
+                        // A password on a never-verified row was chosen by whoever filled in the
+                        // signup form — not necessarily this person. Linking Google to the row
+                        // would preserve it and turn it into a working login now that the address
+                        // counts as verified, so drop it. The owner can set a fresh one in
+                        // Settings, where the live session proves who they are.
+                        if (dbUser.password !== null) {
+                            patch.password = null;
+                        }
+                    }
+
+                    // Backfill names on accounts created before the createUser event existed.
+                    if (!dbUser.firstName && user.name) {
+                        Object.assign(patch, splitName(user.name));
+                    }
+
+                    if (Object.keys(patch).length > 0) {
+                        await prisma.user.update({ where: { id: dbUser.id }, data: patch });
+                    }
+
+                    // Any pending verification token for this address is now moot, and each one
+                    // is a password-less login link for this account.
+                    if (patch.password === null) {
+                        await prisma.verificationToken.deleteMany({
+                            where: { identifier: dbUser.email! },
+                        });
+                    }
                 }
             }
             return true;
@@ -179,14 +219,19 @@ export const authOptions: NextAuthOptions = {
         // after the row exists. That's what makes first/last name available from the very first
         // sign-in rather than the second.
         async createUser({ user }) {
-            if (!user.name) return;
             try {
                 await prisma.user.update({
                     where: { id: user.id },
-                    data: splitName(user.name),
+                    data: {
+                        // next-auth hardcodes `emailVerified: null` for OAuth users, which is what
+                        // let the register route mistake Google accounts for abandoned signups.
+                        // The provider verified this address — record that it is proven.
+                        emailVerified: new Date(),
+                        ...(user.name ? splitName(user.name) : {}),
+                    },
                 });
             } catch {
-                // A cosmetic backfill must never block account creation; signIn() retries it.
+                // Never block account creation on this; signIn() reapplies it on the next login.
             }
         },
     },

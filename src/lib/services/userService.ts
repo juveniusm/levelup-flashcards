@@ -10,64 +10,120 @@ export interface UserProfileUpdateData {
     lastName?: string;
     email?: string;
     username?: string;
+    university?: string;
     currentPassword?: string;
     newPassword?: string;
 }
+
+// Google signups never pass through the signup form, so they arrive with no username. Claiming
+// one has to produce something the signup form would have accepted.
+const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,20}$/;
 
 export const userService = {
     /**
      * Fetches user profile data.
      */
     async getUserProfile(userId: string) {
-        return await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: { id: userId },
             select: {
                 firstName: true,
                 lastName: true,
                 email: true,
                 username: true,
+                university: true,
                 role: true,
+                password: true,
             },
         });
+
+        if (!user) return null;
+
+        // Field-by-field so the password hash can never ride along into the response; the client
+        // only needs to know whether one exists (OAuth accounts have none, and are offered "set a
+        // password" instead of "change password").
+        return {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            username: user.username,
+            university: user.university,
+            role: user.role,
+            hasPassword: user.password !== null,
+        };
     },
 
     /**
      * Updates user profile data, including password and name syncing.
      */
     async updateUserProfile(userId: string, userRole: string, data: UserProfileUpdateData) {
-        const { firstName, lastName, email, username, currentPassword, newPassword } = data;
+        const { firstName, lastName, email, username, university, currentPassword, newPassword } = data;
         const updateData: Prisma.UserUpdateInput = {};
 
         if (firstName !== undefined) updateData.firstName = firstName;
         if (lastName !== undefined) updateData.lastName = lastName;
+        if (university !== undefined) updateData.university = university;
 
-        if (email !== undefined || username !== undefined) {
+        if (email !== undefined) {
             if (userRole !== "ADMIN") {
-                throw new ServiceError("Only admins can change email or username.", 403);
+                throw new ServiceError("Only admins can change email.", 403);
             }
-            if (email !== undefined) updateData.email = email;
-            if (username !== undefined) updateData.username = username;
+            updateData.email = email;
+        }
+
+        if (username !== undefined) {
+            if (userRole === "ADMIN") {
+                updateData.username = username;
+            } else {
+                // A user may claim a username once, while theirs is still empty — that's the gap
+                // OAuth signups fall into. Renaming an existing one stays admin-only, since
+                // usernames are how other people identify an account.
+                const current = await prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { username: true },
+                });
+
+                if (current?.username) {
+                    throw new ServiceError("Only admins can change an existing username.", 403);
+                }
+
+                const claimed = username.trim();
+                if (!USERNAME_PATTERN.test(claimed)) {
+                    throw new ServiceError(
+                        "Username must be 3–20 characters, using letters, numbers or underscores.",
+                        400
+                    );
+                }
+
+                updateData.username = claimed;
+            }
         }
 
         if (newPassword) {
-            if (!currentPassword) {
-                throw new ServiceError("Current password is required to set a new password.", 400);
-            }
-
             const user = await prisma.user.findUnique({
                 where: { id: userId },
-                select: { password: true },
+                select: { password: true, emailVerified: true },
             });
 
-            if (!user?.password) {
-                throw new Error("Cannot change password for OAuth accounts.");
+            if (user?.password) {
+                // Replacing a password requires proving you know the current one.
+                if (!currentPassword) {
+                    throw new ServiceError("Current password is required to set a new password.", 400);
+                }
+
+                const isValid = await bcrypt.compare(currentPassword, user.password);
+                if (!isValid) {
+                    throw new ServiceError("Current password is incorrect.", 400);
+                }
+            } else if (!user?.emailVerified) {
+                // Only OAuth accounts reach here with no password, so the provider already proved
+                // this address. Record that, or the login check would reject the password we are
+                // about to set as belonging to an unverified account.
+                updateData.emailVerified = new Date();
             }
 
-            const isValid = await bcrypt.compare(currentPassword, user.password);
-            if (!isValid) {
-                throw new ServiceError("Current password is incorrect.", 400);
-            }
-
+            // An OAuth-only account has no password to prove; the live session is the proof of
+            // identity. This is what lets a Google user add email + password sign-in.
             updateData.password = await bcrypt.hash(newPassword, 10);
         }
 
@@ -86,20 +142,34 @@ export const userService = {
             throw new Error("No fields to update.");
         }
 
-        return await prisma.user.update({
-            where: { id: userId },
-            data: updateData,
-            // Never return sensitive columns (password hash, emailVerified, image, etc.) to the
-            // client. The route serializes this object verbatim in its response.
-            select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                username: true,
-                role: true,
-            },
-        });
+        try {
+            return await prisma.user.update({
+                where: { id: userId },
+                data: updateData,
+                // Never return sensitive columns (password hash, emailVerified, image, etc.) to the
+                // client. The route serializes this object verbatim in its response.
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    username: true,
+                    university: true,
+                    role: true,
+                },
+            });
+        } catch (error) {
+            // username and email are both @unique; the pre-checks above are racy, so surface a
+            // collision as a 409 rather than a generic 500.
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+                const target = JSON.stringify(error.meta?.target ?? "");
+                throw new ServiceError(
+                    target.includes("email") ? "That email is already in use." : "Username is already taken.",
+                    409
+                );
+            }
+            throw error;
+        }
     },
 
     /**

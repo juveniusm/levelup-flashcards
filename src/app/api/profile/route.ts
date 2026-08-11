@@ -54,7 +54,7 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: error.message }, { status: error.status });
         }
         // Any other thrown Error surfaces its message with a 500 (preserves prior behavior for
-        // e.g. "Cannot change password for OAuth accounts." and "No fields to update.").
+        // e.g. "No fields to update.").
         const errorMsg = error instanceof Error ? error.message : "Internal server error";
         return NextResponse.json({ error: errorMsg }, { status: 500 });
     }

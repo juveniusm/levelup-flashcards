@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import UniversitySearchableDropdown from "@/app/components/auth/UniversitySearchableDropdown";
 
 export default function SettingsPage() {
     const { data: session, update } = useSession();
@@ -11,13 +12,23 @@ export default function SettingsPage() {
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [username, setUsername] = useState("");
+    const [university, setUniversity] = useState("");
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
+    // Both default to the restrictive shape, so a failed profile fetch leaves the form exactly as
+    // it behaved before rather than offering fields the server will reject.
+    const [hadUsername, setHadUsername] = useState(true);
+    const [hasPassword, setHasPassword] = useState(true);
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+    // Admins can rename anyone; everyone else may claim a username only while theirs is empty,
+    // which is the state every Google signup starts in.
+    const canEditUsername = isAdmin || !hadUsername;
 
     useEffect(() => {
         fetch("/api/profile")
@@ -28,6 +39,9 @@ export default function SettingsPage() {
                     setLastName(data.lastName || "");
                     setEmail(data.email || "");
                     setUsername(data.username || "");
+                    setUniversity(data.university || "");
+                    setHadUsername(Boolean(data.username));
+                    setHasPassword(data.hasPassword !== false);
                 }
                 setLoading(false);
             })
@@ -43,8 +57,9 @@ export default function SettingsPage() {
             return;
         }
 
-        if (newPassword && newPassword.length < 6) {
-            setMessage({ type: "error", text: "Password must be at least 6 characters." });
+        // Matches the API's minimum; the old value of 6 only produced a server-side rejection.
+        if (newPassword && newPassword.length < 8) {
+            setMessage({ type: "error", text: "Password must be at least 8 characters." });
             return;
         }
 
@@ -55,6 +70,7 @@ export default function SettingsPage() {
             lastName: string;
             email?: string;
             username?: string;
+            university?: string;
             currentPassword?: string;
             newPassword?: string;
         } = { firstName, lastName };
@@ -62,10 +78,16 @@ export default function SettingsPage() {
         if (isAdmin) {
             payload.email = email;
             payload.username = username;
+        } else if (!hadUsername && username.trim()) {
+            // Claim-once: sending this when the user already has a username would be a 403.
+            payload.username = username.trim();
         }
 
+        // Only sent when set, so a save can't blank out an existing university.
+        if (university) payload.university = university;
+
         if (newPassword) {
-            payload.currentPassword = currentPassword;
+            if (hasPassword) payload.currentPassword = currentPassword;
             payload.newPassword = newPassword;
         }
 
@@ -80,6 +102,10 @@ export default function SettingsPage() {
             if (res.ok) {
                 await update(); // Refresh session so sidebar shows new name instantly
                 setMessage({ type: "success", text: "Profile updated successfully." });
+                // Reflect what the account now has, so the fields settle into their locked /
+                // "change password" shape without a reload.
+                if (payload.username) setHadUsername(true);
+                if (payload.newPassword) setHasPassword(true);
                 setCurrentPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
@@ -158,36 +184,56 @@ export default function SettingsPage() {
                         <div className="space-y-2">
                             <label htmlFor="username" className="text-sm font-medium text-muted-foreground">
                                 Username
-                                {!isAdmin && <span className="text-muted-foreground/60 ml-2 text-xs">(Admin only)</span>}
+                                {!canEditUsername && <span className="text-muted-foreground/60 ml-2 text-xs">(Admin only)</span>}
                             </label>
                             <input
                                 id="username"
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                disabled={!isAdmin}
-                                className={`w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none transition-colors ${isAdmin ? "focus:border-gold focus:ring-2 focus:ring-gold/30" : "opacity-50 cursor-not-allowed"
+                                disabled={!canEditUsername}
+                                placeholder={canEditUsername && !isAdmin ? "Choose a username" : undefined}
+                                className={`w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none transition-colors ${canEditUsername ? "focus:border-gold focus:ring-2 focus:ring-gold/30" : "opacity-50 cursor-not-allowed"
                                     }`}
                             />
+                            {canEditUsername && !isAdmin && (
+                                <p className="text-xs text-muted-foreground/80">
+                                    3–20 characters: letters, numbers or underscores. You can only set this once — an admin can change it later.
+                                </p>
+                            )}
                         </div>
+
+                        <UniversitySearchableDropdown
+                            value={university}
+                            onChange={setUniversity}
+                            disabled={saving}
+                        />
                     </section>
 
                     {/* Password Section */}
                     <section className="space-y-5">
-                        <h2 className="text-lg font-bold text-muted-foreground uppercase tracking-widest text-sm">Change Password</h2>
+                        <h2 className="text-lg font-bold text-muted-foreground uppercase tracking-widest text-sm">
+                            {hasPassword ? "Change Password" : "Set a Password"}
+                        </h2>
 
                         <div className="space-y-4">
-                            <div className="space-y-2">
-                                <label htmlFor="currentPassword" className="text-sm font-medium text-muted-foreground">Current Password</label>
-                                <input
-                                    id="currentPassword"
-                                    type="password"
-                                    value={currentPassword}
-                                    onChange={(e) => setCurrentPassword(e.target.value)}
-                                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
-                                    placeholder="Enter current password"
-                                />
-                            </div>
+                            {hasPassword ? (
+                                <div className="space-y-2">
+                                    <label htmlFor="currentPassword" className="text-sm font-medium text-muted-foreground">Current Password</label>
+                                    <input
+                                        id="currentPassword"
+                                        type="password"
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-colors"
+                                        placeholder="Enter current password"
+                                    />
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">
+                                    You sign in with Google. Setting a password lets you also sign in with your email — Google will keep working either way.
+                                </p>
+                            )}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label htmlFor="newPassword" className="text-sm font-medium text-muted-foreground">New Password</label>
