@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireDeckAccess } from "@/lib/deck-access";
 import { isSafeImageUrl } from "@/lib/url-safety";
+import { mapPrismaError } from "@/lib/errors";
 
 export async function PUT(
     request: Request,
@@ -40,6 +41,12 @@ export async function PUT(
         return NextResponse.json(card);
     } catch (error) {
         console.error("Error updating card:", error);
+        // The `where` pins both id and deck_id, so P2025 means the card doesn't exist in this
+        // deck — a 404, not a server error.
+        const mapped = mapPrismaError(error, { notFound: "Card not found" });
+        if (mapped) {
+            return NextResponse.json({ error: mapped.error }, { status: mapped.status });
+        }
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
@@ -71,6 +78,10 @@ export async function DELETE(
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Error deleting card:", error);
+        const mapped = mapPrismaError(error, { notFound: "Card not found" });
+        if (mapped) {
+            return NextResponse.json({ error: mapped.error }, { status: mapped.status });
+        }
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

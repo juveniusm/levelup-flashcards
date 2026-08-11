@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireOwnerOrAdmin } from "@/lib/authz";
 import { folderService } from "@/lib/services/folderService";
+import { mapPrismaError } from "@/lib/errors";
 
 /**
  * Verifies that the current user owns the folder (or is an ADMIN).
@@ -29,7 +30,12 @@ export async function PUT(
 
         const updated = await folderService.renameFolder(folderId, title.trim());
         return NextResponse.json(updated);
-    } catch {
+    } catch (error: unknown) {
+        console.error("PUT folder error:", error);
+        const mapped = mapPrismaError(error, { notFound: "Folder not found" });
+        if (mapped) {
+            return NextResponse.json({ error: mapped.error }, { status: mapped.status });
+        }
         return NextResponse.json({ error: "Failed to update folder" }, { status: 500 });
     }
 }
@@ -45,7 +51,12 @@ export async function DELETE(
     try {
         await folderService.deleteFolder(folderId);
         return NextResponse.json({ success: true });
-    } catch {
+    } catch (error: unknown) {
+        console.error("DELETE folder error:", error);
+        const mapped = mapPrismaError(error, { notFound: "Folder not found" });
+        if (mapped) {
+            return NextResponse.json({ error: mapped.error }, { status: mapped.status });
+        }
         return NextResponse.json({ error: "Failed to delete folder" }, { status: 500 });
     }
 }

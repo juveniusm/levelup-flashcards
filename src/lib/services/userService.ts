@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { calculateXpForReview } from "@/utils/xp/xpUtils";
 import { normalizeTimezone } from "@/lib/timezone";
-import { ServiceError } from "@/lib/errors";
+import { ServiceError, mapPrismaError } from "@/lib/errors";
 
 export interface UserProfileUpdateData {
     firstName?: string;
@@ -161,13 +161,8 @@ export const userService = {
         } catch (error) {
             // username and email are both @unique; the pre-checks above are racy, so surface a
             // collision as a 409 rather than a generic 500.
-            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-                const target = JSON.stringify(error.meta?.target ?? "");
-                throw new ServiceError(
-                    target.includes("email") ? "That email is already in use." : "Username is already taken.",
-                    409
-                );
-            }
+            const mapped = mapPrismaError(error);
+            if (mapped) throw new ServiceError(mapped.error, mapped.status);
             throw error;
         }
     },

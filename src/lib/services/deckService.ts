@@ -117,21 +117,29 @@ export const deckService = {
      * Creates a new deck with an incremented sequence.
      */
     async createDeck(userId: string, title: string, role: string, folderId?: string | null) {
-        // Find max sequence across ALL decks (global counter, not per-user)
-        const lastDeck = await prisma.decks.findFirst({
-            orderBy: { deck_seq: 'desc' },
-        });
+        // deck_seq stays a GLOBAL counter: it is rendered as a user-facing ID (`007` in the
+        // creator, and the prefix of every card's `0070042` label), so numbering it per user
+        // would make two people's decks display the same ID.
+        //
+        // Reading the current max and inserting in one transaction closes the gap between the
+        // two statements. It does not make the counter collision-proof — two transactions can
+        // still read the same max — which only a @@unique([deck_seq]) constraint could
+        // guarantee, and that needs a migration (out of scope per the handoff).
+        return await prisma.$transaction(async (tx) => {
+            const lastDeck = await tx.decks.findFirst({
+                orderBy: { deck_seq: "desc" },
+                select: { deck_seq: true },
+            });
 
-        const nextSeq = (lastDeck?.deck_seq || 0) + 1;
-
-        return await prisma.decks.create({
-            data: {
-                title,
-                user_id: userId,
-                folder_id: folderId ?? null,
-                deck_seq: nextSeq,
-                is_public: role === "ADMIN",
-            },
+            return await tx.decks.create({
+                data: {
+                    title,
+                    user_id: userId,
+                    folder_id: folderId ?? null,
+                    deck_seq: (lastDeck?.deck_seq || 0) + 1,
+                    is_public: role === "ADMIN",
+                },
+            });
         });
     },
 

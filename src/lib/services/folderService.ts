@@ -41,17 +41,22 @@ export const folderService = {
      * Creates a new folder with an incremented sequence (global counter).
      */
     async createFolder(userId: string, title: string) {
-        const lastFolder = await prisma.folder.findFirst({
-            orderBy: { folder_seq: "desc" },
-        });
-        const nextSeq = (lastFolder?.folder_seq || 0) + 1;
+        // Same shape as deckService.createDeck: folder_seq is a display value, so the counter
+        // stays global and the read+insert share a transaction. See that method for why this
+        // narrows the race rather than eliminating it.
+        return await prisma.$transaction(async (tx) => {
+            const lastFolder = await tx.folder.findFirst({
+                orderBy: { folder_seq: "desc" },
+                select: { folder_seq: true },
+            });
 
-        return await prisma.folder.create({
-            data: {
-                title,
-                user_id: userId,
-                folder_seq: nextSeq,
-            },
+            return await tx.folder.create({
+                data: {
+                    title,
+                    user_id: userId,
+                    folder_seq: (lastFolder?.folder_seq || 0) + 1,
+                },
+            });
         });
     },
 

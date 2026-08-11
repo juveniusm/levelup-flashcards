@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/authz";
 import prisma from "@/lib/prisma";
+import { mapPrismaError } from "@/lib/errors";
 import bcrypt from "bcrypt";
 
 
@@ -104,6 +105,12 @@ export async function PATCH(
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Admin user PATCH error:", error);
+        // email and username are both @unique — a collision is the admin's input being wrong,
+        // not a server fault, so it gets a 409 with the offending field named.
+        const mapped = mapPrismaError(error, { notFound: "User not found" });
+        if (mapped) {
+            return NextResponse.json({ error: mapped.error }, { status: mapped.status });
+        }
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
@@ -132,22 +139,32 @@ export async function DELETE(
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // If the user being deleted is an admin, preserve their decks by 
-        // reassigning them to the admin performing the deletion
-        if (user.role === "ADMIN") {
-            await prisma.decks.updateMany({
-                where: { user_id: userId },
-                data: { user_id: adminId }
-            });
-        }
+        // Reassignment and deletion are one unit of work: if the delete failed on its own, an
+        // admin's decks would already have been handed to someone else while the account they
+        // belong to is still there.
+        await prisma.$transaction(async (tx) => {
+            // If the user being deleted is an admin, preserve their decks by
+            // reassigning them to the admin performing the deletion
+            if (user.role === "ADMIN") {
+                await tx.decks.updateMany({
+                    where: { user_id: userId },
+                    data: { user_id: adminId }
+                });
+            }
 
-        // Deleting the user will cascade delete their cards, stats, and logs
-        // as long as the Prisma schema is configured correctly.
-        await prisma.user.delete({ where: { id: userId } });
+            // Deleting the user will cascade delete their cards, stats, and logs
+            // as long as the Prisma schema is configured correctly.
+            await tx.user.delete({ where: { id: userId } });
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Admin user DELETE error:", error);
+        // The existence check above is racy — a concurrent delete lands here as P2025.
+        const mapped = mapPrismaError(error, { notFound: "User not found" });
+        if (mapped) {
+            return NextResponse.json({ error: mapped.error }, { status: mapped.status });
+        }
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

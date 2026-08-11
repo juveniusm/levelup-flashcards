@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireDeckAccess } from "@/lib/deck-access";
 import { isSafeImageUrl } from "@/lib/url-safety";
+import { ServiceError } from "@/lib/errors";
 
 export async function POST(
     request: Request,
@@ -23,44 +24,53 @@ export async function POST(
             return NextResponse.json({ error: "Front and back text are required" }, { status: 400 });
         }
 
-        // Run duplicate check and sequence check in parallel
-        const [duplicate, lastCard] = await prisma.$transaction([
-            prisma.cards.findFirst({
+        // The duplicate check, the sequence read and the insert all belong to one transaction.
+        // Previously only the two reads were wrapped and the create ran afterwards, so two
+        // simultaneous submissions could both pass the duplicate check, or claim the same
+        // card_seq (which is half of the card's display ID).
+        const card = await prisma.$transaction(async (tx) => {
+            const duplicate = await tx.cards.findFirst({
                 where: {
                     deck_id: deckId,
                     front: { equals: front.trim(), mode: "insensitive" },
                     back: { equals: back.trim(), mode: "insensitive" },
                 },
-            }),
-            prisma.cards.findFirst({
+                select: { id: true },
+            });
+
+            if (duplicate) {
+                // Thrown rather than returned so the transaction rolls back; the catch below
+                // turns it back into the 409 this route has always returned.
+                throw new ServiceError(
+                    "A card with the same prompt and answer already exists in this deck.",
+                    409
+                );
+            }
+
+            const lastCard = await tx.cards.findFirst({
                 where: { deck_id: deckId },
                 orderBy: { card_seq: "desc" },
-            })
-        ]);
+                select: { card_seq: true },
+            });
 
-        if (duplicate) {
-            return NextResponse.json(
-                { error: "A card with the same prompt and answer already exists in this deck." },
-                { status: 409 }
-            );
-        }
-
-        const nextSeq = (lastCard?.card_seq || 0) + 1;
-
-        const card = await prisma.cards.create({
-            data: {
-                front: front.trim(),
-                back: back.trim(),
-                acceptedAnswers: Array.isArray(acceptedAnswers) ? acceptedAnswers.filter(a => typeof a === "string" && a.trim() !== "").map(a => a.trim()) : [],
-                front_image_url: isSafeImageUrl(front_image_url) ? front_image_url : null,
-                back_image_url: isSafeImageUrl(back_image_url) ? back_image_url : null,
-                deck_id: deckId,
-                card_seq: nextSeq,
-            },
+            return await tx.cards.create({
+                data: {
+                    front: front.trim(),
+                    back: back.trim(),
+                    acceptedAnswers: Array.isArray(acceptedAnswers) ? acceptedAnswers.filter(a => typeof a === "string" && a.trim() !== "").map(a => a.trim()) : [],
+                    front_image_url: isSafeImageUrl(front_image_url) ? front_image_url : null,
+                    back_image_url: isSafeImageUrl(back_image_url) ? back_image_url : null,
+                    deck_id: deckId,
+                    card_seq: (lastCard?.card_seq || 0) + 1,
+                },
+            });
         });
 
         return NextResponse.json(card);
     } catch (error) {
+        if (error instanceof ServiceError) {
+            return NextResponse.json({ error: error.message }, { status: error.status });
+        }
         console.error(error);
         return NextResponse.json({ error: "Failed to create card" }, { status: 500 });
     }
