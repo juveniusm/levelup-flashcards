@@ -63,6 +63,12 @@ export async function POST(req: Request) {
                     { username: username || undefined }
                 ]
             },
+            // Linked accounts are needed to tell a pending credentials signup apart from an OAuth
+            // account: next-auth creates Google users with `emailVerified: null`, so they would
+            // otherwise look "unverified" to the overwrite path below.
+            include: {
+                accounts: { select: { provider: true }, take: 1 },
+            },
         });
 
         // If the user exists but is NOT verified, we can overwrite their unverified account
@@ -73,7 +79,16 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: "User with this email already exists." }, { status: 409 });
             }
 
-            if (existingUser.email === email && !existingUser.emailVerified) {
+            // Only a genuine pending credentials signup may be overwritten — that is what this
+            // path is for ("resend the verification email and update their info"). An OAuth user
+            // has no password and at least one linked Account row; their `emailVerified` is null
+            // only because next-auth never sets it, NOT because the address is unproven. Letting
+            // a signup overwrite one would plant a stranger's password on a live account, which
+            // becomes a working login the moment the owner clicks the verification email.
+            const isPendingCredentialsSignup =
+                existingUser.password !== null && existingUser.accounts.length === 0;
+
+            if (existingUser.email === email && !existingUser.emailVerified && isPendingCredentialsSignup) {
                 // We will gracefully proceed and overwrite the user below.
                 // First, clean up any old verification tokens for this email.
                 await prisma.verificationToken.deleteMany({

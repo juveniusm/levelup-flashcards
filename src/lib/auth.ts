@@ -5,6 +5,15 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import type { NextAuthOptions } from "next-auth";
 
+// Google returns a single display name; this app stores first/last separately.
+function splitName(fullName: string) {
+    const parts = fullName.trim().split(/\s+/);
+    return {
+        firstName: parts[0] || "",
+        lastName: parts.slice(1).join(" ") || "",
+    };
+}
+
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
     providers: [
@@ -95,6 +104,10 @@ export const authOptions: NextAuthOptions = {
     },
     pages: {
         signIn: "/login",
+        // next-auth forwards only a subset of error codes to the sign-in page; the rest
+        // (AccessDenied among them) render on its own unbranded /api/auth/error page unless
+        // an error page is configured.
+        error: "/login",
     },
     callbacks: {
         async signIn({ user, account }) {
@@ -107,17 +120,19 @@ export const authOptions: NextAuthOptions = {
                     const { cookies } = await import("next/headers");
                     const cookieStore = await cookies();
                     const adminLoginIntent = cookieStore.get("admin_login_intent")?.value === "true";
-                    if (adminLoginIntent) return false;
+                    // Returning a URL denies the sign-in exactly like `false` does, but lands the
+                    // user back on the admin login page (which shows a proper message) instead of
+                    // next-auth's default error page.
+                    if (adminLoginIntent) return "/admin/login?error=AccessDenied";
                 }
 
-                // Populate firstName/lastName from Google profile if missing
+                // Backfill firstName/lastName for accounts that predate the `createUser` event
+                // below. First-time Google users don't reach this branch — next-auth runs this
+                // callback before the adapter creates the row, so `dbUser` is still null.
                 if (dbUser && !dbUser.firstName && user.name) {
-                    const parts = user.name.trim().split(/\s+/);
-                    const firstName = parts[0] || "";
-                    const lastName = parts.slice(1).join(" ") || "";
                     await prisma.user.update({
                         where: { id: dbUser.id },
-                        data: { firstName, lastName },
+                        data: splitName(user.name),
                     });
                 }
             }
@@ -155,6 +170,24 @@ export const authOptions: NextAuthOptions = {
                 session.user.name = (token.name as string) || session.user.name;
             }
             return session;
+        },
+    },
+
+    events: {
+        // Only the adapter creates users here (credentials accounts come from /api/auth/register),
+        // so this fires exactly once per OAuth signup — and, unlike the signIn callback, it runs
+        // after the row exists. That's what makes first/last name available from the very first
+        // sign-in rather than the second.
+        async createUser({ user }) {
+            if (!user.name) return;
+            try {
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: splitName(user.name),
+                });
+            } catch {
+                // A cosmetic backfill must never block account creation; signIn() retries it.
+            }
         },
     },
 

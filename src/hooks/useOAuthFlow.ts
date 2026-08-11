@@ -63,6 +63,12 @@ export function useOAuthFlow(
                 setTimeout(() => {
                     if (err === "unverified") {
                         setErrorMsg("Please verify your email address before signing in.");
+                    } else if (err === "OAuthAccountNotLinked") {
+                        // This email already has a password-based account; next-auth refuses to
+                        // attach the Google identity to it.
+                        setErrorMsg("This email is already registered with a password. Please sign in with your email and password below.");
+                    } else if (err === "AccessDenied") {
+                        setErrorMsg("Access denied. Only administrators can sign in on the admin page.");
                     } else if (err !== "CredentialsSignin") {
                         setErrorMsg("Authentication error: " + err);
                     }
