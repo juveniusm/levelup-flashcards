@@ -80,8 +80,9 @@ export const folderService = {
     },
 
     /**
-     * Returns { userId } if the folder belongs to the user (or caller is ADMIN).
-     * Returns null otherwise.
+     * Looks up who owns a folder: `{ user_id }`, or null if no folder has this id.
+     * Performs NO authorization of its own — callers pass the result to
+     * `requireOwnerOrAdmin`, which is where the ownership/admin decision is made.
      */
     async getFolderOwner(folderId: string): Promise<{ user_id: string } | null> {
         return await prisma.folder.findUnique({

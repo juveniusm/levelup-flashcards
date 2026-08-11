@@ -133,7 +133,13 @@ export default function StudyInterface({
     const { submitReview } = useStudyReview(deckId, setXpEarned);
 
     const { currentIndex, lives, score, correctAnswers, incorrectAnswers, gameStatus } = state.context;
-    const currentCard = cards[currentIndex];
+
+    // The session's card order lives in the machine's context: cards are shuffled per session and
+    // that order is restored from sessionStorage on reload. The `cards` prop is only the seed for
+    // a fresh session, so indexing into it displayed — and graded — a different card than the one
+    // the machine was actually on after any restore.
+    const sessionCards: Card[] = state.context.cards;
+    const currentCard = sessionCards[currentIndex];
 
     useEffect(() => {
         if (state.value === "question" && inputRef.current) {
@@ -218,14 +224,14 @@ export default function StudyInterface({
             <div className="w-full bg-muted rounded-full h-1 sm:h-2 mb-4 sm:mb-12 overflow-hidden border border-border">
                 <div
                     className="bg-gold h-1 sm:h-2 rounded-full transition-all duration-500 ease-out"
-                    style={{ width: `${((currentIndex) / cards.length) * 100}%` }}
+                    style={{ width: `${((currentIndex) / sessionCards.length) * 100}%` }}
                 ></div>
             </div>
 
             <Flashcard
                 card={currentCard}
                 isFlipped={feedbackType !== null}
-                label={`Card ${currentIndex + 1} of ${cards.length}`}
+                label={`Card ${currentIndex + 1} of ${sessionCards.length}`}
                 feedbackType={feedbackType}
                 userAnswer={state.value === "feedback_incorrect" ? inputAnswer : undefined}
                 matchedAlternative={matchedAlternative}

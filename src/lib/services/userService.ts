@@ -207,12 +207,21 @@ export const userService = {
             }
         }
 
+        // The two branches above are mutually exclusive, but spreading both into one object
+        // depended on that: if they ever overlapped, the second spread would silently overwrite
+        // the first. Resolve to a single value instead.
+        const streakUpdate: Prisma.UserStatsUpdateInput = {};
+        if (setStreakTo !== undefined) {
+            streakUpdate.current_streak = setStreakTo;
+        } else if (streakIncrement > 0) {
+            streakUpdate.current_streak = { increment: streakIncrement };
+        }
+
         const userStats = await prisma.userStats.upsert({
             where: { user_id: userId },
             update: {
                 total_xp: { increment: xpEarned },
-                ...(setStreakTo !== undefined ? { current_streak: setStreakTo } : {}),
-                ...(streakIncrement > 0 ? { current_streak: { increment: streakIncrement } } : {}),
+                ...streakUpdate,
             },
             create: {
                 user_id: userId,

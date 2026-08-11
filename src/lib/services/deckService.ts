@@ -1,6 +1,26 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
+/** One row of the per-deck aggregate in fetchDecksWithStats; every column is cast ::int in SQL. */
+interface DeckStatsRow {
+    deck_id: string;
+    total_cards: number;
+    due_count: number;
+    mastered_count: number;
+    bucket_very_hard: number;
+    bucket_hard: number;
+    bucket_medium: number;
+    bucket_easy: number;
+    bucket_unseen: number;
+}
+
+/** The shape fetchDecksWithStats folds each row into, keyed by deck id. */
+interface DeckStatsSummary {
+    due: number;
+    mastered: number;
+    difficultyCounts: Record<string, number>;
+}
+
 export interface DeckWithStats {
     id: string;
     user_id: string;
@@ -53,7 +73,7 @@ export const deckService = {
         // 1. Fetch Aggregated Stats in ONE query
         // We use a LEFT JOIN on SM2Stats to ensure we count cards that have no stats (New Cards)
         // We filter stats by user_id in the JOIN condition to get personal progress.
-        const stats: any[] = await prisma.$queryRaw`
+        const stats = await prisma.$queryRaw<DeckStatsRow[]>`
             SELECT 
                 c.deck_id,
                 COUNT(c.id)::int as total_cards,
@@ -71,7 +91,7 @@ export const deckService = {
         `;
 
         // Map aggregated stats by deckId
-        const statsMap = stats.reduce((acc, row) => {
+        const statsMap = stats.reduce<Record<string, DeckStatsSummary>>((acc, row) => {
             acc[row.deck_id] = {
                 due: row.due_count,
                 mastered: row.mastered_count,
@@ -85,7 +105,7 @@ export const deckService = {
                 }
             };
             return acc;
-        }, {} as Record<string, any>);
+        }, {});
 
         return decks.map((deck) => {
             const deckStats = statsMap[deck.id] || { 

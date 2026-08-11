@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireDeckAccess } from "@/lib/deck-access";
+import { isSafeImageUrl } from "@/lib/url-safety";
 
 const MAX_BULK_CARDS = 2000;
 
@@ -64,7 +65,11 @@ export async function POST(
         const newCards = deduped.filter(
             (c) => !existingSet.has(`${String(c.front).trim().toLowerCase()}|||${String(c.back).trim().toLowerCase()}`)
         );
-        const skippedCount = validCards.length - newCards.length;
+
+        // Counted against everything the user submitted, not just the rows that survived
+        // validation — malformed rows are skipped too, and were previously invisible in the
+        // total the UI reports back.
+        const skippedCount = cards.length - newCards.length;
 
         // ── Step 4: Nothing new to insert ─────────────────────────────────
         if (newCards.length === 0) {
@@ -84,11 +89,15 @@ export async function POST(
 
         let nextSeq = (lastCard?.card_seq || 0) + 1;
 
-        // Map to DB objects with calculated sequence
+        // Map to DB objects with calculated sequence. Image URLs go through the same safety
+        // check the single-card create uses — without them here, an import silently dropped
+        // every image while creating the same card one at a time kept it.
         const cardsToInsert = newCards.map((cardData) => ({
             front: String(cardData.front).trim(),
             back: String(cardData.back).trim(),
             acceptedAnswers: Array.isArray(cardData.acceptedAnswers) ? cardData.acceptedAnswers.filter((a: any) => typeof a === "string" && a.trim() !== "").map((a: string) => a.trim()) : [],
+            front_image_url: isSafeImageUrl(cardData.front_image_url) ? cardData.front_image_url : null,
+            back_image_url: isSafeImageUrl(cardData.back_image_url) ? cardData.back_image_url : null,
             deck_id: deckId,
             card_seq: nextSeq++,
         }));

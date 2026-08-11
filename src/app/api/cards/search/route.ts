@@ -20,7 +20,13 @@ export async function GET(req: NextRequest) {
         // Note: For partial matches (contains), we fallback to startsWith/endsWith logic 
         // if fullTextSearch doesn't yield results for short queries.
         const searchTerms = query.trim().split(/\s+/).join(" & ");
-        
+
+        // The `as any` on the two `search` clauses below stays for now. `fullTextSearch` is
+        // enabled in schema.prisma, so the generated client should type `search` on a string
+        // filter — but there is no generated client in this checkout to confirm against, and
+        // dropping the cast blind would surface as a build failure rather than a type error.
+        // Re-check once `prisma generate` can run here.
+
         const cards = await prisma.cards.findMany({
             take: limit,
             skip: cursor ? 1 : 0,

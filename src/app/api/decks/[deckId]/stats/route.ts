@@ -1,9 +1,23 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireDeckReadAccess } from "@/lib/deck-access";
-import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * One row of the aggregate below. The COUNT is always a number; every SUM is NULL when the deck
+ * has no cards, since the query has no GROUP BY and still returns a single row.
+ */
+interface DeckStatsRow {
+    total_cards: number;
+    due_count: number | null;
+    bucket_mastered: number | null;
+    bucket_very_hard: number | null;
+    bucket_hard: number | null;
+    bucket_medium: number | null;
+    bucket_easy: number | null;
+    bucket_unseen: number | null;
+}
 
 export async function GET(
     request: Request,
@@ -19,7 +33,7 @@ export async function GET(
 
         const now = new Date();
 
-        const stats: any[] = await prisma.$queryRaw`
+        const stats = await prisma.$queryRaw<DeckStatsRow[]>`
             SELECT 
                 COUNT(c.id)::int as total_cards,
                 SUM(CASE WHEN s.next_review <= ${now} THEN 1 ELSE 0 END)::int as due_count,
@@ -34,18 +48,18 @@ export async function GET(
             WHERE c.deck_id = ${deckId}
         `;
 
-        const row = stats[0] || {};
+        const row = stats[0];
 
         return NextResponse.json({
-            totalCards: row.total_cards || 0,
-            dueCount: row.due_count || 0,
+            totalCards: row?.total_cards ?? 0,
+            dueCount: row?.due_count ?? 0,
             difficultyCounts: {
-                "Unseen": row.bucket_unseen || 0,
-                "Very Hard": row.bucket_very_hard || 0,
-                "Hard": row.bucket_hard || 0,
-                "Medium": row.bucket_medium || 0,
-                "Easy": row.bucket_easy || 0,
-                "Mastered": row.bucket_mastered || 0,
+                "Unseen": row?.bucket_unseen ?? 0,
+                "Very Hard": row?.bucket_very_hard ?? 0,
+                "Hard": row?.bucket_hard ?? 0,
+                "Medium": row?.bucket_medium ?? 0,
+                "Easy": row?.bucket_easy ?? 0,
+                "Mastered": row?.bucket_mastered ?? 0,
             }
         });
     } catch (error) {
