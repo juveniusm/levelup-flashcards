@@ -23,6 +23,7 @@ export default function SettingsPage() {
     const [hasPassword, setHasPassword] = useState(true);
 
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState(false);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -34,7 +35,9 @@ export default function SettingsPage() {
         fetch("/api/profile")
             .then((res) => res.json())
             .then((data) => {
-                if (!data.error) {
+                if (data.error) {
+                    setLoadError(true);
+                } else {
                     setFirstName(data.firstName || "");
                     setLastName(data.lastName || "");
                     setEmail(data.email || "");
@@ -45,7 +48,10 @@ export default function SettingsPage() {
                 }
                 setLoading(false);
             })
-            .catch(() => setLoading(false));
+            .catch(() => {
+                setLoadError(true);
+                setLoading(false);
+            });
     }, []);
 
     const handleSave = async (e: React.FormEvent) => {
@@ -123,6 +129,28 @@ export default function SettingsPage() {
         return (
             <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
                 <span className="text-muted-foreground text-lg">Loading…</span>
+            </div>
+        );
+    }
+
+    // Rendering the form after a failed load would show every field empty, and saving from
+    // there would write those blanks over the user's real name.
+    if (loadError) {
+        return (
+            <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-8">
+                <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center space-y-4">
+                    <h1 className="text-2xl font-display font-bold tracking-tight">Couldn&apos;t load your profile</h1>
+                    <p className="text-muted-foreground text-sm">
+                        Your settings are hidden rather than shown blank, so a save can&apos;t overwrite them with empty values.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        className="bg-gold hover:bg-gold/90 text-foreground font-bold py-3 px-8 rounded-full transition-colors"
+                    >
+                        Try again
+                    </button>
+                </div>
             </div>
         );
     }

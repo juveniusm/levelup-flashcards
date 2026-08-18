@@ -180,7 +180,20 @@ export async function POST(req: Request) {
             );
         }
 
-        await sendVerificationEmail(email, token, baseUrl);
+        const emailResult = await sendVerificationEmail(email, token, baseUrl);
+
+        if (!emailResult.success) {
+            // The account row exists, but it is unreachable until the address is verified and the
+            // only way to verify is the link we just failed to deliver. Reporting 201 here is how
+            // a missing RESEND_API_KEY turned into a queue of accounts nobody could log into, with
+            // every affected user told to check an inbox that would stay empty. Say what happened
+            // instead: registering again re-sends, because this address is still unverified.
+            console.error("Registration: verification email failed to send for", email);
+            return NextResponse.json(
+                { error: "Your account was created, but we couldn't send the verification email. Please try registering again in a few minutes." },
+                { status: 502 }
+            );
+        }
 
         return NextResponse.json(
             { message: "Registration successful. Please check your email to verify your account.", user: { id: newUser.id, email: newUser.email, role: newUser.role } },

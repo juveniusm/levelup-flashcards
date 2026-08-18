@@ -3,15 +3,35 @@
 Next.js 16 (App Router) + React 19 + Prisma 5 (Postgres) + next-auth v4 flashcards app.
 Production site: **levelupflash.com**.
 
-## 👉 Active task: refactor pass (R1–R7) — READ THE HANDOFF FIRST
-A security audit + fixes (S1–S18) are **done and deployed**. The current task is a
-**behavior-preserving refactor / code-quality pass (R1–R7)**. Before doing anything, read:
+## ✅ Status: security pass (S1–S18) and refactor pass (R1–R7) are COMPLETE
+Everything in the two handoffs below has shipped to `origin/main` (= production). Treat both
+documents as **background and history, not a task list**:
 
-- **`../REFACTOR_HANDOFF.md`** — the refactor brief (R1–R7 in detail, what to do, what NOT to touch).
+- `../REFACTOR_HANDOFF.md` — the refactor brief (R1–R7). All items done; still the best record of
+  what changed and, importantly, what was deliberately left alone.
 - `../SECURITY_REFACTOR_HANDOFF.md` — original security/audit brief (background).
 
 (Both live in the parent folder, one level above this repo:
 `G:\My Drive\1. Projects\Atria\ANTIGRAVITY FLASHCARDS\`.)
+
+Shipped since those briefs were written (commits `8a657ad`, `1758da1`): Google accounts can no
+longer be overwritten via the signup form, Google now links to an existing email instead of
+dead-ending on `OAuthAccountNotLinked`, OAuth users get first/last name on their first sign-in
+plus a prompt for the username/university the signup form would have collected, and OAuth
+failures land on the app's own pages rather than next-auth's default error page.
+
+## 📋 Open backlog — none of it started, several need the USER's decision first
+- **Schema/migration items.** `@@unique([deck_seq])` and `@@unique([deck_id, card_seq])` are the
+  only real fix for the sequence races; the transactions added in R5 narrow the window but cannot
+  close it. Needs a migration path set up first (see the migration note in the refactor handoff).
+- **Per-user vs global sequence numbering.** `deck_seq`/`folder_seq` are user-facing display IDs
+  (a deck shows as `007`; card labels are deck-seq + card-seq, `0070042`), so the R5 brief's
+  suggestion to make them per-user would make two users' decks collide. Left global deliberately.
+- **Bulk-import `card_seq` race** (`decks/[deckId]/cards/bulk/route.ts`). Closing it means holding
+  a transaction across up to four `createMany` batches, past Prisma's 5s default timeout.
+- **Logger abstraction.** `console.*` is scattered across routes; replacing it is its own pass.
+- **`as any` on the full-text `search` clauses** (`cards/search/route.ts`). Probably unnecessary
+  now that `fullTextSearch` is enabled, but unverifiable without a generated Prisma client here.
 
 ## ⚠️ Critical environment constraints
 - **Do NOT run `npm install`** or write `node_modules`. This is a **Google Drive (`G:`) path** —
